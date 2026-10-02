@@ -15,6 +15,9 @@ const SPINS_PER_PERSON = Number(process.env.SPINS_PER_PERSON) || 3;
 // "all" = trekk blant alle lodd (også de som ikke er delt ut), "assigned" = kun utdelte lodd
 const DRAW_FROM = process.env.DRAW_FROM === 'assigned' ? 'assigned' : 'all';
 const SPIN_WIN_CHANCE = process.env.SPIN_WIN_CHANCE !== undefined ? Number(process.env.SPIN_WIN_CHANCE) : 0.15;
+// Flappy-spillet: første milepæl og hvor ofte et rør dukker opp (brukes til juksesjekk)
+const GAME_FIRST_MILESTONE = Number(process.env.GAME_FIRST_MILESTONE) || 50;
+const GAME_PIPE_INTERVAL_MS = 1500;
 // Én registrering per IP-adresse. Sett ONE_PER_IP=false hvis alle sitter på samme wifi.
 const ONE_PER_IP = process.env.ONE_PER_IP !== 'false';
 // Sett TRUST_PROXY=true når appen kjører bak en proxy (Render, Railway, Fly, nginx osv.)
@@ -36,6 +39,7 @@ function loadState() {
 }
 
 let state = loadState();
+const games = new Map(); // aktive spill: gameId -> { token, start }
 
 function saveState() {
   const tmp = DATA_FILE + '.tmp';
@@ -88,6 +92,28 @@ function usedTickets() {
   return new Set(state.participants.flatMap((p) => p.tickets));
 }
 
+function spinsAllowed(p) {
+  return SPINS_PER_PERSON + (p.bonusSpins || 0);
+}
+
+// Milepæl k (1, 2, 3 ...) krever 50, 100, 200, 400 ... poeng og gir k nye spinn.
+function milestoneScore(k) {
+  return GAME_FIRST_MILESTONE * 2 ** (k - 1);
+}
+
+function milestonesFor(score) {
+  let k = 0;
+  while (score >= milestoneScore(k + 1)) k++;
+  return k;
+}
+
+function leaderboard() {
+  return state.participants
+    .filter((p) => p.bestScore > 0)
+    .map((p) => ({ name: p.name, score: p.bestScore }))
+    .sort((a, b) => b.score - a.score);
+}
+
 function publicDraw() {
   if (!state.draw) return null;
   const owners = {};
@@ -104,7 +130,10 @@ function meView(p) {
   return {
     name: p.name,
     tickets: p.tickets,
-    spinsLeft: SPINS_PER_PERSON - p.spins.length,
+    spinsLeft: spinsAllowed(p) - p.spins.length,
+    bonusSpins: p.bonusSpins || 0,
+    bestScore: p.bestScore || 0,
+    nextMilestone: { score: milestoneScore((p.milestones || 0) + 1), spins: (p.milestones || 0) + 1 },
     spinWins: p.spins.filter(Boolean).length,
     winningTickets: winning,
   };
@@ -117,6 +146,7 @@ function settings() {
     winningTickets: WINNING_TICKETS,
     spinsPerPerson: SPINS_PER_PERSON,
     spinWinChance: SPIN_WIN_CHANCE,
+    gameFirstMilestone: GAME_FIRST_MILESTONE,
   };
 }
 
@@ -187,6 +217,7 @@ const routes = {
       ticketsLeft: TOTAL_TICKETS - usedTickets().size,
       participants: state.participants.map((p) => p.name),
       draw: publicDraw(),
+      leaderboard: leaderboard(),
     });
   },
 
@@ -230,12 +261,48 @@ const routes = {
   'POST /api/spin': (req, res) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    if (p.spins.length >= SPINS_PER_PERSON) return sendJson(res, 400, { error: 'Du har brukt opp alle spinnene dine.' });
+    if (p.spins.length >= spinsAllowed(p)) return sendJson(res, 400, { error: 'Du har brukt opp alle spinnene dine.' });
 
     const win = crypto.randomInt(1_000_000) < SPIN_WIN_CHANCE * 1_000_000;
     p.spins.push(win);
     saveState();
     sendJson(res, 200, { win, me: meView(p) });
+  },
+
+  'POST /api/game/start': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const gameId = crypto.randomBytes(16).toString('hex');
+    // Kun ett aktivt spill per person om gangen
+    for (const [id, g] of games) if (g.token === p.token) games.delete(id);
+    games.set(gameId, { token: p.token, start: Date.now() });
+    sendJson(res, 200, { gameId });
+  },
+
+  'POST /api/game/end': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const game = games.get(String(body.gameId || ''));
+    if (!game || game.token !== p.token) return sendJson(res, 400, { error: 'Ukjent spill. Prøv igjen.' });
+    games.delete(String(body.gameId));
+
+    const score = Math.floor(Number(body.score));
+    if (!Number.isFinite(score) || score < 0) return sendJson(res, 400, { error: 'Ugyldig poengsum.' });
+    // Rørene kommer med fast takt, så poengsummen kan ikke være høyere enn tiden tillater.
+    const maxPossible = Math.floor((Date.now() - game.start) / GAME_PIPE_INTERVAL_MS) + 1;
+    if (score > maxPossible) return sendJson(res, 400, { error: 'Den poengsummen ser litt mistenkelig ut 🤨' });
+
+    const isRecord = score > (p.bestScore || 0);
+    if (isRecord) p.bestScore = score;
+
+    const reached = milestonesFor(p.bestScore || 0);
+    let earned = 0;
+    for (let k = (p.milestones || 0) + 1; k <= reached; k++) earned += k;
+    p.milestones = Math.max(p.milestones || 0, reached);
+    p.bonusSpins = (p.bonusSpins || 0) + earned;
+    if (isRecord || earned) saveState();
+
+    sendJson(res, 200, { score, isRecord, earnedSpins: earned, me: meView(p), leaderboard: leaderboard() });
   },
 
   'POST /api/admin/login': (req, res, body) => {
@@ -246,6 +313,8 @@ const routes = {
         name: p.name,
         tickets: p.tickets,
         spinsUsed: p.spins.length,
+        spinsAllowed: spinsAllowed(p),
+        bestScore: p.bestScore || 0,
         spinWins: p.spins.filter(Boolean).length,
       })),
     });

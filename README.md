@@ -7,6 +7,7 @@ Nettside for lønningspils med lodd, loddtrekning og lykkehjul.
 - **Lodd:** Deltakere åpner linken og skriver navnet sitt. De får da 5 tilfeldige lodd av totalt 100.
 - **Én per person:** Samme navn kan ikke brukes to ganger, og hver enhet (cookie) og IP-adresse kan bare registrere én person.
 - **Lykkehjul:** Hver deltaker har 3 spinn. Hvert spinn har 15 % sjanse for øl. Resultatet avgjøres på serveren, så det kan ikke jukses fra nettleseren.
+- **Flappy Sjef:** På `/spill.html` kan man spille Flappy Bird med sjefens ansikt for å tjene flere spinn. 50 poeng gir 1 nytt spinn, 100 gir 2, 200 gir 3, 400 gir 4 osv. Hver belønning gis én gang per person. Det finnes en toppliste med beste poengsum per person. Serveren avviser poengsummer som er umulige å nå på tiden spillet varte. Sjefens ansikt ligger i `public/boss.png`.
 - **Loddtrekning:** Admin går til `/admin.html`, skriver passordet og trykker **Kjør loddtrekning**. Da blir 10 av de 100 loddene tilfeldig trukket ut som vinnerlodd, og hvert av dem er verdt én øl. Resultatet vises for alle.
 
 ## Kjøre lokalt
@@ -29,6 +30,7 @@ ADMIN_PASSWORD=hemmelig npm start
 | `WINNING_TICKETS` | `10` | Antall vinnerlodd (øl) |
 | `SPINS_PER_PERSON` | `3` | Spinn per deltaker |
 | `SPIN_WIN_CHANCE` | `0.15` | Sjanse for øl per spinn |
+| `GAME_FIRST_MILESTONE` | `50` | Poeng for første ekstra spinn i Flappy Sjef (dobles for hver neste) |
 | `DRAW_FROM` | `all` | `all` = trekk blant alle 100 lodd, `assigned` = kun blant utdelte lodd |
 | `ONE_PER_IP` | `true` | Én registrering per IP-adresse |
 | `TRUST_PROXY` | `false` | Sett til `true` bak en proxy (Render, Railway, Fly osv.) så riktig IP brukes |

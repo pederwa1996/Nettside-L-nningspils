@@ -107,6 +107,10 @@ function render() {
   $('join-section').classList.toggle('hidden', !!me || !!draw);
   $('me-section').classList.toggle('hidden', !me);
   $('wheel-section').classList.toggle('hidden', !me);
+  $('game-card').classList.toggle('hidden', !me);
+  const first = settings.gameFirstMilestone;
+  $('game-rule').textContent = `${first} poeng gir 1 spinn, ${first * 2} gir 2, ${first * 4} gir 3, ${first * 8} gir 4 osv.`;
+  renderLeaderboard(data.leaderboard, me);
 
   if (me) {
     $('me-name').textContent = me.name;
@@ -155,6 +159,21 @@ function render() {
     const li = document.createElement('li');
     li.textContent = n;
     $('participants').appendChild(li);
+  });
+}
+
+function renderLeaderboard(list, me) {
+  $('leaderboard').innerHTML = '';
+  if (!list.length) {
+    $('leaderboard').innerHTML = '<li class="muted">Ingen har spilt ennå.</li>';
+    return;
+  }
+  list.slice(0, 10).forEach((e, i) => {
+    const li = document.createElement('li');
+    if (me && e.name === me.name) li.classList.add('me');
+    li.innerHTML = `<span class="rank">${['🥇', '🥈', '🥉'][i] || `${i + 1}.`}</span><span class="lb-name"></span><span class="lb-score">${e.score}</span>`;
+    li.querySelector('.lb-name').textContent = e.name;
+    $('leaderboard').appendChild(li);
   });
 }
 

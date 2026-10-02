@@ -26,7 +26,7 @@ async function load() {
   $('rows').innerHTML = '';
   data.participants.forEach((p) => {
     const tr = document.createElement('tr');
-    [p.name, p.tickets.join(', '), p.spinsUsed, p.spinWins].forEach((v) => {
+    [p.name, p.tickets.join(', '), `${p.spinsUsed}/${p.spinsAllowed}`, p.spinWins, p.bestScore].forEach((v) => {
       const td = document.createElement('td');
       td.textContent = v;
       tr.appendChild(td);
