@@ -23,7 +23,8 @@ const PIPE_EVERY = 90; // steg = 1,5 sekunder (må stemme med serveren)
 const PIPE_W = 70;
 const GAP = 170;
 const BIRD_X = 100;
-const BIRD_R = 22;
+const BIRD_R = 22; // kollisjonsradius
+const FACE_R = 32; // tegnes større enn kollisjonen så sjefen synes godt
 
 const canvas = $('game');
 const ctx = canvas.getContext('2d');
@@ -156,20 +157,20 @@ function drawFace() {
   ctx.translate(BIRD_X, bird.y);
   ctx.rotate(Math.max(-0.5, Math.min(1.2, bird.v / 10)));
   ctx.beginPath();
-  ctx.arc(0, 0, BIRD_R + 4, 0, Math.PI * 2);
+  ctx.arc(0, 0, FACE_R + 3, 0, Math.PI * 2);
   ctx.fillStyle = '#fff';
   ctx.fill();
   if (faceReady) {
     ctx.beginPath();
-    ctx.arc(0, 0, BIRD_R + 2, 0, Math.PI * 2);
+    ctx.arc(0, 0, FACE_R, 0, Math.PI * 2);
     ctx.clip();
-    const s = (BIRD_R + 2) * 2;
+    const s = FACE_R * 2;
     const ratio = face.width / face.height;
     const dw = ratio > 1 ? s * ratio : s;
     const dh = ratio > 1 ? s : s / ratio;
     ctx.drawImage(face, -dw / 2, -dh / 2, dw, dh);
   } else {
-    ctx.font = `${BIRD_R * 2}px system-ui`;
+    ctx.font = `${FACE_R * 2}px system-ui`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('😎', 0, 2);
