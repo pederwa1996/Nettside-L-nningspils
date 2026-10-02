@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin – Lønningspils</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>🔐 Admin</h1>
+    <p class="sub"><a href="/">← Tilbake</a></p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Logg inn</h2>
+      <form id="login-form">
+        <input id="password" type="password" placeholder="Admin-passord" required>
+        <button type="submit">Logg inn</button>
+      </form>
+      <p id="msg" class="error"></p>
+    </section>
+
+    <section id="panel" class="card hidden">
+      <h2>Loddtrekning</h2>
+      <button id="draw-btn" class="big">🎲 Kjør loddtrekning</button>
+      <div id="draw-result"></div>
+
+      <h2>Deltakere (<span id="count">0</span>)</h2>
+      <table class="admin-table">
+        <thead><tr><th>Navn</th><th>Lodd</th><th>Spinn</th><th>Øl fra hjul</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+
+      <h2>Farlig sone</h2>
+      <div class="danger">
+        <button id="reset-draw-btn" class="secondary">Angre trekning</button>
+        <button id="reset-all-btn" class="secondary">Slett alt og start på nytt</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/admin.js"></script>
+</body>
+</html>

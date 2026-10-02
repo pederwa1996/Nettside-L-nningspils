@@ -1,0 +1,13 @@
+{
+  "name": "lonningspils",
+  "version": "1.0.0",
+  "description": "Lodd, loddtrekning og lykkehjul for lønningspils",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

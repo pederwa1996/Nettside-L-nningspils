@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lønningspils 🍺</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>🍺 Lønningspils</h1>
+    <p class="sub">Hent loddene dine, spinn hjulet og vinn øl!</p>
+  </header>
+
+  <main>
+    <!-- Registrering -->
+    <section id="join-section" class="card hidden">
+      <h2>Bli med</h2>
+      <p>Skriv inn navnet ditt, så får du <strong id="tpp">5</strong> lodd i trekningen og <strong id="spp">3</strong> spinn på lykkehjulet.</p>
+      <form id="join-form">
+        <input id="name" type="text" placeholder="Navnet ditt" maxlength="40" autocomplete="name" required>
+        <button type="submit">Hent lodd 🎟️</button>
+      </form>
+      <p class="note">Én registrering per person. Det er ikke lov å lage flere navn.</p>
+      <p id="join-error" class="error"></p>
+    </section>
+
+    <!-- Mine lodd -->
+    <section id="me-section" class="card hidden">
+      <h2>Hei, <span id="me-name"></span>! 👋</h2>
+      <p>Dine lodd:</p>
+      <div id="my-tickets" class="tickets"></div>
+      <p id="my-result" class="result"></p>
+    </section>
+
+    <!-- Lykkehjul -->
+    <section id="wheel-section" class="card hidden">
+      <h2>Lykkehjulet 🎡</h2>
+      <p>Du har <strong id="spins-left">0</strong> spinn igjen. Hvert spinn har <strong id="chance">15 %</strong> sjanse for øl.</p>
+      <div class="wheel-wrap">
+        <div class="pointer">▼</div>
+        <canvas id="wheel" width="600" height="600"></canvas>
+      </div>
+      <button id="spin-btn">Spinn! 🎰</button>
+      <p id="spin-result" class="result"></p>
+      <p id="spin-total" class="note"></p>
+    </section>
+
+    <!-- Loddtrekning -->
+    <section class="card">
+      <h2>Loddtrekning 🎟️</h2>
+      <p><span id="win-count">10</span> av <span id="total-count">100</span> lodd er verdt én øl hver.</p>
+      <div id="draw-pending">
+        <p class="muted">Trekningen er ikke gjennomført ennå. Følg med!</p>
+        <p class="note"><span id="participant-count">0</span> deltakere · <span id="tickets-left">100</span> lodd igjen</p>
+      </div>
+      <div id="draw-done" class="hidden">
+        <p>Vinnerloddene er:</p>
+        <ul id="winners" class="winners"></ul>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Deltakere</h2>
+      <ul id="participants" class="participants"></ul>
+    </section>
+  </main>
+
+  <footer><a href="/admin.html">Admin</a></footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
