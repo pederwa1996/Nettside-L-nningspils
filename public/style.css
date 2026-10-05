@@ -160,3 +160,46 @@ footer a { color: var(--muted); }
 .leaderboard .rank { width: 32px; text-align: center; }
 .leaderboard .lb-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .leaderboard .lb-score { font-weight: 800; color: var(--gold); }
+
+/* Duell */
+.highlight { box-shadow: 0 0 0 2px var(--gold), 0 6px 24px rgba(0, 0, 0, 0.3); }
+.big-number { font-size: 1.3rem; margin: 0; }
+.big-number strong { color: var(--gold); font-size: 1.6rem; }
+.field { display: block; margin-bottom: 14px; font-weight: 600; }
+.field-label { font-weight: 600; margin-bottom: 8px; }
+select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 2px solid #34384f;
+  background: #14161f;
+  color: var(--text);
+  font-size: 1rem;
+}
+.stepper { display: flex; align-items: center; gap: 16px; margin-top: 6px; }
+.stepper span { font-size: 1.5rem; font-weight: 800; min-width: 32px; text-align: center; }
+.stepper button { width: 48px; padding: 10px 0; font-size: 1.3rem; }
+.moves { display: flex; gap: 10px; margin-bottom: 10px; }
+.move {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  background: #2c2f42;
+  color: var(--text);
+}
+.move:hover:not(:disabled) { background: var(--gold); color: #1b1e2e; }
+.move-emoji { font-size: 2.2rem; }
+.duel-box { padding: 12px 0; border-bottom: 1px solid #2c2f42; }
+.duel-box:last-child { border-bottom: none; }
+.duel-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #2c2f42; }
+.small-btn { padding: 8px 14px; font-size: 0.9rem; }
+.duel-list { list-style: none; padding: 0; margin: 0; }
+.duel-list li { padding: 8px 0; border-bottom: 1px solid #2c2f42; }
+.duel-list li.won { color: var(--green); }
+.duel-list li.lost { color: var(--red); }
+.duel-alert { background: rgba(245, 179, 1, 0.15); color: var(--gold); padding: 10px 12px; border-radius: 10px; font-weight: 700; }

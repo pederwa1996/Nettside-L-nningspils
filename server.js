@@ -27,7 +27,7 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // ---- Lagring ----
 function freshState() {
-  return { participants: [], draw: null };
+  return { participants: [], draw: null, duels: [] };
 }
 
 function loadState() {
@@ -39,6 +39,7 @@ function loadState() {
 }
 
 let state = loadState();
+state.duels = state.duels || [];
 const games = new Map(); // aktive spill: gameId -> { token, start }
 
 function saveState() {
@@ -105,6 +106,45 @@ function milestonesFor(score) {
   let k = 0;
   while (score >= milestoneScore(k + 1)) k++;
   return k;
+}
+
+// ---- Duell (stein, saks, papir med innsats) ----
+const MOVES = ['stein', 'saks', 'papir'];
+const BEATS = { stein: 'saks', saks: 'papir', papir: 'stein' };
+const MAX_OPEN_DUELS = 3;
+
+function spinsLeft(p) {
+  return spinsAllowed(p) - p.spins.length;
+}
+
+// Innsatsen trekkes fra/legges til via bonusSpins, så spinn kan flyttes mellom spillere.
+function addSpins(p, n) {
+  p.bonusSpins = (p.bonusSpins || 0) + n;
+}
+
+function findParticipant(name) {
+  return state.participants.find((p) => p.name === name) || null;
+}
+
+function duelView(d, viewer) {
+  const v = {
+    id: d.id,
+    challenger: d.challenger,
+    opponent: d.opponent,
+    stake: d.stake,
+    status: d.status, // pending | done | declined | cancelled
+    createdAt: d.createdAt,
+    finishedAt: d.finishedAt || null,
+  };
+  // Trekkene vises først når duellen er ferdig, så motstanderen ikke kan se hva utfordreren valgte.
+  if (d.status === 'done') {
+    v.challengerMove = d.challengerMove;
+    v.opponentMove = d.opponentMove;
+    v.winner = d.winner; // navn, eller null ved uavgjort
+  } else if (viewer && viewer.name === d.challenger) {
+    v.challengerMove = d.challengerMove;
+  }
+  return v;
 }
 
 function leaderboard() {
@@ -210,14 +250,16 @@ function serveStatic(req, res) {
 
 const routes = {
   'GET /api/state': (req, res) => {
+    const me = currentParticipant(req);
     sendJson(res, 200, {
       settings: settings(),
-      me: meView(currentParticipant(req)),
+      me: meView(me),
       participantCount: state.participants.length,
       ticketsLeft: TOTAL_TICKETS - usedTickets().size,
       participants: state.participants.map((p) => p.name),
       draw: publicDraw(),
       leaderboard: leaderboard(),
+      incomingDuels: me ? state.duels.filter((d) => d.status === 'pending' && d.opponent === me.name).length : 0,
     });
   },
 
@@ -303,6 +345,95 @@ const routes = {
     if (isRecord || earned) saveState();
 
     sendJson(res, 200, { score, isRecord, earnedSpins: earned, me: meView(p), leaderboard: leaderboard() });
+  },
+
+  'GET /api/duels': (req, res) => {
+    const p = currentParticipant(req);
+    const mine = p ? state.duels.filter((d) => d.challenger === p.name || d.opponent === p.name) : [];
+    sendJson(res, 200, {
+      me: meView(p),
+      opponents: state.participants.filter((o) => !p || o.name !== p.name).map((o) => o.name),
+      incoming: mine.filter((d) => d.status === 'pending' && d.opponent === p.name).map((d) => duelView(d, p)),
+      outgoing: mine.filter((d) => d.status === 'pending' && d.challenger === p.name).map((d) => duelView(d, p)),
+      history: mine.filter((d) => d.status !== 'pending').slice(-10).reverse().map((d) => duelView(d, p)),
+      feed: state.duels.filter((d) => d.status === 'done').slice(-10).reverse().map((d) => duelView(d, null)),
+    });
+  },
+
+  'POST /api/duel/challenge': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const opponent = findParticipant(String(body.opponent || ''));
+    if (!opponent) return sendJson(res, 400, { error: 'Fant ikke motstanderen.' });
+    if (opponent.name === p.name) return sendJson(res, 400, { error: 'Du kan ikke utfordre deg selv 😅' });
+    const stake = Math.floor(Number(body.stake));
+    if (!Number.isFinite(stake) || stake < 1) return sendJson(res, 400, { error: 'Innsatsen må være minst 1 spinn.' });
+    if (stake > spinsLeft(p)) return sendJson(res, 400, { error: `Du har bare ${spinsLeft(p)} spinn å satse.` });
+    if (!MOVES.includes(body.move)) return sendJson(res, 400, { error: 'Velg stein, saks eller papir.' });
+    const open = state.duels.filter((d) => d.status === 'pending' && d.challenger === p.name).length;
+    if (open >= MAX_OPEN_DUELS) return sendJson(res, 400, { error: `Du kan ha maks ${MAX_OPEN_DUELS} åpne utfordringer.` });
+
+    addSpins(p, -stake); // innsatsen holdes av til duellen er ferdig
+    const duel = {
+      id: crypto.randomBytes(8).toString('hex'),
+      challenger: p.name,
+      opponent: opponent.name,
+      stake,
+      challengerMove: body.move,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    state.duels.push(duel);
+    saveState();
+    sendJson(res, 200, { duel: duelView(duel, p), me: meView(p) });
+  },
+
+  'POST /api/duel/respond': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const d = state.duels.find((x) => x.id === body.duelId && x.status === 'pending' && x.opponent === p.name);
+    if (!d) return sendJson(res, 400, { error: 'Fant ikke utfordringen. Kanskje den er trukket tilbake?' });
+    const challenger = findParticipant(d.challenger);
+
+    if (body.decline) {
+      d.status = 'declined';
+      d.finishedAt = new Date().toISOString();
+      if (challenger) addSpins(challenger, d.stake);
+      saveState();
+      return sendJson(res, 200, { duel: duelView(d, p), me: meView(p) });
+    }
+
+    if (!MOVES.includes(body.move)) return sendJson(res, 400, { error: 'Velg stein, saks eller papir.' });
+    if (d.stake > spinsLeft(p)) return sendJson(res, 400, { error: `Du trenger ${d.stake} spinn for å godta, men har bare ${spinsLeft(p)}.` });
+
+    d.opponentMove = body.move;
+    d.status = 'done';
+    d.finishedAt = new Date().toISOString();
+    if (d.challengerMove === d.opponentMove) {
+      d.winner = null; // uavgjort: utfordreren får innsatsen tilbake, motstanderen satser ingenting
+      if (challenger) addSpins(challenger, d.stake);
+    } else if (BEATS[d.challengerMove] === d.opponentMove) {
+      d.winner = d.challenger;
+      addSpins(p, -d.stake);
+      if (challenger) addSpins(challenger, d.stake * 2);
+    } else {
+      d.winner = p.name;
+      addSpins(p, d.stake); // utfordrerens innsats er allerede trukket
+    }
+    saveState();
+    sendJson(res, 200, { duel: duelView(d, p), me: meView(p) });
+  },
+
+  'POST /api/duel/cancel': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const d = state.duels.find((x) => x.id === body.duelId && x.status === 'pending' && x.challenger === p.name);
+    if (!d) return sendJson(res, 400, { error: 'Fant ikke utfordringen.' });
+    d.status = 'cancelled';
+    d.finishedAt = new Date().toISOString();
+    addSpins(p, d.stake);
+    saveState();
+    sendJson(res, 200, { me: meView(p) });
   },
 
   'POST /api/admin/login': (req, res, body) => {

@@ -8,6 +8,7 @@ Nettside for lønningspils med lodd, loddtrekning og lykkehjul.
 - **Én per person:** Samme navn kan ikke brukes to ganger, og hver enhet (cookie) og IP-adresse kan bare registrere én person.
 - **Lykkehjul:** Hver deltaker har 3 spinn. Hvert spinn har 15 % sjanse for øl. Resultatet avgjøres på serveren, så det kan ikke jukses fra nettleseren.
 - **Flappy Sjef:** På `/spill.html` kan man spille Flappy Bird med sjefens ansikt for å tjene flere spinn. 50 poeng gir 1 nytt spinn, 100 gir 2, 200 gir 3, 400 gir 4 osv. Hver belønning gis én gang per person. Det finnes en toppliste med beste poengsum per person. Serveren avviser poengsummer som er umulige å nå på tiden spillet varte. Sjefens ansikt ligger i `public/boss.png`.
+- **Duell:** På `/duell.html` kan man utfordre en annen deltaker i stein, saks, papir og satse spinn. Utfordreren velger motstander, innsats og sitt hemmelige trekk. Innsatsen holdes av til motstanderen svarer. Motstanderen kan godta (må ha nok spinn) eller avslå. Vinneren tar hele potten. Ved uavgjort eller avslag får utfordreren innsatsen tilbake. Spinn bytter bare eier, så det blir ikke flere spinn totalt.
 - **Loddtrekning:** Admin går til `/admin.html`, skriver passordet og trykker **Kjør loddtrekning**. Da blir 10 av de 100 loddene tilfeldig trukket ut som vinnerlodd, og hvert av dem er verdt én øl. Resultatet vises for alle.
 
 ## Kjøre lokalt

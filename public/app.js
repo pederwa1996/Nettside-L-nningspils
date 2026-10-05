@@ -108,6 +108,11 @@ function render() {
   $('me-section').classList.toggle('hidden', !me);
   $('wheel-section').classList.toggle('hidden', !me);
   $('game-card').classList.toggle('hidden', !me);
+  $('duel-card').classList.toggle('hidden', !me);
+  $('duel-alert').classList.toggle('hidden', !data.incomingDuels);
+  $('duel-alert').textContent = data.incomingDuels === 1
+    ? '🔔 Du har 1 utfordring som venter på svar!'
+    : `🔔 Du har ${data.incomingDuels} utfordringer som venter på svar!`;
   const first = settings.gameFirstMilestone;
   $('game-rule').textContent = `${first} poeng gir 1 spinn, ${first * 2} gir 2, ${first * 4} gir 3, ${first * 8} gir 4 osv.`;
   renderLeaderboard(data.leaderboard, me);
