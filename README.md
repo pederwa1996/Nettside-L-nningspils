@@ -25,6 +25,7 @@ Nettside for lønningspils med lodd, loddtrekning og lykkehjul.
 - **Chat:** På `/chat.html` kan alle prate live. Meldinger kommer fram med en gang via Server-Sent Events. De siste 300 meldingene lagres.
 - **Story:** Øverst på forsiden og i chatten. Trykk «Din story» for å dele et bilde med valgfri tekst. Bildene slettes automatisk etter 24 timer. Man kan slette sine egne bilder.
 - **Spinn-admin:** På `/admin-spinn.html` (knapp øverst på admin-siden) kan admin gi eller ta spinn fra hver deltaker med + og −, i steg på 1, 2, 5 eller 10. Man kan ikke ta flere spinn enn personen har. Alle endringer logges på siden.
+- **Spillmester (admin som egen bruker):** Registrer deg som vanlig deltaker, og logg inn på `/admin.html` med passordet fra den samme enheten. Da kobles admin til profilen din (👑 Spillmester). Etterpå er du admin automatisk på den enheten, uten passord: admin-sidene, spinn-admin og bestillingsboblen virker direkte, og forsiden får en «🔐 Admin»-knapp. Passordet virker fortsatt fra alle enheter.
 - **Moderering:** Admin kan slette story-bilder og chatmeldinger, eller tømme hele chatten.
 - **Loddtrekning:** Admin går til `/admin.html`, skriver passordet og trykker **Kjør loddtrekning**. Da blir 10 av de 100 loddene tilfeldig trukket ut som vinnerlodd, og hvert av dem er verdt én øl. Resultatet vises for alle.
 

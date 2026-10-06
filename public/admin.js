@@ -202,7 +202,7 @@ async function login() {
     showMsg('Innlogget ✅', true);
     // Husk passordet i denne fanen, så spinn-admin-siden slipper ny innlogging
     try {
-      sessionStorage.setItem('adminPassword', password);
+      if (password) sessionStorage.setItem('adminPassword', password);
     } catch { /* ignorer */ }
     showBubble();
   } catch (err) {
@@ -224,6 +224,8 @@ try {
   password = sessionStorage.getItem('adminPassword') || '';
 } catch { /* ignorer */ }
 if (password) login();
+// Spillmesteren (admin-profilen) slipper passordet på enheter der den er logget inn
+else fetch('/api/admin/me').then((r) => r.json()).then((r) => r.admin && login()).catch(() => {});
 
 $('draw-btn').addEventListener('click', async () => {
   if (!confirm('Kjøre loddtrekningen nå? Den kan bare kjøres én gang.')) return;

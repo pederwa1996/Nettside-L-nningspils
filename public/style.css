@@ -938,3 +938,5 @@ a.profile-link:hover span { text-decoration: underline; }
 }
 @keyframes toast-in { from { opacity: 0; transform: translateY(-20px) scale(0.9); } }
 @keyframes toast-out { to { opacity: 0; transform: translateY(-20px); } }
+.admin-badge-tag { display: inline-block; margin: 2px 0 4px; padding: 3px 12px; border-radius: 999px; background: linear-gradient(180deg, #ffd977, #e0a21a); color: #3a2200; font-weight: 800; font-size: 0.85rem; }
+#admin-btn { margin-top: 10px; margin-right: 6px; }

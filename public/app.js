@@ -135,7 +135,8 @@ function render() {
   renderStandings(data.standings, me);
 
   if (me) {
-    $('me-name').textContent = me.name;
+    $('me-name').textContent = me.isAdmin ? `${me.name} 👑` : me.name;
+    $('admin-btn').classList.toggle('hidden', !me.isAdmin);
     $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 64));
     $('avatar-missing').classList.toggle('hidden', !!me.avatar);
     const winSet = new Set(me.winningTickets);
@@ -190,7 +191,7 @@ function render() {
     a.className = 'profile-link';
     a.href = `/profil.html?navn=${encodeURIComponent(n)}`;
     const span = document.createElement('span');
-    span.textContent = n;
+    span.textContent = data.admins.includes(n) ? `${n} 👑` : n;
     a.append(avatarEl(data.avatars[n], n, 28), span);
     li.appendChild(a);
     $('participants').appendChild(li);
@@ -216,7 +217,7 @@ function renderStandings(list, me) {
     const who = document.createElement('td');
     who.className = 'who';
     const name = document.createElement('span');
-    name.textContent = e.name;
+    name.textContent = data.admins.includes(e.name) ? `${e.name} 👑` : e.name;
     const link = document.createElement('a');
     link.className = 'profile-link';
     link.href = `/profil.html?navn=${encodeURIComponent(e.name)}`;

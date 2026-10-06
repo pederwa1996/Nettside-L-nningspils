@@ -7,8 +7,12 @@
   try {
     password = sessionStorage.getItem('adminPassword') || '';
   } catch { /* ignorer */ }
-  if (!password) return;
+  if (password) start();
+  // Spillmesteren (admin-profilen) får boblen uten passord
+  else fetch('/api/admin/me').then((r) => r.json()).then((r) => r.admin && start()).catch(() => {});
 
+  function start() {
+  if (document.querySelector('.admin-bubble')) return;
   let lastCount = null;
   let open = false;
   let audio = null;
@@ -178,4 +182,5 @@
   else if (window.EventSource) new EventSource('/api/events').addEventListener('orders', load);
   setInterval(load, 15000);
   load();
+  }
 })();

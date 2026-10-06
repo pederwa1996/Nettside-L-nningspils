@@ -690,6 +690,7 @@ function meView(p) {
   return {
     name: p.name,
     avatar: p.avatar || null,
+    isAdmin: !!p.isAdmin,
     tickets: p.tickets,
     spinsLeft: spinsAllowed(p) - p.spins.length,
     bonusSpins: p.bonusSpins || 0,
@@ -714,10 +715,21 @@ function settings() {
   };
 }
 
-function checkAdmin(body) {
+function checkPassword(body) {
   const given = Buffer.from(String(body.password || ''));
   const real = Buffer.from(ADMIN_PASSWORD);
   return given.length === real.length && crypto.timingSafeEqual(given, real);
+}
+
+// Admin er enten den som kan passordet, eller deltakeren som er koblet til admin (spillmesteren)
+function checkAdmin(body, req) {
+  if (checkPassword(body)) return true;
+  const p = req ? currentParticipant(req) : null;
+  return !!(p && p.isAdmin);
+}
+
+function adminNames() {
+  return state.participants.filter((p) => p.isAdmin).map((p) => p.name);
 }
 
 // ---- HTTP ----
@@ -808,6 +820,7 @@ const routes = {
       ticketsLeft: TOTAL_TICKETS - usedTickets().size,
       participants: state.participants.map((p) => p.name),
       avatars: avatars(),
+      admins: adminNames(),
       draw: publicDraw(),
       leaderboard: leaderboard(),
       standings: standings(),
@@ -1122,7 +1135,7 @@ const routes = {
   },
 
   'POST /api/admin/story-delete': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const s = state.stories.find((x) => x.id === body.id);
     if (s) {
       deleteImage(s.url);
@@ -1134,7 +1147,7 @@ const routes = {
   },
 
   'POST /api/admin/chat-delete': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     state.chat = body.all ? [] : state.chat.filter((m) => m.id !== body.id);
     saveState();
     broadcast('chat-reload', {});
@@ -1238,7 +1251,7 @@ const routes = {
   },
 
   'POST /api/admin/mogg-remove': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     delete state.moggBest[String(body.name || '')];
     saveState();
     sendJson(res, 200, { ok: true });
@@ -1286,7 +1299,7 @@ const routes = {
   },
 
   'POST /api/admin/task-review': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const t = state.tasks.find((x) => x.id === body.id && x.status === 'pending');
     if (!t) return sendJson(res, 400, { error: 'Fant ikke innleveringen.' });
     const cur = currentAttempt(t);
@@ -1311,7 +1324,7 @@ const routes = {
   },
 
   'POST /api/admin/task-add': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const title = String(body.title || '').trim();
     if (title.length < 3) return sendJson(res, 400, { error: 'Oppgaven trenger en tittel.' });
     state.tasks.push(newTask({ ...body, title }));
@@ -1321,7 +1334,7 @@ const routes = {
   },
 
   'POST /api/admin/task-delete': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const t = state.tasks.find((x) => x.id === body.id);
     if (t) {
       t.attempts.forEach((a) => deleteImage(a.url));
@@ -1441,7 +1454,7 @@ const routes = {
 
   // ---- Admin: gi eller ta spinn ----
   'POST /api/admin/players': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     sendJson(res, 200, {
       players: state.participants
         .map((p) => ({ name: p.name, avatar: p.avatar || null, spinsLeft: spinsLeft(p) }))
@@ -1451,7 +1464,7 @@ const routes = {
   },
 
   'POST /api/admin/spins': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const p = findParticipant(String(body.name || ''));
     if (!p) return sendJson(res, 404, { error: 'Fant ikke deltakeren.' });
     let delta = Math.trunc(Number(body.delta));
@@ -1528,7 +1541,7 @@ const routes = {
   },
 
   'POST /api/admin/orders': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const av = avatars();
     const withAvatar = (o) => ({ ...orderView(o), avatar: av[o.name] || null });
     sendJson(res, 200, {
@@ -1538,7 +1551,7 @@ const routes = {
   },
 
   'POST /api/admin/order-status': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const o = state.orders.find((x) => x.id === body.id && x.status === 'pending');
     if (!o) return sendJson(res, 400, { error: 'Fant ikke bestillingen.' });
     if (body.status === 'delivered') o.status = 'delivered';
@@ -1562,9 +1575,9 @@ const routes = {
     const acts = state.activity.filter((a) => a.name === p.name).slice().reverse();
     sendJson(res, 200, {
       viewer: viewer ? viewer.name : null,
-      profile: { name: p.name, avatar: p.avatar || null, joinedAt: p.joinedAt, stats: profileStats(p) },
+      profile: { name: p.name, avatar: p.avatar || null, joinedAt: p.joinedAt, isAdmin: !!p.isAdmin, stats: profileStats(p) },
       activity: acts.slice(0, 150).map((a) => activityView(a, viewer)),
-      people: state.participants.map((x) => ({ name: x.name, avatar: x.avatar || null })),
+      people: state.participants.map((x) => ({ name: x.name, avatar: x.avatar || null, isAdmin: !!x.isAdmin })),
     });
   },
 
@@ -1602,7 +1615,7 @@ const routes = {
 
   'POST /api/react/comment-delete': (req, res, body) => {
     const p = currentParticipant(req);
-    const isAdmin = checkAdmin(body);
+    const isAdmin = checkAdmin(body, req);
     const a = findActivity(String(body.id || ''));
     const r = a && state.reactions[a.id];
     const c = r && r.comments.find((x) => x.id === body.commentId);
@@ -1614,8 +1627,20 @@ const routes = {
     sendJson(res, 200, { activity: activityView(a, p) });
   },
 
+  'GET /api/admin/me': (req, res) => {
+    const p = currentParticipant(req);
+    sendJson(res, 200, { admin: !!(p && p.isAdmin), name: p ? p.name : null });
+  },
+
   'POST /api/admin/login': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
+    // Første innlogging med passord fra en enhet der man er registrert: koble admin til den profilen
+    const me = currentParticipant(req);
+    if (me && !me.isAdmin && checkPassword(body)) {
+      me.isAdmin = true;
+      addActivity(me.name, '👑', 'ble spillmester for kvelden');
+      saveState();
+    }
     sendJson(res, 200, {
       ok: true,
       participants: state.participants.map((p) => ({
@@ -1636,7 +1661,7 @@ const routes = {
   },
 
   'POST /api/admin/draw': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     if (state.draw) return sendJson(res, 400, { error: 'Loddtrekningen er allerede gjennomført.' });
 
     const pool = DRAW_FROM === 'assigned'
@@ -1656,14 +1681,14 @@ const routes = {
   },
 
   'POST /api/admin/reset-draw': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     state.draw = null;
     saveState();
     sendJson(res, 200, { ok: true });
   },
 
   'POST /api/admin/reset-all': (req, res, body) => {
-    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     state = freshState();
     saveState();
     fs.rmSync(MEDIA_DIR, { recursive: true, force: true });

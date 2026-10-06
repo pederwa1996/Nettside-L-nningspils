@@ -92,7 +92,7 @@
     try {
       await load();
       try {
-        sessionStorage.setItem('adminPassword', password);
+        if (password) sessionStorage.setItem('adminPassword', password);
       } catch { /* ignorer */ }
       $('login').classList.add('hidden');
       $('panel').classList.remove('hidden');
@@ -128,5 +128,7 @@
 
   // Logget inn tidligere i denne fanen? Da slipper man å skrive passordet på nytt
   if (password) login();
+  // Spillmesteren (admin-profilen) slipper passordet på enheter der den er logget inn
+  else fetch('/api/admin/me').then((r) => r.json()).then((r) => r.admin && login()).catch(() => {});
   setInterval(() => !$('panel').classList.contains('hidden') && load().catch(() => {}), 10000);
 })();

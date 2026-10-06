@@ -45,7 +45,7 @@
     data.people.forEach((p) => {
       const a = el('a', 'person' + (p.name === data.profile.name ? ' active' : ''));
       a.href = profileLink(p.name);
-      a.append(avatarEl(p.avatar, p.name, 48), el('span', 'person-name', p.name === data.viewer ? 'Deg' : p.name.split(' ')[0]));
+      a.append(avatarEl(p.avatar, p.name, 48), el('span', 'person-name', (p.isAdmin ? '👑 ' : '') + (p.name === data.viewer ? 'Deg' : p.name.split(' ')[0])));
       wrap.appendChild(a);
     });
     const active = wrap.querySelector('.active');
@@ -251,6 +251,7 @@
     $('profile').classList.remove('hidden');
     $('p-avatar').replaceChildren(avatarEl(p.avatar, p.name, 120));
     $('p-name').textContent = p.name === data.viewer ? `${p.name} (deg)` : p.name;
+    $('p-badge').classList.toggle('hidden', !p.isAdmin);
     $('p-joined').textContent = p.joinedAt ? `Med siden ${when(Date.parse(p.joinedAt))}` : '';
     renderPeople();
     renderStats(p.stats);
