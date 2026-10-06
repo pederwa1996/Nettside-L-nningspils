@@ -120,6 +120,7 @@ function render() {
   const first = settings.gameFirstMilestone;
   $('game-rule').textContent = `${first} poeng gir 1 spinn, ${first * 2} gir 2, ${first * 4} gir 3, ${first * 8} gir 4 osv.`;
   renderLeaderboard(data.leaderboard, me);
+  renderStandings(data.standings, me);
 
   if (me) {
     $('me-name').textContent = me.name;
@@ -170,6 +171,39 @@ function render() {
     const li = document.createElement('li');
     li.append(avatarEl(data.avatars[n], n, 28), document.createTextNode(n));
     $('participants').appendChild(li);
+  });
+}
+
+function renderStandings(list, me) {
+  const body = $('standings');
+  body.innerHTML = '';
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="4" class="muted">Ingen deltakere ennå.</td></tr>';
+    return;
+  }
+  let place = 0;
+  list.forEach((e, i) => {
+    // Like mange øl gir delt plassering
+    if (i === 0 || e.beers !== list[i - 1].beers) place = i;
+    const tr = document.createElement('tr');
+    if (me && e.name === me.name) tr.classList.add('me');
+    const rank = document.createElement('td');
+    rank.className = 'rank';
+    rank.textContent = e.beers ? ['🥇', '🥈', '🥉'][place] || `${place + 1}.` : '–';
+    const who = document.createElement('td');
+    who.className = 'who';
+    const name = document.createElement('span');
+    name.textContent = e.name;
+    who.append(avatarEl(data.avatars[e.name], e.name, 30), name);
+    const beers = document.createElement('td');
+    beers.className = 'num beers';
+    beers.textContent = e.beers;
+    beers.title = `${e.wheelBeers} fra lykkehjulet, ${e.ticketBeers} fra loddtrekningen`;
+    const spins = document.createElement('td');
+    spins.className = 'num';
+    spins.textContent = e.spinsLeft;
+    tr.append(rank, who, beers, spins);
+    body.appendChild(tr);
   });
 }
 

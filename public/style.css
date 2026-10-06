@@ -350,3 +350,15 @@ body.no-scroll { overflow: hidden; }
 .mogg-part .bar span { display: block; height: 100%; background: var(--gold); }
 .mogg-part .val { text-align: right; font-weight: 700; }
 #analyze { background: #0d0f17; }
+
+/* Leaderboard (øl og spinn) */
+.standings { width: 100%; border-collapse: collapse; }
+.standings th { text-align: left; font-size: 0.85rem; color: var(--muted); font-weight: 600; padding: 0 6px 8px; }
+.standings th:nth-child(3), .standings th:nth-child(4) { text-align: center; }
+.standings td { padding: 8px 6px; border-bottom: 1px solid #2c2f42; }
+.standings tr.me td { background: rgba(245, 179, 1, 0.12); }
+.standings .rank { width: 32px; text-align: center; }
+.standings .who { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.standings .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.standings .num { text-align: center; font-weight: 800; width: 64px; }
+.standings .beers { color: var(--gold); font-size: 1.15rem; }

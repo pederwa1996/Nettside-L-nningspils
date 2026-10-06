@@ -269,6 +269,18 @@ function duelView(d, viewer) {
   return v;
 }
 
+// Øl vunnet (lykkehjul + vinnerlodd) og spinn igjen per person
+function standings() {
+  const winning = new Set(state.draw ? state.draw.winningTickets : []);
+  return state.participants
+    .map((p) => {
+      const wheelBeers = p.spins.filter(Boolean).length;
+      const ticketBeers = p.tickets.filter((t) => winning.has(t)).length;
+      return { name: p.name, beers: wheelBeers + ticketBeers, wheelBeers, ticketBeers, spinsLeft: spinsLeft(p) };
+    })
+    .sort((a, b) => b.beers - a.beers || b.spinsLeft - a.spinsLeft || a.name.localeCompare(b.name, 'no'));
+}
+
 function leaderboard() {
   return state.participants
     .filter((p) => p.bestScore > 0)
@@ -404,6 +416,7 @@ const routes = {
       avatars: avatars(),
       draw: publicDraw(),
       leaderboard: leaderboard(),
+      standings: standings(),
       incomingDuels: me ? state.duels.filter((d) => d.status === 'pending' && d.opponent === me.name).length : 0,
       incomingMoggs: me ? state.moggs.filter((m) => m.status === 'pending' && m.opponent === me.name).length : 0,
     });
