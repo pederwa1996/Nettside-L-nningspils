@@ -107,6 +107,7 @@
     act(async () => {
       await api('/api/bar/order', { qty, pay, note: $('note').value });
       showMsg(`🍻 Bestilt ${qty} pils! Spillmesteren kommer med den til bordet.`, 'win');
+      slideBeer();
       qty = 1;
     });
   }
@@ -121,6 +122,66 @@
   });
   $('order-credit').addEventListener('click', () => order('credit'));
   $('order-flus').addEventListener('click', () => order('flus'));
+
+  // ---------- Baren som scene: bartender og krakker ----------
+  let admins = [];
+  let lastRooms = {};
+  fetch('/api/state').then((r) => r.json()).then((d) => {
+    admins = d.admins || [];
+    renderScene();
+  }).catch(() => {});
+
+  function renderScene() {
+    const stoolsEl = document.getElementById('stools');
+    if (!stoolsEl) return;
+    const meName = data && data.me ? data.me.name : null;
+    const here = (lastRooms['kasino-bar'] || []).slice();
+    // Spillmesteren står bak disken hvis hen er i baren
+    const bt = here.find((x) => admins.includes(x.name));
+    const tender = document.getElementById('bartender');
+    tender.innerHTML = '';
+    if (bt) {
+      tender.append(avatarEl(bt.avatar, bt.name, 46), Object.assign(document.createElement('span'), { textContent: `${bt.name.split(' ')[0]} 👑` }));
+      tender.classList.remove('away');
+    } else {
+      tender.append(Object.assign(document.createElement('div'), { className: 'bartender-emoji', textContent: '🤵' }), Object.assign(document.createElement('span'), { textContent: 'Spillmesteren' }));
+      tender.classList.add('away');
+    }
+    const guests = here.filter((x) => x !== bt);
+    const count = Math.max(6, guests.length + (guests.length % 2));
+    stoolsEl.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const g = guests[i];
+      const stool = document.createElement('div');
+      stool.className = 'stool' + (g ? ' taken' : '') + (g && g.name === meName ? ' me' : '');
+      if (g) {
+        const a = document.createElement('a');
+        a.href = `/profil.html?navn=${encodeURIComponent(g.name)}`;
+        a.className = 'stool-guest';
+        a.append(avatarEl(g.avatar, g.name, 42), Object.assign(document.createElement('span'), { textContent: g.name === meName ? 'Deg' : g.name.split(' ')[0] }));
+        stool.appendChild(a);
+      }
+      stool.appendChild(Object.assign(document.createElement('div'), { className: 'stool-seat' }));
+      stool.appendChild(Object.assign(document.createElement('div'), { className: 'stool-leg' }));
+      stoolsEl.appendChild(stool);
+    }
+    const n = here.length;
+    document.getElementById('bar-crowd').textContent = n <= 1 ? 'Stille i baren akkurat nå. Ta med noen! 🍻' : `${n} i baren nå 🍻`;
+  }
+
+  document.addEventListener('presence', (e) => {
+    lastRooms = e.detail.rooms || {};
+    renderScene();
+  });
+
+  // En pils sklir bortover disken når man bestiller
+  function slideBeer() {
+    const s = document.getElementById('bar-slide');
+    if (!s) return;
+    s.classList.remove('go');
+    void s.offsetWidth;
+    s.classList.add('go');
+  }
 
   // Oppdater når spillmesteren leverer
   onLive('orders', () => !busy && refresh());

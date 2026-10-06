@@ -1474,3 +1474,52 @@ body.kasino[data-tab="roulette"] .tab.active { background: linear-gradient(180de
 .tile-here { display: inline-flex; align-items: center; gap: 2px; margin-top: auto; padding-top: 6px; font-size: 0.75rem; color: #9ff0b5; font-weight: 700; }
 .tile-here .avatar { margin-left: -6px; border: 1px solid rgba(0, 0, 0, 0.5); }
 .tile-here .avatar:first-child { margin-left: 0; }
+
+/* =========================================================
+   Baren som scene
+   ========================================================= */
+.bar-scene { position: relative; margin: -6px -6px 6px; border-radius: 14px; overflow: hidden; padding-bottom: 10px;
+  background: linear-gradient(180deg, #24120a 0%, #3a1e0d 55%, #1a0d06 100%); box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6); }
+.bar-wall { position: relative; padding: 12px 10px 34px;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 200, 110, 0.35), transparent 70%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 2px, transparent 2px 46px),
+    linear-gradient(180deg, #4a2812, #2a150a); }
+.bar-neon { text-align: center; font-family: 'Lobster', cursive; font-size: 1.4rem; color: #fff1d0; margin-bottom: 8px;
+  text-shadow: 0 0 6px #ff9a3c, 0 0 14px #ff9a3c, 0 0 28px #ff6a00; animation: neon-flicker 7s infinite; }
+.bar-shelf { display: flex; justify-content: space-around; align-items: flex-end; padding: 0 6px 4px; margin-bottom: 8px;
+  border-bottom: 5px solid #8a5a2b; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5); font-size: 1.5rem;
+  filter: drop-shadow(0 0 6px rgba(255, 200, 120, 0.35)); }
+.bar-shelf span { display: inline-block; transform-origin: bottom; }
+.bar-shelf span:nth-child(odd) { transform: scale(0.9); }
+
+.bartender { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); z-index: 2; display: flex; flex-direction: column; align-items: center;
+  font-size: 0.72rem; font-weight: 800; color: #fff1d0; text-shadow: 0 1px 2px #000; }
+.bartender .avatar { border: 3px solid #f7b733; box-shadow: 0 0 14px rgba(247, 183, 51, 0.6); }
+.bartender-emoji { font-size: 2.6rem; line-height: 1; }
+.bartender.away { opacity: 0.75; }
+
+.bar-counter { position: relative; z-index: 3; height: 40px; margin-top: -8px;
+  background: linear-gradient(180deg, #c98a45 0%, #8a5226 30%, #5a3215 100%);
+  border-top: 4px solid #e8b04d; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); }
+.bar-counter::after { content: ''; position: absolute; left: 0; right: 0; bottom: 6px; height: 4px; background: linear-gradient(90deg, #b8862b, #ffe08a, #b8862b); opacity: 0.8; }
+.bar-taps { position: absolute; top: -30px; left: 14px; display: flex; gap: 10px; }
+.bar-taps i { display: block; width: 8px; height: 30px; border-radius: 4px 4px 2px 2px; background: linear-gradient(90deg, #8c8c8c, #f0f0f0, #8c8c8c); position: relative; }
+.bar-taps i::before { content: ''; position: absolute; top: -10px; left: -2px; width: 12px; height: 12px; border-radius: 3px; background: #c0392b; }
+.bar-taps i:nth-child(2)::before { background: #2e86de; }
+.bar-taps i:nth-child(3)::before { background: #f7b733; }
+.bar-slide { position: absolute; top: -26px; right: 100%; font-size: 1.6rem; opacity: 0; }
+.bar-slide.go { animation: beer-slide 1.6s cubic-bezier(0.15, 0.8, 0.3, 1) forwards; }
+@keyframes beer-slide { 0% { right: 92%; opacity: 1; } 85% { opacity: 1; } 100% { right: 6%; opacity: 0; } }
+
+.stools { position: relative; z-index: 4; display: flex; flex-wrap: wrap; justify-content: space-around; gap: 4px 0; margin-top: -26px; padding: 0 4px; }
+.stool { position: relative; width: 16%; min-width: 50px; height: 110px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.stool-seat { width: 40px; height: 12px; border-radius: 50%; background: radial-gradient(ellipse at 50% 30%, #d0463b, #7a1a14); box-shadow: 0 3px 4px rgba(0, 0, 0, 0.6); z-index: 1; }
+.stool-leg { width: 5px; height: 40px; background: linear-gradient(90deg, #555, #ccc, #555); position: relative; }
+.stool-leg::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 26px; height: 5px; border-radius: 50%; background: #888; }
+.stool-guest { position: absolute; bottom: 48px; display: flex; flex-direction: column; align-items: center; gap: 1px; text-decoration: none; color: #fff1d0;
+  font-size: 0.7rem; font-weight: 800; text-shadow: 0 1px 2px #000; animation: presence-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.stool-guest .avatar { border: 3px solid #3a1e0d; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6); }
+.stool.me .stool-guest .avatar { border-color: #f7b733; box-shadow: 0 0 12px rgba(247, 183, 51, 0.8); }
+.stool:not(.taken) { opacity: 0.55; }
+.bar-crowd { margin: 4px 0 14px; }
