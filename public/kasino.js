@@ -320,6 +320,7 @@
 
   function showTab(name) {
     document.body.dataset.tab = name; // hver fane har sitt eget tema
+    if (window.updatePresenceRoom) window.updatePresenceRoom();
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
     Object.keys(TAB_HASH).forEach((t) => $(`tab-${t}`).classList.toggle('hidden', t !== name));
     $('bet-card').classList.toggle('hidden', name === 'slot' || name === 'bar' || name === 'poker');

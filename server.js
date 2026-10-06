@@ -597,6 +597,43 @@ function addSpins(p, n) {
   p.bonusSpins = (p.bonusSpins || 0) + n;
 }
 
+// ---- Hvem er her (tilstedeværelse per side) ----
+// Bare i minnet: token -> { room, at }. Nettleseren sender et livstegn hvert 20. sekund.
+const presence = new Map();
+const PRESENCE_TTL_MS = 45000;
+
+function presenceView() {
+  const rooms = {};
+  const seen = new Set();
+  for (const [token, v] of presence) {
+    const p = state.participants.find((x) => x.token === token);
+    if (!p || seen.has(`${v.room}|${p.name}`)) continue; // samme person på flere enheter
+    seen.add(`${v.room}|${p.name}`);
+    (rooms[v.room] = rooms[v.room] || []).push({ name: p.name, avatar: p.avatar || null, since: v.since });
+  }
+  Object.values(rooms).forEach((list) => list.sort((a, b) => a.since - b.since));
+  return rooms;
+}
+
+let presenceTimer = null;
+function presenceChanged() {
+  // Samle flere endringer på rad til én melding
+  clearTimeout(presenceTimer);
+  presenceTimer = setTimeout(() => broadcast('presence', presenceView()), 300);
+}
+
+setInterval(() => {
+  const cutoff = Date.now() - PRESENCE_TTL_MS;
+  let changed = false;
+  for (const [token, v] of presence) {
+    if (v.at < cutoff) {
+      presence.delete(token);
+      changed = true;
+    }
+  }
+  if (changed) presenceChanged();
+}, 10000);
+
 // ---- Poker ----
 const poker = createPoker({
   state: () => state,
@@ -922,6 +959,24 @@ const routes = {
     sendJson(res, 200, { me: meView(participant) }, { 'Set-Cookie': sessionCookie(participant.token) });
   },
 
+  'POST /api/presence': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 200, { rooms: presenceView() });
+    const room = String(body.room || '').slice(0, 40).replace(/[^a-z0-9:-]/gi, '');
+    if (!room) return sendJson(res, 400, { error: 'Ukjent side.' });
+    const prev = presence.get(p.token);
+    const now = Date.now();
+    presence.set(p.token, { room, at: now, since: prev && prev.room === room ? prev.since : now });
+    if (!prev || prev.room !== room) presenceChanged();
+    sendJson(res, 200, { rooms: presenceView() });
+  },
+
+  'POST /api/presence/leave': (req, res) => {
+    const p = currentParticipant(req);
+    if (p && presence.delete(p.token)) presenceChanged();
+    sendJson(res, 200, { ok: true });
+  },
+
   'POST /api/rename': (req, res, body) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
@@ -936,6 +991,7 @@ const routes = {
     renameEverywhere(old, name);
     p.name = name;
     addActivity(name, '✏️', `byttet navn fra ${old}`);
+    presenceChanged();
     saveState();
     broadcast('avatars', avatars());
     sendJson(res, 200, { me: meView(p) });

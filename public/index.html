@@ -109,32 +109,39 @@
         <a id="casino-card" class="tile hidden" href="/kasino.html">
           <span class="tile-icon">🎰</span><strong>Kasino</strong>
           <small>Automat, roulette, blackjack og poker</small>
+          <span class="tile-here hidden" data-rooms="kasino-slot,kasino-roulette,kasino-blackjack,kasino-poker"></span>
         </a>
         <a id="bar-card" class="tile hidden" href="/kasino.html#baren">
           <span class="tile-icon">🍻</span><strong>Baren</strong>
           <small id="bar-info"></small>
+          <span class="tile-here hidden" data-rooms="kasino-bar"></span>
         </a>
         <a id="tasks-card" class="tile hidden" href="/oppgaver.html">
           <span class="tile-icon">🎯</span><strong>Oppgaver</strong>
           <small>Opptil 10 spinn per oppgave. <span id="open-tasks"></span></small>
+          <span class="tile-here hidden" data-rooms="oppgaver"></span>
         </a>
         <a id="duel-card" class="tile hidden" href="/duell.html">
           <span class="tile-icon">⚔️</span><strong>Duell</strong>
           <small>Stein, saks, papir om spinn</small>
+          <span class="tile-here hidden" data-rooms="duell"></span>
           <span id="duel-alert" class="tile-badge hidden"></span>
         </a>
         <a id="mogg-card" class="tile hidden" href="/mogg.html">
           <span class="tile-icon">🗿</span><strong>Mogg-off</strong>
           <small>Hardeste chad-ansikt vinner</small>
+          <span class="tile-here hidden" data-rooms="mogg"></span>
           <span id="mogg-alert" class="tile-badge hidden"></span>
         </a>
         <a id="game-card" class="tile hidden" href="/spill.html">
           <span class="tile-icon">🕊️</span><strong>Flappy Sjef</strong>
           <small id="game-rule"></small>
+          <span class="tile-here hidden" data-rooms="flappy"></span>
         </a>
         <a id="chat-card" class="tile wide hidden" href="/chat.html">
           <span class="tile-icon">💬</span><strong>Chat</strong>
           <small>Prat med alle på lønningspilsen, live</small>
+          <span class="tile-here hidden" data-rooms="chat"></span>
         </a>
       </div>
     </div>
@@ -189,6 +196,7 @@
   <script src="/media.js"></script>
   <script src="/stories.js"></script>
   <script src="/app.js"></script>
+  <script src="/presence.js"></script>
   <script src="/admin-bubble.js"></script>
 </body>
 </html>

@@ -324,6 +324,18 @@ $('join-form').addEventListener('submit', async (e) => {
   $('join-btn').disabled = false;
 });
 
+// ---------- Hvem er hvor (fra presence.js) ----------
+document.addEventListener('presence', (e) => {
+  const { rooms } = e.detail;
+  document.querySelectorAll('.tile-here').forEach((el) => {
+    const people = el.dataset.rooms.split(',').flatMap((r) => rooms[r] || []);
+    el.classList.toggle('hidden', !people.length);
+    el.innerHTML = '';
+    people.slice(0, 3).forEach((x) => el.appendChild(avatarEl(x.avatar, x.name, 20)));
+    el.appendChild(document.createTextNode(` ${people.length} her nå`));
+  });
+});
+
 // ---------- Meny nederst ----------
 const VIEW_HASH = { home: '', games: '#spill', standings: '#stilling' };
 
