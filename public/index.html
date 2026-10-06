@@ -31,6 +31,15 @@
       </form>
       <p class="note">Én registrering per person. Det er ikke lov å lage flere navn.</p>
       <p id="join-error" class="error"></p>
+      <details class="tips device-login" id="device-login">
+        <summary>💻 Allerede registrert på en annen enhet? Logg inn med kode</summary>
+        <p class="note">Åpne siden på enheten der du er registrert, trykk «Bruk på en annen enhet» og skriv inn koden du får her.</p>
+        <form id="code-form" class="code-form">
+          <input id="code-input" type="text" maxlength="7" placeholder="ABC123" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false">
+          <button type="submit">Logg inn</button>
+        </form>
+        <p id="code-error" class="error"></p>
+      </details>
     </section>
 
     <!-- Mine lodd -->
@@ -47,6 +56,13 @@
       <p>Dine lodd:</p>
       <div id="my-tickets" class="tickets"></div>
       <p id="my-result" class="result"></p>
+      <button type="button" id="device-btn" class="secondary small-btn">💻 Bruk på en annen enhet</button>
+      <div id="device-code-box" class="device-code-box hidden">
+        <p>Skriv inn denne koden på den andre enheten (under «Logg inn med kode»):</p>
+        <p class="device-code" id="device-code"></p>
+        <p class="note">Eller åpn denne lenken der: <a id="device-link" href="#"></a></p>
+        <p class="note">Koden virker én gang og går ut om 10 minutter. Ikke del den med andre, da logger de inn som deg!</p>
+      </div>
     </section>
 
     <!-- Lykkehjul -->

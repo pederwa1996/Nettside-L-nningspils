@@ -143,6 +143,23 @@ function parseCookies(req) {
   return out;
 }
 
+function sessionCookie(token) {
+  return `pils_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
+}
+
+// Engangskoder for å logge inn på samme profil fra en annen enhet (kode -> { token, expires })
+const deviceCodes = new Map();
+const DEVICE_CODE_TTL_MS = 10 * 60 * 1000;
+const DEVICE_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // uten O/0 og I/1 som er lette å blande
+
+function newDeviceCode() {
+  let code;
+  do {
+    code = Array.from({ length: 6 }, () => DEVICE_CODE_CHARS[randomInt(DEVICE_CODE_CHARS.length)]).join('');
+  } while (deviceCodes.has(code));
+  return code;
+}
+
 function currentParticipant(req) {
   const token = parseCookies(req).pils_token;
   if (!token) return null;
@@ -716,7 +733,7 @@ const routes = {
 
     const ip = clientIp(req);
     if (ONE_PER_IP && state.participants.some((p) => p.ip === ip)) {
-      return sendJson(res, 409, { error: 'Det er allerede registrert noen fra denne enheten/nettverket. Én registrering per person!' });
+      return sendJson(res, 409, { error: 'Det er allerede registrert noen fra dette nettverket. Har du registrert deg på en annen enhet (f.eks. mobilen)? Bruk «Logg inn med kode» under.' });
     }
 
     if (!body.avatar) return sendJson(res, 400, { error: 'Du må ta et profilbilde 📸' });
@@ -739,8 +756,31 @@ const routes = {
     state.participants.push(participant);
     saveState();
 
-    const cookie = `pils_token=${participant.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
-    sendJson(res, 200, { me: meView(participant) }, { 'Set-Cookie': cookie });
+    sendJson(res, 200, { me: meView(participant) }, { 'Set-Cookie': sessionCookie(participant.token) });
+  },
+
+  // ---- Samme profil på flere enheter ----
+  'POST /api/device-code': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const now = Date.now();
+    for (const [c, v] of deviceCodes) if (v.expires < now || v.token === p.token) deviceCodes.delete(c);
+    const code = newDeviceCode();
+    deviceCodes.set(code, { token: p.token, expires: now + DEVICE_CODE_TTL_MS });
+    sendJson(res, 200, { code, expiresInMinutes: DEVICE_CODE_TTL_MS / 60000 });
+  },
+
+  'POST /api/device-login': (req, res, body) => {
+    const code = String(body.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const entry = deviceCodes.get(code);
+    if (!entry || entry.expires < Date.now()) {
+      // Litt forsinkelse gjør det upraktisk å gjette koder
+      return setTimeout(() => sendJson(res, 400, { error: 'Ugyldig eller utløpt kode. Lag en ny på enheten du allerede er logget inn på.' }), 800);
+    }
+    deviceCodes.delete(code); // kan bare brukes én gang
+    const p = state.participants.find((x) => x.token === entry.token);
+    if (!p) return sendJson(res, 400, { error: 'Fant ikke profilen.' });
+    sendJson(res, 200, { me: meView(p) }, { 'Set-Cookie': sessionCookie(p.token) });
   },
 
   'POST /api/spin': (req, res, body) => {

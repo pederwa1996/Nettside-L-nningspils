@@ -701,3 +701,13 @@ body.kasino .duel-list li, body.kasino .order, body.kasino .paytable li { border
 body.kasino .pt-win, body.kasino .tips summary { color: var(--gold-1); }
 body.kasino .result.win { color: #ffe27a; text-shadow: 0 0 12px rgba(255, 210, 90, 0.6); }
 body.kasino .note, body.kasino .muted { color: #d9b8a0; }
+
+/* Logg inn med kode */
+.device-login { margin-top: 10px; }
+.code-form { margin-top: 8px; }
+.code-form input { text-transform: uppercase; letter-spacing: 4px; font-weight: 800; text-align: center; font-size: 1.2rem; }
+#device-btn { margin-top: 10px; }
+.device-code-box { margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(245, 179, 1, 0.1); border: 1px dashed var(--gold); text-align: center; }
+.device-code-box p { margin: 6px 0; }
+.device-code { font-size: 2.2rem; font-weight: 900; letter-spacing: 6px; color: var(--gold); font-family: ui-monospace, monospace; }
+.device-code-box a { word-break: break-all; }

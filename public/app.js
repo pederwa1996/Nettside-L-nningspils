@@ -105,7 +105,9 @@ function render() {
   $('participant-count').textContent = data.participantCount;
   $('tickets-left').textContent = data.ticketsLeft;
 
-  $('join-section').classList.toggle('hidden', !!me || !!draw);
+  // Etter trekningen kan man ikke registrere seg, men man kan fortsatt logge inn med kode
+  $('join-section').classList.toggle('hidden', !!me);
+  $('join-form').classList.toggle('hidden', !!draw);
   $('me-section').classList.toggle('hidden', !me);
   $('wheel-section').classList.toggle('hidden', !me);
   $('game-card').classList.toggle('hidden', !me);
@@ -300,6 +302,45 @@ $('join-form').addEventListener('submit', async (e) => {
   }
   $('join-btn').disabled = false;
 });
+
+// ---------- Samme profil på flere enheter ----------
+$('device-btn').addEventListener('click', async () => {
+  try {
+    const r = await api('/api/device-code', {});
+    const link = `${location.origin}/?kode=${r.code}`;
+    $('device-code').textContent = r.code;
+    $('device-link').textContent = link;
+    $('device-link').href = link;
+    $('device-code-box').classList.remove('hidden');
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+async function loginWithCode(code) {
+  $('code-error').textContent = '';
+  try {
+    await api('/api/device-login', { code });
+    history.replaceState(null, '', '/');
+    await refresh();
+    if (window.reloadStories) window.reloadStories();
+  } catch (err) {
+    $('device-login').open = true;
+    $('code-error').textContent = err.message;
+  }
+}
+
+$('code-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  loginWithCode($('code-input').value);
+});
+
+// Lenke med kode (/?kode=ABC123) logger inn automatisk
+const codeFromLink = new URLSearchParams(location.search).get('kode');
+if (codeFromLink) {
+  $('code-input').value = codeFromLink;
+  loginWithCode(codeFromLink);
+}
 
 $('spin-btn').addEventListener('click', () => onSpin('spin'));
 $('spin-flus-btn').addEventListener('click', () => onSpin('flus'));
