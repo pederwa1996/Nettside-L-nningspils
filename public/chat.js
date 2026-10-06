@@ -29,15 +29,25 @@
     const row = document.createElement('div');
     row.className = 'msg' + (mine ? ' mine' : '') + (grouped ? ' grouped' : '');
     if (!mine) {
-      const av = grouped ? document.createElement('span') : avatarEl(m.avatar, m.name, 34);
-      if (grouped) av.className = 'avatar-spacer';
+      let av;
+      if (grouped) {
+        av = document.createElement('span');
+        av.className = 'avatar-spacer';
+      } else {
+        av = document.createElement('a');
+        av.href = `/profil.html?navn=${encodeURIComponent(m.name)}`;
+        av.appendChild(avatarEl(m.avatar, m.name, 34));
+      }
       row.appendChild(av);
     }
     const bubble = document.createElement('div');
     bubble.className = 'bubble';
     if (!mine && !grouped) {
-      const n = document.createElement('div');
+      const n = document.createElement('a');
       n.className = 'msg-name';
+      n.style.display = 'block';
+      n.style.textDecoration = 'none';
+      n.href = `/profil.html?navn=${encodeURIComponent(m.name)}`;
       n.textContent = m.name;
       bubble.appendChild(n);
     }

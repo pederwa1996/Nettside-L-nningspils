@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil – Lønningspils</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="hero profile-top">
+    <p class="sub"><a href="/">← Tilbake</a></p>
+  </header>
+
+  <main>
+    <div id="people" class="people-strip"></div>
+
+    <p id="error" class="error center"></p>
+
+    <div id="profile" class="hidden">
+      <section class="card profile-card">
+        <div id="p-avatar" class="profile-avatar"></div>
+        <h1 id="p-name" class="profile-name"></h1>
+        <p id="p-joined" class="muted center"></p>
+        <div id="stats" class="stat-grid"></div>
+      </section>
+
+      <section id="gallery-section" class="card hidden">
+        <h2>📸 Bilder</h2>
+        <div id="gallery" class="gallery"></div>
+      </section>
+
+      <section class="card">
+        <h2>📜 Aktivitet</h2>
+        <div id="feed" class="feed"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Stort bilde med likes og kommentarer -->
+  <div id="lightbox" class="story-overlay hidden">
+    <div class="lightbox-box">
+      <button type="button" class="lightbox-close" id="lightbox-close">✕</button>
+      <div id="lightbox-item"></div>
+    </div>
+  </div>
+
+  <script src="/media.js"></script>
+  <script src="/profil.js"></script>
+  <script src="/admin-bubble.js"></script>
+</body>
+</html>

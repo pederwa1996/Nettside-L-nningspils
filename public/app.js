@@ -186,7 +186,13 @@ function render() {
   }
   data.participants.forEach((n) => {
     const li = document.createElement('li');
-    li.append(avatarEl(data.avatars[n], n, 28), document.createTextNode(n));
+    const a = document.createElement('a');
+    a.className = 'profile-link';
+    a.href = `/profil.html?navn=${encodeURIComponent(n)}`;
+    const span = document.createElement('span');
+    span.textContent = n;
+    a.append(avatarEl(data.avatars[n], n, 28), span);
+    li.appendChild(a);
     $('participants').appendChild(li);
   });
 }
@@ -211,7 +217,11 @@ function renderStandings(list, me) {
     who.className = 'who';
     const name = document.createElement('span');
     name.textContent = e.name;
-    who.append(avatarEl(data.avatars[e.name], e.name, 30), name);
+    const link = document.createElement('a');
+    link.className = 'profile-link';
+    link.href = `/profil.html?navn=${encodeURIComponent(e.name)}`;
+    link.append(avatarEl(data.avatars[e.name], e.name, 30), name);
+    who.append(link);
     const beers = document.createElement('td');
     beers.className = 'num beers';
     beers.textContent = e.beers;

@@ -45,7 +45,7 @@ const MAX_PENDING_ORDERS = 3;
 
 // ---- Lagring ----
 function freshState() {
-  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [] };
+  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {} };
 }
 
 function defaultTasks() {
@@ -85,7 +85,8 @@ function normalizeState(s) {
   out.participants.forEach((p) => {
     if (p.flus === undefined) p.flus = START_FLUS;
   });
-  out.casinoLog = out.casinoLog.filter((e) => e.cur); // gamle oppføringer var i spinn
+  out.casinoLog = out.casinoLog.filter((e) => e.won !== undefined); // gamle oppføringer hadde annet format
+  if (!s.activity) out.activity = backfillActivity(out);
   // Blackjack-hender fra før kasinoet gikk over til flus ble spilt med spinn: gi innsatsen tilbake
   for (const [name, h] of Object.entries(out.blackjack)) {
     if (h.currency === 'flus') continue;
@@ -97,6 +98,32 @@ function normalizeState(s) {
 }
 
 let removedTasks = 0;
+
+// Lager aktivitetshistorikk for data lagret før profilsidene fantes
+function backfillActivity(st) {
+  const acts = [];
+  const add = (name, icon, text, at, extra = {}) =>
+    acts.push({ id: crypto.randomBytes(6).toString('hex'), name, icon, text, at, ...extra });
+  st.participants.forEach((p) => add(p.name, '🎉', 'ble med på lønningspilsen', Date.parse(p.joinedAt) || Date.now()));
+  st.tasks.forEach((t) => t.attempts.forEach((a) => {
+    if (a.status === 'approved') add(a.name, '🎯', `fullførte «${t.title}» og fikk ${t.reward} spinn`, a.reviewedAt || a.at, { url: a.url });
+  }));
+  st.moggs.forEach((m) => {
+    if (m.status !== 'done') return;
+    const at = m.finishedAt || m.at;
+    add(m.challenger, '🗿', moggText(m, m.challenger), at, { url: m.challengerUrl });
+    add(m.opponent, '🗿', moggText(m, m.opponent), at, { url: m.opponentUrl });
+  });
+  return acts.sort((a, b) => a.at - b.at);
+}
+
+function moggText(m, name) {
+  const other = name === m.challenger ? m.opponent : m.challenger;
+  const mine = (name === m.challenger ? m.challengerScore : m.opponentScore).toFixed(2);
+  const theirs = (name === m.challenger ? m.opponentScore : m.challengerScore).toFixed(2);
+  if (!m.winner) return `mogg-off mot ${other} endte uavgjort (${mine})`;
+  return m.winner === name ? `mogget ${other} med ${mine} mot ${theirs} 🗿` : `ble mogget av ${other} (${mine} mot ${theirs})`;
+}
 
 let state = normalizeState(loadState());
 const games = new Map(); // aktive spill: gameId -> { token, start }
@@ -399,9 +426,19 @@ function orderView(o) {
   return { id: o.id, name: o.name, qty: o.qty, pay: o.pay, cost: o.cost, note: o.note, status: o.status, at: o.at, doneAt: o.doneAt || null };
 }
 
-function logCasino(name, game, bet, net, detail) {
-  state.casinoLog.push({ name, game, bet, net, detail, cur: 'flus', at: Date.now() });
+const GAME_NAMES = { slot: 'automaten', roulette: 'roulette', blackjack: 'blackjack' };
+
+// Registrerer et kasinospill. Gevinster vises live i kasinoet, store gevinster havner på profilen.
+// won = det som vises som gevinst, net = hva man faktisk tjente/tapte (til statistikken)
+function logCasino(p, game, { won = 0, beer = 0, net = 0, detail = '' }) {
+  p.casinoNet = (p.casinoNet || 0) + net;
+  if (won <= 0 && !beer) return;
+  const entry = { name: p.name, game, won, beer, detail, at: Date.now() };
+  state.casinoLog.push(entry);
   if (state.casinoLog.length > 30) state.casinoLog = state.casinoLog.slice(-30);
+  broadcast('casino-win', { ...entry, avatar: p.avatar || null });
+  if (beer) addActivity(p.name, '🎰', `fikk 🍺🍺🍺 på automaten og vant en pils!`);
+  else if (won >= 100) addActivity(p.name, '🎰', `vant ${won} flus på ${GAME_NAMES[game]}`);
 }
 
 // Blackjack
@@ -476,7 +513,7 @@ function settleBlackjack(p, h, { dealerPlays = true } = {}) {
   h.net = payout - h.bet;
   h.status = 'done';
   delete h.deck;
-  logCasino(p.name, 'blackjack', h.bet, h.net, h.result);
+  logCasino(p, 'blackjack', { won: h.net, net: h.net, detail: h.result });
 }
 
 function activeHand(p) {
@@ -524,6 +561,67 @@ function spinsLeft(p) {
 // Innsatsen trekkes fra/legges til via bonusSpins, så spinn kan flyttes mellom spillere.
 function addSpins(p, n) {
   p.bonusSpins = (p.bonusSpins || 0) + n;
+}
+
+// ---- Aktivitet og reaksjoner (likes/kommentarer) ----
+const MAX_ACTIVITY = 2000;
+
+function addActivity(name, icon, text, extra = {}) {
+  const a = { id: crypto.randomBytes(6).toString('hex'), name, icon, text, at: Date.now(), ...extra };
+  state.activity.push(a);
+  if (state.activity.length > MAX_ACTIVITY) state.activity = state.activity.slice(-MAX_ACTIVITY);
+  broadcast('activity', { name });
+  return a;
+}
+
+function reactionsFor(id) {
+  return state.reactions[id] || { likes: [], comments: [] };
+}
+
+function activityView(a, viewer) {
+  const r = reactionsFor(a.id);
+  const v = { id: a.id, name: a.name, icon: a.icon, text: a.text, at: a.at };
+  // Story-bilder forsvinner etter 24 timer
+  const storyGone = a.story && !state.stories.some((x) => x.id === a.story);
+  if (a.url && !storyGone) v.url = a.url;
+  if (a.story) v.story = true;
+  v.likes = r.likes.length;
+  v.likedBy = r.likes.slice(-5);
+  v.liked = !!viewer && r.likes.includes(viewer.name);
+  v.comments = r.comments.map((c) => ({ ...c, avatar: avatars()[c.name] || null }));
+  return v;
+}
+
+function profileStats(p) {
+  const w = beersWon(p);
+  const record = (list, winnerKey = 'winner') => {
+    let won = 0;
+    let lost = 0;
+    list.forEach((x) => {
+      if (x.status !== 'done' || (x.challenger !== p.name && x.opponent !== p.name) || !x[winnerKey]) return;
+      if (x[winnerKey] === p.name) won++;
+      else lost++;
+    });
+    return { won, lost };
+  };
+  return {
+    beersWon: w.wheel + w.tickets + w.slot,
+    beersOwed: beersOwed(p),
+    spinsLeft: spinsLeft(p),
+    flus: p.flus || 0,
+    wheelSpins: p.spins.length + (p.paidWheelSpins || 0),
+    flappyBest: p.bestScore || 0,
+    moggBest: state.moggBest[p.name] ? state.moggBest[p.name].score : null,
+    duels: record(state.duels),
+    moggs: record(state.moggs),
+    tasksDone: state.tasks.filter((t) => t.status === 'done' && currentAttempt(t).name === p.name).length,
+    casinoNet: p.casinoNet || 0,
+    chatMessages: state.chat.filter((m) => m.name === p.name).length,
+  };
+}
+
+function findActivity(id) {
+  return state.activity.find((a) => a.id === id) || null;
 }
 
 function findParticipant(name) {
@@ -754,6 +852,7 @@ const routes = {
       joinedAt: new Date().toISOString(),
     };
     state.participants.push(participant);
+    addActivity(name, '🎉', 'ble med på lønningspilsen');
     saveState();
 
     sendJson(res, 200, { me: meView(participant) }, { 'Set-Cookie': sessionCookie(participant.token) });
@@ -794,6 +893,7 @@ const routes = {
       p.paidWheelSpins = (p.paidWheelSpins || 0) + 1;
       if (win) p.paidWheelWins = (p.paidWheelWins || 0) + 1;
     } else p.spins.push(win);
+    if (win) addActivity(p.name, '🎡', 'vant en pils på lykkehjulet! 🍺');
     saveState();
     sendJson(res, 200, { win, me: meView(p) });
   },
@@ -829,6 +929,9 @@ const routes = {
     for (let k = (p.milestones || 0) + 1; k <= reached; k++) earned += k;
     p.milestones = Math.max(p.milestones || 0, reached);
     p.bonusSpins = (p.bonusSpins || 0) + earned;
+    if (isRecord && score >= 5) {
+      addActivity(p.name, '🕊️', `satte ny rekord i Flappy Sjef: ${score} poeng${earned ? ` (+${earned} spinn)` : ''}`);
+    }
     if (isRecord || earned) saveState();
 
     sendJson(res, 200, { score, isRecord, earnedSpins: earned, me: meView(p), leaderboard: leaderboard() });
@@ -907,6 +1010,18 @@ const routes = {
       d.winner = p.name;
       addSpins(p, d.stake); // utfordrerens innsats er allerede trukket
     }
+    const MOVE_EMOJI = { stein: '✊', saks: '✌️', papir: '✋' };
+    const duelText = (name) => {
+      const other = name === d.challenger ? d.opponent : d.challenger;
+      const mine = MOVE_EMOJI[name === d.challenger ? d.challengerMove : d.opponentMove];
+      const theirs = MOVE_EMOJI[name === d.challenger ? d.opponentMove : d.challengerMove];
+      if (!d.winner) return `${mine} mot ${theirs}: uavgjort mot ${other} i stein, saks, papir`;
+      return d.winner === name
+        ? `${mine} slo ${theirs}: vant ${d.stake} spinn fra ${other} i stein, saks, papir`
+        : `${mine} tapte mot ${theirs}: ${other} vant ${d.stake} spinn`;
+    };
+    addActivity(d.challenger, '⚔️', duelText(d.challenger));
+    addActivity(d.opponent, '⚔️', duelText(d.opponent));
     saveState();
     sendJson(res, 200, { duel: duelView(d, p), me: meView(p) });
   },
@@ -988,6 +1103,7 @@ const routes = {
       at: Date.now(),
     };
     state.stories.push(story);
+    addActivity(p.name, '📸', story.caption ? `la ut en story: «${story.caption}»` : 'la ut en story', { url: story.url, story: story.id });
     saveState();
     broadcast('stories', {});
     sendJson(res, 200, { ok: true });
@@ -1104,6 +1220,8 @@ const routes = {
       addSpins(p, 1);
     }
     recordMoggBest(p.name, m.opponentUrl, score);
+    addActivity(m.challenger, '🗿', moggText(m, m.challenger), { url: m.challengerUrl });
+    addActivity(m.opponent, '🗿', moggText(m, m.opponent), { url: m.opponentUrl });
     saveState();
     sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
   },
@@ -1178,6 +1296,7 @@ const routes = {
       t.status = 'done';
       const p = findParticipant(cur.name);
       if (p) addSpins(p, t.reward);
+      addActivity(cur.name, '🎯', `fullførte «${t.title}» og fikk ${t.reward} spinn`, { url: cur.url });
     } else {
       // Avvist: oppgaven blir åpen for alle igjen
       cur.status = 'rejected';
@@ -1245,7 +1364,7 @@ const routes = {
     const won = kind.wins(number);
     const net = won ? bet * kind.pays : -bet;
     addFlus(p, net);
-    logCasino(p.name, 'roulette', bet, net, `${kind.label} → ${number}`);
+    logCasino(p, 'roulette', { won: net, net, detail: `${kind.label} → ${number}` });
     saveState();
     sendJson(res, 200, { number, color: number === 0 ? 'green' : RED_NUMBERS.has(number) ? 'red' : 'black', won, net, me: meView(p) });
   },
@@ -1253,13 +1372,17 @@ const routes = {
   'POST /api/casino/slot': (req, res, body) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    payForSpin(p, body.pay === 'flus' ? 'flus' : 'spin');
+    const pay = body.pay === 'flus' ? 'flus' : 'spin';
+    payForSpin(p, pay);
     const { outcome, reels } = pullSlot();
     if (outcome.flus) addFlus(p, outcome.flus);
     if (outcome.beer) p.slotBeers = (p.slotBeers || 0) + outcome.beer;
-    // Bare de store gevinstene havner i «Siste spill», ellers blir det for mye støy
-    if (outcome.beer) logCasino(p.name, 'slot', 1, 0, '🍺🍺🍺 vant en pils!');
-    else if (outcome.flus >= 100) logCasino(p.name, 'slot', 1, outcome.flus, `${reels.join('')} vant ${outcome.flus} flus`);
+    logCasino(p, 'slot', {
+      won: outcome.flus,
+      beer: outcome.beer || 0,
+      net: outcome.flus - (pay === 'flus' ? SPIN_PRICE : 0),
+      detail: reels.join(''),
+    });
     saveState();
     sendJson(res, 200, { reels, flus: outcome.flus, beer: outcome.beer || 0, me: meView(p) });
   },
@@ -1430,6 +1553,67 @@ const routes = {
     sendJson(res, 200, { ok: true });
   },
 
+  // ---- Profil ----
+  'GET /api/profile': (req, res) => {
+    const viewer = currentParticipant(req);
+    const name = new URL(req.url, 'http://x').searchParams.get('navn') || (viewer && viewer.name);
+    const p = name ? findParticipant(name) : null;
+    if (!p) return sendJson(res, 404, { error: 'Fant ikke den personen.' });
+    const acts = state.activity.filter((a) => a.name === p.name).slice().reverse();
+    sendJson(res, 200, {
+      viewer: viewer ? viewer.name : null,
+      profile: { name: p.name, avatar: p.avatar || null, joinedAt: p.joinedAt, stats: profileStats(p) },
+      activity: acts.slice(0, 150).map((a) => activityView(a, viewer)),
+      people: state.participants.map((x) => ({ name: x.name, avatar: x.avatar || null })),
+    });
+  },
+
+  'POST /api/react/like': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg for å like.' });
+    const a = findActivity(String(body.id || ''));
+    if (!a) return sendJson(res, 404, { error: 'Fant ikke innlegget.' });
+    const r = (state.reactions[a.id] = state.reactions[a.id] || { likes: [], comments: [] });
+    const i = r.likes.indexOf(p.name);
+    if (i >= 0) r.likes.splice(i, 1);
+    else r.likes.push(p.name);
+    saveState();
+    broadcast('reactions', { id: a.id, name: a.name });
+    sendJson(res, 200, { activity: activityView(a, p) });
+  },
+
+  'POST /api/react/comment': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg for å kommentere.' });
+    const a = findActivity(String(body.id || ''));
+    if (!a) return sendJson(res, 404, { error: 'Fant ikke innlegget.' });
+    const text = String(body.text || '').trim().slice(0, 300);
+    if (!text) return sendJson(res, 400, { error: 'Kommentaren er tom.' });
+    const now = Date.now();
+    if (p.lastCommentAt && now - p.lastCommentAt < 1500) return sendJson(res, 429, { error: 'Rolig nå 😄' });
+    p.lastCommentAt = now;
+    const r = (state.reactions[a.id] = state.reactions[a.id] || { likes: [], comments: [] });
+    r.comments.push({ id: crypto.randomBytes(5).toString('hex'), name: p.name, text, at: now });
+    if (r.comments.length > 100) r.comments = r.comments.slice(-100);
+    saveState();
+    broadcast('reactions', { id: a.id, name: a.name });
+    sendJson(res, 200, { activity: activityView(a, p) });
+  },
+
+  'POST /api/react/comment-delete': (req, res, body) => {
+    const p = currentParticipant(req);
+    const isAdmin = checkAdmin(body);
+    const a = findActivity(String(body.id || ''));
+    const r = a && state.reactions[a.id];
+    const c = r && r.comments.find((x) => x.id === body.commentId);
+    if (!c) return sendJson(res, 404, { error: 'Fant ikke kommentaren.' });
+    if (!isAdmin && (!p || p.name !== c.name)) return sendJson(res, 403, { error: 'Du kan bare slette dine egne kommentarer.' });
+    r.comments = r.comments.filter((x) => x !== c);
+    saveState();
+    broadcast('reactions', { id: a.id, name: a.name });
+    sendJson(res, 200, { activity: activityView(a, p) });
+  },
+
   'POST /api/admin/login': (req, res, body) => {
     if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
     sendJson(res, 200, {
@@ -1463,6 +1647,10 @@ const routes = {
       drawnAt: new Date().toISOString(),
       winningTickets: pickRandom(pool, WINNING_TICKETS).sort((a, b) => a - b),
     };
+    state.participants.forEach((p) => {
+      const won = p.tickets.filter((t) => state.draw.winningTickets.includes(t));
+      if (won.length) addActivity(p.name, '🎟️', `vant ${won.length} pils i loddtrekningen (lodd ${won.map((t) => `#${t}`).join(', ')})`);
+    });
     saveState();
     sendJson(res, 200, { draw: publicDraw() });
   },

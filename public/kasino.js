@@ -330,26 +330,65 @@
   }
   document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 
+  // ---------- Live gevinster ----------
+  const GAME_ICON = { roulette: '🎡', blackjack: '🃏', slot: '🎰' };
+  const GAME_NAME = { roulette: 'roulette', blackjack: 'blackjack', slot: 'automaten' };
+
+  function winText(e) {
+    if (e.beer) return 'fikk 🍺🍺🍺 og vant en pils!';
+    if (e.game === 'blackjack' && e.detail === 'blackjack') return `fikk BLACKJACK og vant ${flusWord(e.won)}`;
+    return `vant på ${GAME_NAME[e.game]}${e.game === 'slot' ? ` ${e.detail}` : ''}`;
+  }
+
+  function winRow(e, fresh) {
+    const li = document.createElement('li');
+    li.className = 'win-item' + (fresh ? ' fresh' : '');
+    const link = document.createElement('a');
+    link.href = `/profil.html?navn=${encodeURIComponent(e.name)}`;
+    link.appendChild(avatarEl(e.avatar || (data && data.avatars[e.name]), e.name, 34));
+    const text = document.createElement('div');
+    text.className = 'win-text';
+    const name = document.createElement('strong');
+    name.textContent = e.name;
+    const time = document.createElement('div');
+    time.className = 'win-time muted';
+    time.textContent = `${GAME_ICON[e.game]} ${timeOfDay(e.at)}`;
+    text.append(name, document.createTextNode(` ${winText(e)}`), time);
+    const amount = document.createElement('span');
+    amount.className = 'win-amount';
+    amount.textContent = e.beer ? '+1 🍺' : `+${e.won}`;
+    li.append(link, text, amount);
+    return li;
+  }
+
   function renderLog(log) {
     const ul = $('casino-log');
     ul.innerHTML = '';
-    if (!log.length) ul.innerHTML = '<li class="muted">Ingen har spilt ennå.</li>';
-    log.forEach((e) => {
-      const li = document.createElement('li');
-      const icon = { roulette: '🎡', blackjack: '🃏', slot: '🎰' }[e.game];
-      let text;
-      if (e.game === 'slot') {
-        text = `${icon} ${e.name}: ${e.detail}`;
-        li.className = 'won';
-      } else {
-        li.className = e.net > 0 ? 'won' : e.net < 0 ? 'lost' : '';
-        const res = e.net > 0 ? `vant ${flusWord(e.net)}` : e.net < 0 ? `tapte ${flusWord(e.net)}` : 'gikk i null';
-        text = `${icon} ${e.name} ${res}${e.game === 'roulette' ? ` (${e.detail})` : ''}`;
-      }
-      li.textContent = text;
-      ul.appendChild(li);
-    });
+    if (!log.length) ul.innerHTML = '<li class="muted">Ingen gevinster ennå. Bli den første!</li>';
+    log.forEach((e) => ul.appendChild(winRow(e, false)));
   }
+
+  function showToast(e) {
+    const t = document.createElement('div');
+    t.className = 'win-toast';
+    const msg = document.createElement('span');
+    msg.textContent = `${e.name} ${e.beer ? 'vant en pils på automaten! 🍺🍺🍺' : `vant ${flusWord(e.won)} på ${GAME_NAME[e.game]}!`}`;
+    t.append(avatarEl(e.avatar, e.name, 32), msg);
+    $('win-toasts').appendChild(t);
+    setTimeout(() => t.remove(), 4800);
+    while ($('win-toasts').children.length > 3) $('win-toasts').firstChild.remove();
+  }
+
+  onLive('casino-win', (e) => {
+    const ul = $('casino-log');
+    const empty = ul.querySelector('.muted');
+    if (empty) empty.remove();
+    ul.prepend(winRow(e, true));
+    while (ul.children.length > 10) ul.lastChild.remove();
+    // Vis ikke toast for dine egne gevinster, de ser du allerede
+    if (!data || !data.me || e.name !== data.me.name) showToast(e);
+  });
+
 
   async function loadLog() {
     try {

@@ -859,3 +859,82 @@ body.cantina .standings td, body.cantina .leaderboard li, body.cantina .winners 
 body.cantina .story-ring { background: conic-gradient(var(--neon-pink), var(--terracotta), var(--gold), var(--neon-blue), var(--neon-pink)); }
 body.cantina .story-ring .avatar, body.cantina .story-plus { border-color: var(--wood-2); }
 body.cantina footer a { color: #b89a7a; }
+
+/* Profil */
+.profile-top { padding-bottom: 0; }
+.people-strip { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 14px; scrollbar-width: none; }
+.people-strip::-webkit-scrollbar { display: none; }
+.person { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; flex-shrink: 0; text-decoration: none; color: var(--text); opacity: 0.75; }
+.person .avatar { border: 2px solid transparent; }
+.person.active { opacity: 1; }
+.person.active .avatar { border-color: var(--gold); box-shadow: 0 0 12px rgba(245, 179, 1, 0.5); }
+.person-name { font-size: 0.72rem; max-width: 60px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-card { text-align: center; }
+.profile-avatar { display: flex; justify-content: center; margin-top: 4px; }
+.profile-avatar .avatar { border: 4px solid var(--gold); box-shadow: 0 0 24px rgba(245, 179, 1, 0.35); font-size: 3rem; }
+.profile-name { margin: 12px 0 2px; font-size: 1.8rem; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+.stat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); }
+.stat-icon { font-size: 1.2rem; }
+.stat-value { font-size: 1.3rem; font-weight: 900; color: var(--gold); }
+.stat-label { font-size: 0.72rem; color: var(--muted); text-align: center; }
+
+.gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.gallery-item { position: relative; padding: 0; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: #000; }
+.gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-item:hover:not(:disabled) { background: #000; filter: brightness(1.1); }
+.gallery-badge { position: absolute; left: 4px; bottom: 4px; font-size: 0.7rem; background: rgba(0, 0, 0, 0.65); color: #fff; padding: 2px 6px; border-radius: 999px; }
+
+.feed-item { padding: 12px 0; border-bottom: 1px solid #2c2f42; }
+.feed-item:last-child { border-bottom: none; }
+.feed-item.big { border: none; padding: 0; }
+.feed-head { display: flex; gap: 10px; align-items: flex-start; }
+.feed-icon { font-size: 1.4rem; line-height: 1.2; }
+.feed-text { flex: 1; }
+.feed-time { margin: 2px 0 6px 34px; font-size: 0.8rem; }
+.feed-img { width: 100%; max-height: 420px; object-fit: cover; border-radius: 12px; cursor: pointer; display: block; margin: 6px 0; }
+.feed-item.big .feed-img { max-height: 60vh; object-fit: contain; background: #000; cursor: default; }
+.feed-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.like-btn, .comment-btn { background: rgba(255, 255, 255, 0.06); color: var(--text); padding: 6px 12px; font-size: 0.95rem; font-weight: 700; }
+.like-btn:hover:not(:disabled), .comment-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+.like-btn.liked { background: rgba(255, 80, 120, 0.18); color: #ff8fb0; }
+.like-btn.liked { animation: pop 0.3s ease; }
+@keyframes pop { 50% { transform: scale(1.15); } }
+.liked-by { font-size: 0.8rem; }
+.comments { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+.comment { display: flex; align-items: flex-start; gap: 8px; }
+.comment-body { flex: 1; background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 6px 10px; display: flex; flex-direction: column; }
+.comment-name { font-weight: 700; font-size: 0.85rem; text-decoration: none; }
+.comment-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.comment-time { font-size: 0.72rem; }
+.comment-del { background: none; color: var(--muted); padding: 2px 6px; font-size: 0.8rem; }
+.comment-del:hover:not(:disabled) { background: rgba(255, 255, 255, 0.08); }
+.link-btn { background: none; color: var(--muted); padding: 2px 0; font-size: 0.85rem; text-align: left; }
+.link-btn:hover:not(:disabled) { background: none; color: var(--text); }
+.comment-form { display: flex; gap: 6px; margin-top: 8px; flex-wrap: nowrap; }
+.comment-form input { padding: 8px 12px; font-size: 0.95rem; }
+.lightbox-box { position: relative; width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; background: var(--card); border-radius: 16px; padding: 16px; }
+.lightbox-close { position: sticky; top: 0; float: right; z-index: 2; background: rgba(0, 0, 0, 0.5); color: #fff; padding: 6px 10px; }
+
+/* Lenker til profiler */
+a.profile-link { color: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+a.profile-link:hover span { text-decoration: underline; }
+#profile-btn { margin-top: 10px; margin-right: 6px; }
+
+/* Kasino: live gevinster */
+.win-list { list-style: none; padding: 0; margin: 0; }
+.win-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.win-item.fresh { animation: win-in 0.6s ease; }
+@keyframes win-in { from { opacity: 0; transform: translateX(-20px); background: rgba(255, 210, 90, 0.25); } }
+.win-text { flex: 1; }
+.win-amount { font-weight: 900; color: #ffe27a; white-space: nowrap; }
+.win-time { font-size: 0.75rem; }
+.win-toasts { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 95; display: flex; flex-direction: column; gap: 8px; width: min(380px, calc(100vw - 24px)); pointer-events: none; }
+.win-toast {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 14px;
+  background: linear-gradient(180deg, #7a0d17, #3d0409); color: #fff3c4; font-weight: 700;
+  border: 2px solid #d4a530; box-shadow: 0 0 20px rgba(255, 200, 80, 0.45), 0 8px 20px rgba(0, 0, 0, 0.5);
+  animation: toast-in 0.4s ease, toast-out 0.4s ease 4.2s forwards;
+}
+@keyframes toast-in { from { opacity: 0; transform: translateY(-20px) scale(0.9); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(-20px); } }
