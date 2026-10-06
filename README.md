@@ -4,11 +4,15 @@ Nettside for lønningspils med lodd, loddtrekning og lykkehjul.
 
 ## Slik fungerer det
 
-- **Lodd:** Deltakere åpner linken og skriver navnet sitt. De får da 5 tilfeldige lodd av totalt 100.
+- **Lodd:** Deltakere åpner linken, tar et profilbilde med mobilen og skriver navnet sitt. De får da 5 tilfeldige lodd av totalt 100.
 - **Én per person:** Samme navn kan ikke brukes to ganger, og hver enhet (cookie) og IP-adresse kan bare registrere én person.
 - **Lykkehjul:** Hver deltaker har 3 spinn. Hvert spinn har 15 % sjanse for øl. Resultatet avgjøres på serveren, så det kan ikke jukses fra nettleseren.
 - **Flappy Sjef:** På `/spill.html` kan man spille Flappy Bird med sjefens ansikt for å tjene flere spinn. 50 poeng gir 1 nytt spinn, 100 gir 2, 200 gir 3, 400 gir 4 osv. Hver belønning gis én gang per person. Det finnes en toppliste med beste poengsum per person. Serveren avviser poengsummer som er umulige å nå på tiden spillet varte. Sjefens ansikt ligger i `public/boss.png`.
 - **Duell:** På `/duell.html` kan man utfordre en annen deltaker i stein, saks, papir og satse spinn. Utfordreren velger motstander, innsats og sitt hemmelige trekk. Innsatsen holdes av til motstanderen svarer. Motstanderen kan godta (må ha nok spinn) eller avslå. Vinneren tar hele potten. Ved uavgjort eller avslag får utfordreren innsatsen tilbake. Spinn bytter bare eier, så det blir ikke flere spinn totalt.
+- **Profilbilde:** Påkrevd ved registrering. På mobil åpnes frontkameraet direkte. Bildet skaleres ned i nettleseren før opplasting. Man kan bytte bilde ved å trykke på det på forsiden.
+- **Chat:** På `/chat.html` kan alle prate live. Meldinger kommer fram med en gang via Server-Sent Events. De siste 300 meldingene lagres.
+- **Story:** Øverst på forsiden og i chatten. Trykk «Din story» for å dele et bilde med valgfri tekst. Bildene slettes automatisk etter 24 timer. Man kan slette sine egne bilder.
+- **Moderering:** Admin kan slette story-bilder og chatmeldinger, eller tømme hele chatten.
 - **Loddtrekning:** Admin går til `/admin.html`, skriver passordet og trykker **Kjør loddtrekning**. Da blir 10 av de 100 loddene tilfeldig trukket ut som vinnerlodd, og hvert av dem er verdt én øl. Resultatet vises for alle.
 
 ## Kjøre lokalt
@@ -36,6 +40,7 @@ ADMIN_PASSWORD=hemmelig npm start
 | `ONE_PER_IP` | `true` | Én registrering per IP-adresse |
 | `TRUST_PROXY` | `false` | Sett til `true` bak en proxy (Render, Railway, Fly osv.) så riktig IP brukes |
 | `DATA_FILE` | `./data.json` | Hvor data lagres |
+| `MEDIA_DIR` | `./media` | Hvor bilder (profilbilder og story) lagres |
 
 ### Merk om IP-sperren
 

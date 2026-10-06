@@ -13,13 +13,21 @@
   </header>
 
   <main>
+    <!-- Story -->
+    <div id="stories-bar" class="stories-bar"></div>
+
     <!-- Registrering -->
     <section id="join-section" class="card hidden">
       <h2>Bli med</h2>
       <p>Skriv inn navnet ditt, så får du <strong id="tpp">5</strong> lodd i trekningen og <strong id="spp">3</strong> spinn på lykkehjulet.</p>
-      <form id="join-form">
+      <form id="join-form" class="join-form">
+        <label class="avatar-picker" id="avatar-picker">
+          <input id="avatar-input" type="file" accept="image/*" capture="user" hidden>
+          <img id="avatar-preview" class="hidden" alt="Profilbildet ditt">
+          <span id="avatar-placeholder">📸<br>Ta profilbilde</span>
+        </label>
         <input id="name" type="text" placeholder="Navnet ditt" maxlength="40" autocomplete="name" required>
-        <button type="submit">Hent lodd 🎟️</button>
+        <button type="submit" id="join-btn">Hent lodd 🎟️</button>
       </form>
       <p class="note">Én registrering per person. Det er ikke lov å lage flere navn.</p>
       <p id="join-error" class="error"></p>
@@ -27,7 +35,15 @@
 
     <!-- Mine lodd -->
     <section id="me-section" class="card hidden">
-      <h2>Hei, <span id="me-name"></span>! 👋</h2>
+      <div class="me-head">
+        <label class="me-avatar" title="Bytt profilbilde">
+          <input id="change-avatar-input" type="file" accept="image/*" capture="user" hidden>
+          <span id="me-avatar"></span>
+          <span class="me-avatar-edit">📷</span>
+        </label>
+        <h2>Hei, <span id="me-name"></span>! 👋</h2>
+      </div>
+      <p id="avatar-missing" class="duel-alert hidden">📸 Trykk på bildet over for å legge inn et profilbilde!</p>
       <p>Dine lodd:</p>
       <div id="my-tickets" class="tickets"></div>
       <p id="my-result" class="result"></p>
@@ -44,6 +60,13 @@
       <button id="spin-btn">Spinn! 🎰</button>
       <p id="spin-result" class="result"></p>
       <p id="spin-total" class="note"></p>
+    </section>
+
+    <!-- Chat -->
+    <section id="chat-card" class="card hidden">
+      <h2>💬 Chat</h2>
+      <p>Prat med alle på lønningspilsen, live.</p>
+      <a class="button" href="/chat.html">Åpne chatten 💬</a>
     </section>
 
     <!-- Duell -->
@@ -85,6 +108,8 @@
 
   <footer><a href="/admin.html">Admin</a></footer>
 
+  <script src="/media.js"></script>
+  <script src="/stories.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

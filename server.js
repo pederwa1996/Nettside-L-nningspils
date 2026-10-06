@@ -24,10 +24,16 @@ const ONE_PER_IP = process.env.ONE_PER_IP !== 'false';
 const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 const PUBLIC_DIR = path.join(__dirname, 'public');
+// Bilder (profilbilder og story) lagres som filer her
+const MEDIA_DIR = process.env.MEDIA_DIR || path.join(path.dirname(DATA_FILE), 'media');
+const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
+const STORY_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_STORIES_PER_PERSON = 20;
+const CHAT_HISTORY = 300;
 
 // ---- Lagring ----
 function freshState() {
-  return { participants: [], draw: null, duels: [] };
+  return { participants: [], draw: null, duels: [], chat: [], stories: [] };
 }
 
 function loadState() {
@@ -40,6 +46,8 @@ function loadState() {
 
 let state = loadState();
 state.duels = state.duels || [];
+state.chat = state.chat || [];
+state.stories = state.stories || [];
 const games = new Map(); // aktive spill: gameId -> { token, start }
 
 function saveState() {
@@ -108,6 +116,72 @@ function milestonesFor(score) {
   return k;
 }
 
+// ---- Bilder ----
+// Tar imot et JPEG-bilde som data-URL (nedskalert i nettleseren) og lagrer det som fil.
+function saveImage(dataUrl, kind) {
+  const m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ''));
+  if (!m) throw new Error('Ugyldig bilde. Prøv å ta bildet på nytt.');
+  const buf = Buffer.from(m[1], 'base64');
+  if (buf.length > MAX_IMAGE_BYTES) throw new Error('Bildet er for stort.');
+  if (buf[0] !== 0xff || buf[1] !== 0xd8) throw new Error('Ugyldig bilde. Prøv å ta bildet på nytt.');
+  fs.mkdirSync(path.join(MEDIA_DIR, kind), { recursive: true });
+  const id = crypto.randomBytes(12).toString('hex');
+  fs.writeFileSync(path.join(MEDIA_DIR, kind, `${id}.jpg`), buf);
+  return `/media/${kind}/${id}.jpg`;
+}
+
+function deleteImage(url) {
+  const m = /^\/media\/(avatars|stories)\/([a-f0-9]+)\.jpg$/.exec(url || '');
+  if (m) fs.rm(path.join(MEDIA_DIR, m[1], `${m[2]}.jpg`), { force: true }, () => {});
+}
+
+function avatars() {
+  const out = {};
+  state.participants.forEach((p) => (out[p.name] = p.avatar || null));
+  return out;
+}
+
+// ---- Live-oppdateringer (Server-Sent Events) ----
+const sseClients = new Set();
+
+function broadcast(event, data) {
+  const msg = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+  for (const res of sseClients) res.write(msg);
+}
+
+setInterval(() => {
+  for (const res of sseClients) res.write(': ping\n\n');
+}, 20000);
+
+// ---- Story ----
+function pruneStories() {
+  const cutoff = Date.now() - STORY_TTL_MS;
+  const expired = state.stories.filter((s) => s.at < cutoff);
+  if (!expired.length) return false;
+  expired.forEach((s) => deleteImage(s.url));
+  state.stories = state.stories.filter((s) => s.at >= cutoff);
+  saveState();
+  return true;
+}
+
+setInterval(() => {
+  if (pruneStories()) broadcast('stories', {});
+}, 5 * 60 * 1000);
+
+function storyGroups() {
+  pruneStories();
+  const groups = new Map();
+  for (const s of state.stories) {
+    if (!groups.has(s.name)) groups.set(s.name, { name: s.name, avatar: avatars()[s.name] || null, items: [] });
+    groups.get(s.name).items.push({ id: s.id, url: s.url, caption: s.caption, at: s.at, expiresAt: s.at + STORY_TTL_MS });
+  }
+  return [...groups.values()].sort((a, b) => b.items[b.items.length - 1].at - a.items[a.items.length - 1].at);
+}
+
+function chatView(m) {
+  return { ...m, avatar: avatars()[m.name] || null };
+}
+
 // ---- Duell (stein, saks, papir med innsats) ----
 const MOVES = ['stein', 'saks', 'papir'];
 const BEATS = { stein: 'saks', saks: 'papir', papir: 'stein' };
@@ -169,6 +243,7 @@ function meView(p) {
   const winning = state.draw ? p.tickets.filter((t) => state.draw.winningTickets.includes(t)) : [];
   return {
     name: p.name,
+    avatar: p.avatar || null,
     tickets: p.tickets,
     spinsLeft: spinsAllowed(p) - p.spins.length,
     bonusSpins: p.bonusSpins || 0,
@@ -207,7 +282,7 @@ function readBody(req) {
     let raw = '';
     req.on('data', (chunk) => {
       raw += chunk;
-      if (raw.length > 10000) {
+      if (raw.length > 3_000_000) {
         reject(new Error('For stor forespørsel'));
         req.destroy();
       }
@@ -230,6 +305,22 @@ const MIME = {
   '.png': 'image/png',
   '.ico': 'image/x-icon',
 };
+
+function serveMedia(pathname, res) {
+  const m = /^\/media\/(avatars|stories)\/([a-f0-9]+)\.jpg$/.exec(pathname);
+  if (!m) {
+    res.writeHead(404);
+    return res.end();
+  }
+  fs.readFile(path.join(MEDIA_DIR, m[1], `${m[2]}.jpg`), (err, content) => {
+    if (err) {
+      res.writeHead(404);
+      return res.end();
+    }
+    res.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=86400' });
+    res.end(content);
+  });
+}
 
 function serveStatic(req, res) {
   const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
@@ -257,6 +348,7 @@ const routes = {
       participantCount: state.participants.length,
       ticketsLeft: TOTAL_TICKETS - usedTickets().size,
       participants: state.participants.map((p) => p.name),
+      avatars: avatars(),
       draw: publicDraw(),
       leaderboard: leaderboard(),
       incomingDuels: me ? state.duels.filter((d) => d.status === 'pending' && d.opponent === me.name).length : 0,
@@ -280,6 +372,8 @@ const routes = {
       return sendJson(res, 409, { error: 'Det er allerede registrert noen fra denne enheten/nettverket. Én registrering per person!' });
     }
 
+    if (!body.avatar) return sendJson(res, 400, { error: 'Du må ta et profilbilde 📸' });
+
     const used = usedTickets();
     const free = [];
     for (let i = 1; i <= TOTAL_TICKETS; i++) if (!used.has(i)) free.push(i);
@@ -289,6 +383,7 @@ const routes = {
       name,
       token: crypto.randomBytes(24).toString('hex'),
       ip,
+      avatar: saveImage(body.avatar, 'avatars'),
       tickets: pickRandom(free, TICKETS_PER_PERSON).sort((a, b) => a - b),
       spins: [],
       joinedAt: new Date().toISOString(),
@@ -436,6 +531,108 @@ const routes = {
     sendJson(res, 200, { me: meView(p) });
   },
 
+  'POST /api/avatar': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const url = saveImage(body.avatar, 'avatars');
+    deleteImage(p.avatar);
+    p.avatar = url;
+    saveState();
+    broadcast('avatars', avatars());
+    sendJson(res, 200, { me: meView(p) });
+  },
+
+  // ---- Live ----
+  'GET /api/events': (req, res) => {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-store',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+    res.write('retry: 3000\n\n');
+    sseClients.add(res);
+    req.on('close', () => sseClients.delete(res));
+  },
+
+  // ---- Chat ----
+  'GET /api/chat': (req, res) => {
+    sendJson(res, 200, { me: meView(currentParticipant(req)), messages: state.chat.slice(-100).map(chatView) });
+  },
+
+  'POST /api/chat': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const text = String(body.text || '').trim().slice(0, 500);
+    if (!text) return sendJson(res, 400, { error: 'Meldingen er tom.' });
+    const now = Date.now();
+    if (p.lastChatAt && now - p.lastChatAt < 400) return sendJson(res, 429, { error: 'Rolig nå, ikke så fort 😄' });
+    p.lastChatAt = now;
+    const msg = { id: crypto.randomBytes(8).toString('hex'), name: p.name, text, at: now };
+    state.chat.push(msg);
+    if (state.chat.length > CHAT_HISTORY) state.chat = state.chat.slice(-CHAT_HISTORY);
+    saveState();
+    broadcast('chat', chatView(msg));
+    sendJson(res, 200, { message: chatView(msg) });
+  },
+
+  // ---- Story ----
+  'GET /api/stories': (req, res) => {
+    sendJson(res, 200, { me: meView(currentParticipant(req)), groups: storyGroups() });
+  },
+
+  'POST /api/stories': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    pruneStories();
+    if (state.stories.filter((s) => s.name === p.name).length >= MAX_STORIES_PER_PERSON) {
+      return sendJson(res, 400, { error: `Du kan ha maks ${MAX_STORIES_PER_PERSON} bilder i storyen din.` });
+    }
+    const story = {
+      id: crypto.randomBytes(8).toString('hex'),
+      name: p.name,
+      url: saveImage(body.image, 'stories'),
+      caption: String(body.caption || '').trim().slice(0, 150),
+      at: Date.now(),
+    };
+    state.stories.push(story);
+    saveState();
+    broadcast('stories', {});
+    sendJson(res, 200, { ok: true });
+  },
+
+  'POST /api/stories/delete': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const s = state.stories.find((x) => x.id === body.id && x.name === p.name);
+    if (!s) return sendJson(res, 404, { error: 'Fant ikke bildet.' });
+    deleteImage(s.url);
+    state.stories = state.stories.filter((x) => x !== s);
+    saveState();
+    broadcast('stories', {});
+    sendJson(res, 200, { ok: true });
+  },
+
+  'POST /api/admin/story-delete': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const s = state.stories.find((x) => x.id === body.id);
+    if (s) {
+      deleteImage(s.url);
+      state.stories = state.stories.filter((x) => x !== s);
+      saveState();
+      broadcast('stories', {});
+    }
+    sendJson(res, 200, { ok: true });
+  },
+
+  'POST /api/admin/chat-delete': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    state.chat = body.all ? [] : state.chat.filter((m) => m.id !== body.id);
+    saveState();
+    broadcast('chat-reload', {});
+    sendJson(res, 200, { ok: true });
+  },
+
   'POST /api/admin/login': (req, res, body) => {
     if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
     sendJson(res, 200, {
@@ -447,7 +644,10 @@ const routes = {
         spinsAllowed: spinsAllowed(p),
         bestScore: p.bestScore || 0,
         spinWins: p.spins.filter(Boolean).length,
+        avatar: p.avatar || null,
       })),
+      stories: (pruneStories(), state.stories.map((x) => ({ id: x.id, name: x.name, url: x.url, caption: x.caption, at: x.at }))),
+      chat: state.chat.slice(-50).reverse(),
     });
   },
 
@@ -478,6 +678,9 @@ const routes = {
     if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
     state = freshState();
     saveState();
+    fs.rmSync(MEDIA_DIR, { recursive: true, force: true });
+    broadcast('chat-reload', {});
+    broadcast('stories', {});
     sendJson(res, 200, { ok: true });
   },
 };
@@ -487,6 +690,7 @@ const server = http.createServer(async (req, res) => {
   const handler = routes[`${req.method} ${pathname}`];
   if (!handler) {
     if (pathname.startsWith('/api/')) return sendJson(res, 404, { error: 'Ukjent endepunkt' });
+    if (req.method === 'GET' && pathname.startsWith('/media/')) return serveMedia(pathname, res);
     if (req.method === 'GET') return serveStatic(req, res);
     res.writeHead(405);
     return res.end();

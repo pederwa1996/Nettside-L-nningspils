@@ -109,6 +109,7 @@ function render() {
   $('wheel-section').classList.toggle('hidden', !me);
   $('game-card').classList.toggle('hidden', !me);
   $('duel-card').classList.toggle('hidden', !me);
+  $('chat-card').classList.toggle('hidden', !me);
   $('duel-alert').classList.toggle('hidden', !data.incomingDuels);
   $('duel-alert').textContent = data.incomingDuels === 1
     ? '🔔 Du har 1 utfordring som venter på svar!'
@@ -119,6 +120,8 @@ function render() {
 
   if (me) {
     $('me-name').textContent = me.name;
+    $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 64));
+    $('avatar-missing').classList.toggle('hidden', !!me.avatar);
     const winSet = new Set(me.winningTickets);
     $('my-tickets').innerHTML = '';
     me.tickets.forEach((t) => {
@@ -162,7 +165,7 @@ function render() {
   }
   data.participants.forEach((n) => {
     const li = document.createElement('li');
-    li.textContent = n;
+    li.append(avatarEl(data.avatars[n], n, 28), document.createTextNode(n));
     $('participants').appendChild(li);
   });
 }
@@ -178,6 +181,7 @@ function renderLeaderboard(list, me) {
     if (me && e.name === me.name) li.classList.add('me');
     li.innerHTML = `<span class="rank">${['🥇', '🥈', '🥉'][i] || `${i + 1}.`}</span><span class="lb-name"></span><span class="lb-score">${e.score}</span>`;
     li.querySelector('.lb-name').textContent = e.name;
+    li.querySelector('.rank').after(avatarEl(data.avatars[e.name], e.name, 28));
     $('leaderboard').appendChild(li);
   });
 }
@@ -193,15 +197,53 @@ async function refresh() {
   }
 }
 
-$('join-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  $('join-error').textContent = '';
+// ---------- Profilbilde ----------
+let avatarData = null;
+
+$('avatar-input').addEventListener('change', async () => {
+  const file = $('avatar-input').files[0];
+  if (!file) return;
   try {
-    await api('/api/join', { name: $('name').value });
-    await refresh();
+    avatarData = await resizeImage(file, 320, 0.85, true);
+    $('avatar-preview').src = avatarData;
+    $('avatar-preview').classList.remove('hidden');
+    $('avatar-placeholder').classList.add('hidden');
+    $('join-error').textContent = '';
   } catch (err) {
     $('join-error').textContent = err.message;
   }
+});
+
+$('change-avatar-input').addEventListener('change', async () => {
+  const file = $('change-avatar-input').files[0];
+  $('change-avatar-input').value = '';
+  if (!file) return;
+  try {
+    const avatar = await resizeImage(file, 320, 0.85, true);
+    await api('/api/avatar', { avatar });
+    await refresh();
+    if (window.reloadStories) window.reloadStories();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+$('join-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('join-error').textContent = '';
+  if (!avatarData) {
+    $('join-error').textContent = 'Du må ta et profilbilde først 📸';
+    return;
+  }
+  $('join-btn').disabled = true;
+  try {
+    await api('/api/join', { name: $('name').value, avatar: avatarData });
+    await refresh();
+    if (window.reloadStories) window.reloadStories();
+  } catch (err) {
+    $('join-error').textContent = err.message;
+  }
+  $('join-btn').disabled = false;
 });
 
 $('spin-btn').addEventListener('click', onSpin);

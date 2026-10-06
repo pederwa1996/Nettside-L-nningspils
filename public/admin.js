@@ -34,6 +34,43 @@ async function load() {
     $('rows').appendChild(tr);
   });
 
+  $('story-count').textContent = data.stories.length;
+  $('admin-stories').innerHTML = data.stories.length ? '' : '<p class="muted">Ingen bilder i storyen.</p>';
+  data.stories.forEach((s) => {
+    const fig = document.createElement('figure');
+    const img = document.createElement('img');
+    img.src = s.url;
+    const cap = document.createElement('figcaption');
+    cap.textContent = s.name + (s.caption ? `: ${s.caption}` : '');
+    const del = document.createElement('button');
+    del.className = 'secondary small-btn';
+    del.textContent = 'Slett';
+    del.addEventListener('click', async () => {
+      if (!confirm(`Slette bildet fra ${s.name}?`)) return;
+      await post('/api/admin/story-delete', { id: s.id });
+      await load();
+    });
+    fig.append(img, cap, del);
+    $('admin-stories').appendChild(fig);
+  });
+
+  $('admin-chat').innerHTML = data.chat.length ? '' : '<li class="muted">Ingen meldinger.</li>';
+  data.chat.forEach((m) => {
+    const li = document.createElement('li');
+    li.className = 'duel-row';
+    const span = document.createElement('span');
+    span.textContent = `${m.name}: ${m.text}`;
+    const del = document.createElement('button');
+    del.className = 'secondary small-btn';
+    del.textContent = 'Slett';
+    del.addEventListener('click', async () => {
+      await post('/api/admin/chat-delete', { id: m.id });
+      await load();
+    });
+    li.append(span, del);
+    $('admin-chat').appendChild(li);
+  });
+
   const state = await (await fetch('/api/state')).json();
   renderDraw(state.draw);
 }
@@ -74,6 +111,16 @@ $('draw-btn').addEventListener('click', async () => {
   try {
     const { draw } = await post('/api/admin/draw');
     renderDraw(draw);
+  } catch (err) {
+    showMsg(err.message);
+  }
+});
+
+$('clear-chat-btn').addEventListener('click', async () => {
+  if (!confirm('Slette alle meldinger i chatten?')) return;
+  try {
+    await post('/api/admin/chat-delete', { all: true });
+    await load();
   } catch (err) {
     showMsg(err.message);
   }
