@@ -319,6 +319,7 @@
   const TAB_HASH = { slot: 'automat', roulette: 'roulette', blackjack: 'blackjack', poker: 'poker', bar: 'baren' };
 
   function showTab(name) {
+    document.body.dataset.tab = name; // hver fane har sitt eget tema
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
     Object.keys(TAB_HASH).forEach((t) => $(`tab-${t}`).classList.toggle('hidden', t !== name));
     $('bet-card').classList.toggle('hidden', name === 'slot' || name === 'bar' || name === 'poker');

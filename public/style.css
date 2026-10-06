@@ -1116,3 +1116,298 @@ body.cantina .card, body.cantina .tile {
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
+
+/* =========================================================
+   Egne temaer per kasinofane (body[data-tab])
+   ========================================================= */
+body.kasino { transition: background-color 0.4s; }
+body.kasino h1, body.kasino h2, body.kasino .tab, body.kasino .slot-top { transition: color 0.3s; }
+
+/* ---------- 🎰 Automat: Las Vegas-neon ---------- */
+body.kasino[data-tab="slot"] {
+  background-color: #0b0614;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgba(255, 46, 196, 0.35), transparent 50%),
+    radial-gradient(ellipse at 90% 30%, rgba(0, 229, 255, 0.25), transparent 45%),
+    radial-gradient(ellipse at 50% 110%, rgba(140, 60, 255, 0.4), transparent 55%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 40px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 40px),
+    linear-gradient(180deg, #1a0b2e, #07030d);
+}
+body.kasino[data-tab="slot"] .card {
+  background: rgba(16, 6, 30, 0.88);
+  border: 2px solid #ff2ec4;
+  box-shadow: 0 0 14px rgba(255, 46, 196, 0.6), inset 0 0 18px rgba(255, 46, 196, 0.15), 0 0 0 4px rgba(0, 229, 255, 0.25);
+}
+body.kasino[data-tab="slot"] .marquee { background: #12061f; border-color: #00e5ff; box-shadow: 0 0 22px #00e5ff, inset 0 0 20px rgba(0, 229, 255, 0.3); }
+body.kasino[data-tab="slot"] .marquee::before { border-color: #ff2ec4; filter: drop-shadow(0 0 4px #ff2ec4); }
+body.kasino[data-tab="slot"] .marquee h1 {
+  font-family: 'Monoton', cursive;
+  font-weight: 400;
+  background: none;
+  color: #ffe6fa;
+  -webkit-text-fill-color: #ffe6fa;
+  text-shadow: 0 0 6px #ff2ec4, 0 0 16px #ff2ec4, 0 0 30px #ff2ec4;
+  filter: none;
+}
+body.kasino[data-tab="slot"] h2,
+body.kasino[data-tab="slot"] .wallet-num {
+  background: none;
+  -webkit-text-fill-color: #b9fbff;
+  color: #b9fbff;
+  text-shadow: 0 0 10px #00e5ff;
+}
+body.kasino[data-tab="slot"] .tab { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
+body.kasino[data-tab="slot"] .tab.active { background: #ff2ec4; color: #fff; box-shadow: 0 0 16px #ff2ec4; }
+body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble) {
+  background: linear-gradient(180deg, #00f0ff, #00a8c6);
+  color: #08010f;
+  border-color: #00e5ff;
+  box-shadow: 0 0 18px rgba(0, 229, 255, 0.7);
+  text-shadow: none;
+}
+body.kasino[data-tab="slot"] button.secondary { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
+body.kasino[data-tab="slot"] .slot-machine {
+  background: linear-gradient(180deg, #2a0f4a, #12061f);
+  border-color: #00e5ff;
+  box-shadow: 0 0 0 3px #ff2ec4, 0 0 30px rgba(255, 46, 196, 0.6);
+}
+body.kasino[data-tab="slot"] .slot-top { font-family: 'Monoton', cursive; font-weight: 400; color: #ffe6fa; text-shadow: 0 0 8px #ff2ec4; letter-spacing: 3px; }
+body.kasino[data-tab="slot"] .reel { border-color: #00e5ff; box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.35), 0 0 10px rgba(0, 229, 255, 0.5); }
+body.kasino[data-tab="slot"] .wallet-item { border-color: rgba(0, 229, 255, 0.5); }
+body.kasino[data-tab="slot"] .note, body.kasino[data-tab="slot"] .muted { color: #c9b3e6; }
+
+/* ---------- 🎡 Roulette: Monte Carlo ---------- */
+body.kasino[data-tab="roulette"] {
+  background-color: #031a12;
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(120, 255, 190, 0.22), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #0d4a33 0%, #063322 40%, #021a11 100%);
+}
+body.kasino[data-tab="roulette"] .card {
+  background: linear-gradient(180deg, rgba(6, 55, 36, 0.92), rgba(2, 28, 18, 0.95));
+}
+body.kasino[data-tab="roulette"] .marquee { background: linear-gradient(180deg, #0d4a33, #021a11); }
+body.kasino[data-tab="roulette"] .marquee h1,
+body.kasino[data-tab="roulette"] h2 { font-family: 'Playfair Display', Georgia, serif; font-style: italic; }
+body.kasino[data-tab="roulette"] .tab { background: linear-gradient(180deg, #0d4a33, #021a11); }
+body.kasino[data-tab="roulette"] .tab, body.kasino[data-tab="roulette"] .field-label { font-family: 'Playfair Display', Georgia, serif; }
+body.kasino[data-tab="roulette"] button.secondary { background: linear-gradient(180deg, #0d4a33, #021a11); }
+
+/* ---------- 🃏 Blackjack: rød velur og gull (grunntemaet) ---------- */
+
+/* ---------- ♠️ Poker: røykfylt saloon ---------- */
+body.kasino[data-tab="poker"] {
+  background-color: #0b0806;
+  background-image:
+    radial-gradient(ellipse at 50% 15%, rgba(255, 190, 110, 0.18), transparent 45%),
+    radial-gradient(ellipse at 15% 80%, rgba(200, 200, 200, 0.06), transparent 40%),
+    radial-gradient(ellipse at 85% 60%, rgba(200, 200, 200, 0.05), transparent 40%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 3px, transparent 3px 90px),
+    linear-gradient(180deg, #2b1a10 0%, #150c07 50%, #070403 100%);
+}
+body.kasino[data-tab="poker"] .card {
+  background: linear-gradient(180deg, rgba(40, 22, 12, 0.93), rgba(14, 8, 5, 0.96));
+  border-color: #8a5a2b;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.4), 0 0 0 5px #5a3517, inset 0 0 30px rgba(0, 0, 0, 0.6), 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+body.kasino[data-tab="poker"] .marquee { background: #1a0d06; border-color: #8a5a2b; box-shadow: 0 0 0 3px #3a2210, 0 10px 30px rgba(0, 0, 0, 0.6); }
+body.kasino[data-tab="poker"] .marquee::before { border-color: #ffb347; }
+body.kasino[data-tab="poker"] .marquee h1,
+body.kasino[data-tab="poker"] h2,
+body.kasino[data-tab="poker"] .tab { font-family: 'Rye', Georgia, serif; }
+body.kasino[data-tab="poker"] .marquee h1, body.kasino[data-tab="poker"] h2, body.kasino[data-tab="poker"] .wallet-num {
+  background: linear-gradient(180deg, #fff1d6, #e0a96d 60%, #9c6a33);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+body.kasino[data-tab="poker"] .tab { background: #1a0d06; color: #e0a96d; border-color: #5a3517; }
+body.kasino[data-tab="poker"] .tab.active { background: linear-gradient(180deg, #e0a96d, #9c6a33); color: #1a0d06; }
+body.kasino[data-tab="poker"] button.secondary { background: #1a0d06; color: #e0a96d; border-color: #5a3517; }
+body.kasino[data-tab="poker"] .poker-felt { border-color: #3a2210; box-shadow: 0 0 0 3px #8a5a2b, 0 0 0 6px #3a2210, inset 0 0 50px rgba(0, 0, 0, 0.6), 0 14px 30px rgba(0, 0, 0, 0.7); }
+
+/* ---------- 🍻 Baren: ølhall ---------- */
+body.kasino[data-tab="bar"] {
+  background-color: #2a1606;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 210, 120, 0.35), transparent 55%),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.22) 0 2px, transparent 2px 70px),
+    linear-gradient(180deg, #6b3a12 0%, #3d2009 50%, #1c0e04 100%);
+}
+body.kasino[data-tab="bar"] .card {
+  background: linear-gradient(180deg, rgba(255, 196, 70, 0.16), rgba(60, 30, 8, 0.92) 30%, rgba(30, 15, 4, 0.95));
+  border: 3px solid #c9932e;
+  border-top: 10px solid #fff7e6; /* ølskum */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(0, 0, 0, 0.35);
+}
+body.kasino[data-tab="bar"] .marquee { background: linear-gradient(180deg, #f7b733, #c47a0c); border-color: #fff7e6; box-shadow: 0 0 0 3px #8a5a14, 0 0 30px rgba(255, 200, 80, 0.5); }
+body.kasino[data-tab="bar"] .marquee::before { border-color: #fff7e6; }
+body.kasino[data-tab="bar"] .marquee h1,
+body.kasino[data-tab="bar"] h2 {
+  font-family: 'Lobster', cursive;
+  font-weight: 400;
+}
+body.kasino[data-tab="bar"] .marquee h1 { background: none; -webkit-text-fill-color: #fff7e6; color: #fff7e6; text-shadow: 0 2px 0 #8a5a14, 0 0 14px rgba(255, 255, 255, 0.5); filter: none; }
+body.kasino[data-tab="bar"] .casino-tagline { color: #3a1f05; }
+body.kasino[data-tab="bar"] .tab { background: #3d2009; color: #ffd27a; border-color: #8a5a14; }
+body.kasino[data-tab="bar"] .tab.active { background: linear-gradient(180deg, #fff7e6 0 22%, #f7b733 23%, #d48a14); color: #3a1f05; }
+body.kasino[data-tab="bar"] button.secondary { background: #3d2009; color: #ffd27a; border-color: #8a5a14; }
+
+/* =========================================================
+   Egne temaer per side
+   ========================================================= */
+/* Felles: kort følger sidens farger */
+body[class*="theme-"] .card { background: var(--card); }
+
+/* ---------- 💬 Chat: nattby med neon ---------- */
+body.theme-chat {
+  --bg: #050b18;
+  --card: #0f1b33;
+  --gold: #2ee6d6;
+  --gold-dark: #1fb5a8;
+  --muted: #8aa0c2;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(46, 230, 214, 0.18), transparent 45%),
+    radial-gradient(ellipse at 0% 100%, rgba(124, 77, 255, 0.22), transparent 50%),
+    linear-gradient(180deg, #0a1428, #050b18) fixed;
+}
+body.theme-chat .chat-header { background: rgba(10, 20, 40, 0.92); border-bottom: 1px solid rgba(46, 230, 214, 0.35); }
+body.theme-chat .chat-header h1 { font-family: 'Audiowide', sans-serif; color: #b8fff8; text-shadow: 0 0 10px #2ee6d6; }
+body.theme-chat .bubble { background: #13244a; border: 1px solid rgba(124, 77, 255, 0.35); }
+body.theme-chat .msg.mine .bubble { background: linear-gradient(135deg, #2ee6d6, #7c4dff); color: #fff; border: none; }
+body.theme-chat .msg-name { color: #2ee6d6; }
+body.theme-chat .chat-form { background: rgba(10, 20, 40, 0.95); border-top-color: rgba(46, 230, 214, 0.35); }
+
+/* ---------- ⚔️ Duell: arena med stål og ild ---------- */
+body.theme-duel {
+  --bg: #120a08;
+  --card: #1f1714;
+  --gold: #ff6a1a;
+  --gold-dark: #d9500a;
+  --muted: #b39a8f;
+  background:
+    radial-gradient(ellipse at 50% 120%, rgba(255, 90, 20, 0.45), transparent 55%),
+    radial-gradient(ellipse at 50% -20%, rgba(180, 190, 200, 0.18), transparent 50%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 12px),
+    linear-gradient(180deg, #2a201c, #0c0605) fixed;
+}
+body.theme-duel h1, body.theme-duel h2 { font-family: 'Black Ops One', Impact, sans-serif; font-weight: 400; letter-spacing: 1px; }
+body.theme-duel h1 { color: #e8ecf1; text-shadow: 0 2px 0 #555, 0 0 20px rgba(255, 106, 26, 0.7); }
+body.theme-duel h2 { color: #ff8a3d; }
+body.theme-duel .card { background: linear-gradient(180deg, #2b2320, #17110f); border: 2px solid #4d4642; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 0 1px #000, 0 10px 26px rgba(0, 0, 0, 0.6); }
+body.theme-duel button:not(.secondary) { color: #1a0b02; }
+body.theme-duel .move { background: linear-gradient(180deg, #3d3532, #241d1a); border: 1px solid #5c5450; }
+
+/* ---------- 🗿 Mogg-off: marmor og gull ---------- */
+body.theme-mogg {
+  --bg: #0a0a0a;
+  --card: #151515;
+  --gold: #d6b25e;
+  --gold-dark: #b08d3a;
+  --muted: #9a9a9a;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.12), transparent 50%),
+    linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.04) 45%, transparent 50%),
+    linear-gradient(65deg, transparent 60%, rgba(255, 255, 255, 0.03) 63%, transparent 66%),
+    linear-gradient(180deg, #1c1c1c, #050505) fixed;
+}
+body.theme-mogg h1, body.theme-mogg h2 { font-family: 'Anton', Impact, sans-serif; font-weight: 400; letter-spacing: 2px; text-transform: uppercase; }
+body.theme-mogg h1 { font-size: 3rem; color: #f2f2f2; text-shadow: 0 4px 0 #000, 0 0 30px rgba(214, 178, 94, 0.4); }
+body.theme-mogg .card {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.05), transparent 40%),
+    linear-gradient(180deg, #1d1d1d, #0f0f0f);
+  border: 1px solid #3a3a3a;
+  border-top: 2px solid var(--gold);
+}
+
+/* ---------- 🎯 Oppgaver: skattekart ---------- */
+body.theme-quest {
+  --bg: #2b1d10;
+  --card: #f1e2c0;
+  --text: #3b2a17;
+  --muted: #7a6040;
+  --gold: #8b2e16;
+  --gold-dark: #6e230f;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5)),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #4a3220, #22160b) fixed;
+}
+body.theme-quest .hero h1 { font-family: 'Pirata One', Georgia, serif; font-weight: 400; font-size: 3rem; color: #f1e2c0; text-shadow: 0 3px 0 #000; }
+body.theme-quest .hero .sub { color: #e6d3a8; }
+body.theme-quest .hero .sub a { color: #ffd27a; }
+body.theme-quest .card {
+  color: var(--text);
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.4), transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(139, 90, 43, 0.25), transparent 50%),
+    #f1e2c0;
+  border: 1px solid #c4a473;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 0 40px rgba(139, 90, 43, 0.35);
+}
+body.theme-quest .card h2, body.theme-quest .card h3, body.theme-quest .task-title { font-family: 'Pirata One', Georgia, serif; font-weight: 400; font-size: 1.5rem; color: #5a1d0c; }
+body.theme-quest button:not(.secondary) { background: #8b2e16; color: #f9eccf; }
+body.theme-quest button.secondary { background: #e3cfa3; color: #3b2a17; border: 1px solid #b08d5a; }
+body.theme-quest .task-reward { background: #8b2e16; color: #f9eccf; }
+body.theme-quest .task-text { background: #fbf3df; color: #3b2a17; border-color: #c4a473; }
+body.theme-quest .big-number strong { color: #8b2e16; }
+body.theme-quest a { color: #8b2e16; }
+
+/* ---------- 🕊️ Flappy Sjef: retro arkade ---------- */
+body.theme-arcade {
+  --bg: #2a6fd1;
+  --card: #10235a;
+  --gold: #ffd33d;
+  --gold-dark: #e6b800;
+  --muted: #b7c8f0;
+  background:
+    radial-gradient(ellipse 120px 40px at 15% 18%, rgba(255, 255, 255, 0.85), transparent 70%),
+    radial-gradient(ellipse 160px 50px at 80% 10%, rgba(255, 255, 255, 0.75), transparent 70%),
+    radial-gradient(ellipse 140px 44px at 60% 30%, rgba(255, 255, 255, 0.55), transparent 70%),
+    linear-gradient(180deg, #5fb4ff 0%, #2a6fd1 45%, #10235a 100%) fixed;
+}
+body.theme-arcade h1, body.theme-arcade h2 { font-family: 'Press Start 2P', monospace; font-weight: 400; line-height: 1.4; }
+body.theme-arcade h1 { font-size: 1.5rem; color: #ffd33d; text-shadow: 3px 3px 0 #b3401a, 6px 6px 0 rgba(0, 0, 0, 0.3); }
+body.theme-arcade h2 { font-size: 0.95rem; color: #ffd33d; }
+body.theme-arcade .card { border: 4px solid #000; border-radius: 4px; box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45); }
+body.theme-arcade button:not(.secondary) { border-radius: 4px; box-shadow: 4px 4px 0 #000; }
+
+/* ---------- 👤 Profil: lilla og rosa ---------- */
+body.theme-profile {
+  --bg: #120a1f;
+  --card: #1d1330;
+  --gold: #ff7ac6;
+  --gold-dark: #e0559f;
+  --muted: #a99bc4;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(255, 122, 198, 0.25), transparent 45%),
+    radial-gradient(ellipse at 100% 20%, rgba(255, 179, 71, 0.18), transparent 40%),
+    radial-gradient(ellipse at 50% 100%, rgba(124, 77, 255, 0.3), transparent 55%),
+    linear-gradient(180deg, #1d1033, #0b0614) fixed;
+}
+body.theme-profile .profile-name { font-family: 'Pacifico', cursive; font-weight: 400; font-size: 2rem; background: linear-gradient(90deg, #ffb347, #ff7ac6, #a77bff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+body.theme-profile .profile-avatar .avatar { border: none; padding: 4px; background: conic-gradient(#ffb347, #ff7ac6, #a77bff, #ffb347); box-shadow: 0 0 30px rgba(255, 122, 198, 0.45); }
+body.theme-profile .stat { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 122, 198, 0.2); }
+body.theme-profile .stat-value { color: #ffb3dd; }
+body.theme-profile .card { border: 1px solid rgba(255, 122, 198, 0.18); }
+
+/* ---------- 🔐 Admin: kontrollrom ---------- */
+body.theme-admin {
+  --bg: #050a06;
+  --card: #0b140d;
+  --text: #c8f7d0;
+  --muted: #6fa77a;
+  --gold: #39ff6a;
+  --gold-dark: #22c44b;
+  background:
+    repeating-linear-gradient(0deg, rgba(57, 255, 106, 0.03) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #08130b, #020502) fixed;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+body.theme-admin h1, body.theme-admin h2 { font-family: 'JetBrains Mono', ui-monospace, monospace; color: #39ff6a; text-shadow: 0 0 8px rgba(57, 255, 106, 0.6); }
+body.theme-admin .card { border: 1px solid rgba(57, 255, 106, 0.35); box-shadow: 0 0 16px rgba(57, 255, 106, 0.08); }
+body.theme-admin button:not(.secondary) { color: #021006; }
+body.theme-admin input, body.theme-admin select, body.theme-admin textarea { font-family: inherit; }
+body.kasino[data-tab="roulette"] .tab.active { background: linear-gradient(180deg, var(--gold-1), var(--gold-2)); color: #021a11; }
