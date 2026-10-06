@@ -4,6 +4,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const supabase = require('./supabase');
 
 // ---- Innstillinger (kan overstyres med miljøvariabler) ----
 const PORT = Number(process.env.PORT) || 3000;
@@ -44,18 +45,19 @@ function loadState() {
   }
 }
 
-let state = loadState();
-state.duels = state.duels || [];
-state.chat = state.chat || [];
-state.stories = state.stories || [];
-state.moggs = state.moggs || [];
-state.moggBest = state.moggBest || {};
+// Fyller inn felt som mangler i data lagret av eldre versjoner
+function normalizeState(s) {
+  return { ...freshState(), ...s };
+}
+
+let state = normalizeState(loadState());
 const games = new Map(); // aktive spill: gameId -> { token, start }
 
 function saveState() {
   const tmp = DATA_FILE + '.tmp';
   fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
   fs.renameSync(tmp, DATA_FILE);
+  supabase.scheduleSave(() => JSON.stringify(state));
 }
 
 // ---- Hjelpefunksjoner ----
@@ -129,12 +131,16 @@ function saveImage(dataUrl, kind) {
   fs.mkdirSync(path.join(MEDIA_DIR, kind), { recursive: true });
   const id = crypto.randomBytes(12).toString('hex');
   fs.writeFileSync(path.join(MEDIA_DIR, kind, `${id}.jpg`), buf);
+  // Kopi i Supabase, så bildet overlever at serveren starter på nytt
+  if (supabase.enabled) supabase.uploadImage(`${kind}/${id}.jpg`, buf);
   return `/media/${kind}/${id}.jpg`;
 }
 
 function deleteImage(url) {
   const m = /^\/media\/(avatars|stories|mogg)\/([a-f0-9]+)\.jpg$/.exec(url || '');
-  if (m) fs.rm(path.join(MEDIA_DIR, m[1], `${m[2]}.jpg`), { force: true }, () => {});
+  if (!m) return;
+  fs.rm(path.join(MEDIA_DIR, m[1], `${m[2]}.jpg`), { force: true }, () => {});
+  if (supabase.enabled) supabase.deleteImages([`${m[1]}/${m[2]}.jpg`]);
 }
 
 function avatars() {
@@ -377,6 +383,11 @@ function serveMedia(pathname, res) {
   }
   fs.readFile(path.join(MEDIA_DIR, m[1], `${m[2]}.jpg`), (err, content) => {
     if (err) {
+      // Etter omstart ligger bildet bare i Supabase
+      if (supabase.enabled) {
+        res.writeHead(302, { Location: supabase.publicUrl(`${m[1]}/${m[2]}.jpg`), 'Cache-Control': 'public, max-age=3600' });
+        return res.end();
+      }
       res.writeHead(404);
       return res.end();
     }
@@ -848,6 +859,7 @@ const routes = {
     state = freshState();
     saveState();
     fs.rmSync(MEDIA_DIR, { recursive: true, force: true });
+    if (supabase.enabled) supabase.deleteAllImages();
     broadcast('chat-reload', {});
     broadcast('stories', {});
     sendJson(res, 200, { ok: true });
@@ -872,7 +884,43 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log(`🍺 Lønningspils kjører på http://localhost:${PORT}`);
-  if (!process.env.ADMIN_PASSWORD) console.log('⚠️  Bruker standard admin-passord "pils123". Sett ADMIN_PASSWORD!');
-});
+async function start() {
+  if (supabase.enabled) {
+    // Hent lagrede data fra Supabase før vi tar imot besøk. Feiler det, avslutter vi
+    // heller enn å starte tomt (da ville vi overskrevet de lagrede dataene).
+    for (let attempt = 1; ; attempt++) {
+      try {
+        await supabase.init();
+        const remote = await supabase.loadState();
+        if (remote) state = normalizeState(remote);
+        console.log(remote ? `☁️  Hentet data fra Supabase (${state.participants.length} deltakere)` : '☁️  Supabase er klar (ingen lagrede data ennå)');
+        break;
+      } catch (err) {
+        console.error(`Kunne ikke koble til Supabase (forsøk ${attempt}):`, err.message);
+        if (attempt >= 5) {
+          console.error('Gir opp. Sjekk SUPABASE_URL og SUPABASE_KEY.');
+          process.exit(1);
+        }
+        await new Promise((r) => setTimeout(r, 2000 * attempt));
+      }
+    }
+  } else {
+    console.log('💾 Lagrer lokalt i', DATA_FILE, '(sett SUPABASE_URL og SUPABASE_KEY for varig lagring)');
+  }
+
+  server.listen(PORT, () => {
+    console.log(`🍺 Lønningspils kjører på http://localhost:${PORT}`);
+    if (!process.env.ADMIN_PASSWORD) console.log('⚠️  Bruker standard admin-passord "pils123". Sett ADMIN_PASSWORD!');
+  });
+}
+
+// Render stopper serveren med SIGTERM: sørg for at siste endringer er lagret først
+for (const sig of ['SIGTERM', 'SIGINT']) {
+  process.on(sig, async () => {
+    console.log(`${sig} mottatt, lagrer ...`);
+    await supabase.drain();
+    process.exit(0);
+  });
+}
+
+start();

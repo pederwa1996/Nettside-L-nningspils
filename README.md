@@ -43,6 +43,24 @@ ADMIN_PASSWORD=hemmelig npm start
 | `TRUST_PROXY` | `false` | Sett til `true` bak en proxy (Render, Railway, Fly osv.) så riktig IP brukes |
 | `DATA_FILE` | `./data.json` | Hvor data lagres |
 | `MEDIA_DIR` | `./media` | Hvor bilder (profilbilder og story) lagres |
+| `SUPABASE_URL` | – | Project URL fra Supabase. Slår på varig lagring |
+| `SUPABASE_KEY` | – | Hemmelig nøkkel fra Supabase (service_role / secret). **Del aldri denne** |
+
+### Varig lagring med Supabase (gratis)
+
+Gratisversjonen av Render sletter disken når tjenesten sovner eller startes på nytt. Med Supabase lagres alt der i stedet:
+
+- Data (deltakere, spinn, chat, dueller osv.) lagres som én JSON-fil i den private bøtta `lonningspils-data`.
+- Bilder lastes opp til den offentlige bøtta `lonningspils-media`.
+- Bøttene opprettes automatisk. Du trenger ikke kjøre noe SQL.
+
+Oppsett:
+1. Lag en gratis konto og et nytt prosjekt på supabase.com.
+2. Under **Project Settings → API Keys**, kopier **Project URL** og den **hemmelige** nøkkelen (`service_role` eller `sb_secret_...`, ikke `anon`/`publishable`).
+3. Legg dem inn i Render som `SUPABASE_URL` og `SUPABASE_KEY`.
+4. I loggen til Render skal det stå «☁️ Supabase er klar» ved oppstart.
+
+Når serveren starter, hentes lagrede data fra Supabase. Klarer den ikke koble til, avslutter den heller enn å starte tomt, så lagrede data ikke blir overskrevet.
 
 ### Merk om IP-sperren
 
