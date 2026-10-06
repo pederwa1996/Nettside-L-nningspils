@@ -190,7 +190,31 @@ function newDeviceCode() {
 function currentParticipant(req) {
   const token = parseCookies(req).pils_token;
   if (!token) return null;
-  return state.participants.find((p) => p.token === token) || null;
+  const p = state.participants.find((x) => x.token === token) || null;
+  // «Sist online»: lagres sammen med neste endring, så vi slipper å skrive til disk på hvert besøk
+  if (p) p.lastSeen = Date.now();
+  return p;
+}
+
+// Bytter navn overalt der navnet brukes som nøkkel
+function renameEverywhere(oldName, newName) {
+  const swap = (obj, key) => {
+    if (obj && obj[key] === oldName) obj[key] = newName;
+  };
+  state.duels.forEach((d) => ['challenger', 'opponent', 'winner'].forEach((k) => swap(d, k)));
+  state.moggs.forEach((m) => ['challenger', 'opponent', 'winner'].forEach((k) => swap(m, k)));
+  state.tasks.forEach((t) => t.attempts.forEach((a) => swap(a, 'name')));
+  [state.stories, state.chat, state.activity, state.orders, state.casinoLog, state.spinLog].forEach((list) => list.forEach((x) => swap(x, 'name')));
+  Object.values(state.reactions).forEach((r) => {
+    r.likes = r.likes.map((n) => (n === oldName ? newName : n));
+    r.comments.forEach((c) => swap(c, 'name'));
+  });
+  for (const map of [state.moggBest, state.blackjack]) {
+    if (map[oldName]) {
+      map[newName] = map[oldName];
+      delete map[oldName];
+    }
+  }
 }
 
 function usedTickets() {
@@ -869,6 +893,25 @@ const routes = {
     saveState();
 
     sendJson(res, 200, { me: meView(participant) }, { 'Set-Cookie': sessionCookie(participant.token) });
+  },
+
+  'POST /api/rename': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const name = String(body.name || '').trim().replace(/\s+/g, ' ');
+    if (name.length < 2 || name.length > 40) return sendJson(res, 400, { error: 'Navnet må være mellom 2 og 40 tegn.' });
+    if (name === p.name) return sendJson(res, 400, { error: 'Det er jo det samme navnet 😄' });
+    const key = normalizeName(name);
+    if (state.participants.some((x) => x !== p && normalizeName(x.name) === key)) {
+      return sendJson(res, 409, { error: 'Det navnet er allerede tatt.' });
+    }
+    const old = p.name;
+    renameEverywhere(old, name);
+    p.name = name;
+    addActivity(name, '✏️', `byttet navn fra ${old}`);
+    saveState();
+    broadcast('avatars', avatars());
+    sendJson(res, 200, { me: meView(p) });
   },
 
   // ---- Samme profil på flere enheter ----
@@ -1575,7 +1618,7 @@ const routes = {
     const acts = state.activity.filter((a) => a.name === p.name).slice().reverse();
     sendJson(res, 200, {
       viewer: viewer ? viewer.name : null,
-      profile: { name: p.name, avatar: p.avatar || null, joinedAt: p.joinedAt, isAdmin: !!p.isAdmin, stats: profileStats(p) },
+      profile: { name: p.name, avatar: p.avatar || null, joinedAt: p.joinedAt, lastSeen: p.lastSeen || null, isAdmin: !!p.isAdmin, stats: profileStats(p) },
       activity: acts.slice(0, 150).map((a) => activityView(a, viewer)),
       people: state.participants.map((x) => ({ name: x.name, avatar: x.avatar || null, isAdmin: !!x.isAdmin })),
     });

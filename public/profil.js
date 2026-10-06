@@ -38,6 +38,12 @@
     return sameDay ? `${timeAgo(ms)} · ${timeOfDay(ms)}` : new Date(ms).toLocaleString('no-NO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
+  function lastSeenText(p) {
+    if (p.name === data.viewer || (p.lastSeen && Date.now() - p.lastSeen < 3 * 60 * 1000)) return '🟢 Online nå';
+    if (!p.lastSeen) return 'Ikke sett på en stund';
+    return `Sist online ${when(p.lastSeen)}`;
+  }
+
   // ---------- Øverst: alle deltakere ----------
   function renderPeople() {
     const wrap = $('people');
@@ -252,7 +258,7 @@
     $('p-avatar').replaceChildren(avatarEl(p.avatar, p.name, 120));
     $('p-name').textContent = p.name === data.viewer ? `${p.name} (deg)` : p.name;
     $('p-badge').classList.toggle('hidden', !p.isAdmin);
-    $('p-joined').textContent = p.joinedAt ? `Med siden ${when(Date.parse(p.joinedAt))}` : '';
+    $('p-joined').textContent = lastSeenText(p);
     renderPeople();
     renderStats(p.stats);
     renderGallery();

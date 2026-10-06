@@ -241,9 +241,11 @@ select {
 .join-form .avatar-picker + input { flex-basis: 100%; }
 .me-head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
 .me-head h2 { margin: 0; }
-.me-avatar { position: relative; cursor: pointer; display: inline-flex; }
+.me-avatar { position: relative; display: inline-flex; }
 .me-avatar .avatar { border: 3px solid var(--gold); }
-.me-avatar-edit { position: absolute; right: -4px; bottom: -4px; font-size: 1rem; background: var(--card); border-radius: 50%; padding: 2px; }
+.me-avatar-edit { position: absolute; right: -6px; bottom: -6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: var(--card); border: 2px solid var(--gold); border-radius: 50%; cursor: pointer; }
+.rename-btn { background: none; padding: 2px 6px; font-size: 1rem; vertical-align: middle; opacity: 0.7; }
+.rename-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); opacity: 1; }
 
 /* Story */
 .stories-bar { display: flex; gap: 14px; overflow-x: auto; padding: 4px 2px 14px; margin-bottom: 4px; scrollbar-width: none; }
@@ -819,13 +821,13 @@ body.cantina h3 {
 }
 
 /* Knapper i ølfarge med varm glød */
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.ao-close),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.ao-close):not(.rename-btn),
 body.cantina .button {
   background: linear-gradient(180deg, #ffcf5a, #f2a516);
   color: #2a1608;
   box-shadow: 0 3px 0 #a86a0b, 0 0 16px rgba(255, 180, 60, 0.3);
 }
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.ao-close):hover:not(:disabled),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.ao-close):not(.rename-btn):hover:not(:disabled),
 body.cantina .button:hover {
   background: linear-gradient(180deg, #ffd977, #f7b02a);
 }

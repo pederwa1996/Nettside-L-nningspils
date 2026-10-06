@@ -314,6 +314,19 @@ $('join-form').addEventListener('submit', async (e) => {
   $('join-btn').disabled = false;
 });
 
+// ---------- Endre navn ----------
+$('rename-btn').addEventListener('click', async () => {
+  const name = prompt('Hva vil du hete?', data.me.name);
+  if (name === null || !name.trim() || name.trim() === data.me.name) return;
+  try {
+    await api('/api/rename', { name });
+    await refresh();
+    if (window.reloadStories) window.reloadStories();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
 // ---------- Samme profil på flere enheter ----------
 $('device-btn').addEventListener('click', async () => {
   try {

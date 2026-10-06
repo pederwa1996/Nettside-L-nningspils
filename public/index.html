@@ -50,14 +50,16 @@
     <!-- Mine lodd -->
     <section id="me-section" class="card hidden">
       <div class="me-head">
-        <label class="me-avatar" title="Bytt profilbilde">
-          <input id="change-avatar-input" type="file" accept="image/*" capture="user" hidden>
+        <div class="me-avatar">
           <span id="me-avatar"></span>
-          <span class="me-avatar-edit">📷</span>
-        </label>
-        <h2>Hei, <span id="me-name"></span>! 👋</h2>
+          <!-- Bare det lille kameraet åpner kameraet, så man ikke kommer borti det ved et uhell -->
+          <label class="me-avatar-edit" title="Bytt profilbilde">
+            <input id="change-avatar-input" type="file" accept="image/*" capture="user" hidden>📷
+          </label>
+        </div>
+        <h2>Hei, <span id="me-name"></span>! 👋 <button type="button" id="rename-btn" class="rename-btn" title="Endre navn">✏️</button></h2>
       </div>
-      <p id="avatar-missing" class="duel-alert hidden">📸 Trykk på bildet over for å legge inn et profilbilde!</p>
+      <p id="avatar-missing" class="duel-alert hidden">📸 Trykk på det lille kameraet for å legge inn et profilbilde!</p>
       <p>Dine lodd:</p>
       <div id="my-tickets" class="tickets"></div>
       <p id="my-result" class="result"></p>
