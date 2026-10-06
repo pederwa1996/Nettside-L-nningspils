@@ -34,6 +34,7 @@
         <button type="button" class="tab active" data-tab="slot">🎰 Automat</button>
         <button type="button" class="tab" data-tab="roulette">🎡 Roulette</button>
         <button type="button" class="tab" data-tab="blackjack">🃏 Blackjack</button>
+        <button type="button" class="tab" data-tab="poker">♠️ Poker</button>
         <button type="button" class="tab" data-tab="bar">🍻 Baren</button>
       </div>
 
@@ -106,6 +107,47 @@
         <p class="note">Dealer trekker til 17. Blackjack betaler 3:2. Du kan doble på de to første kortene.</p>
       </section>
 
+      <!-- Poker -->
+      <section id="tab-poker" class="card hidden">
+        <div class="poker-table" id="poker-table">
+          <div class="poker-felt"></div>
+          <div class="poker-center">
+            <div id="pk-board" class="pk-board"></div>
+            <div id="pk-pot" class="pk-pot"></div>
+            <div id="pk-status" class="pk-status"></div>
+          </div>
+          <div id="pk-seats"></div>
+        </div>
+        <div id="pk-mine" class="pk-mine hidden">
+          <div id="pk-my-cards" class="pk-my-cards"></div>
+          <div id="pk-my-info" class="pk-my-info"></div>
+        </div>
+        <div id="pk-actions" class="pk-actions hidden">
+          <div class="pk-buttons">
+            <button type="button" class="secondary" id="pk-fold">Kast</button>
+            <button type="button" id="pk-call">Sjekk</button>
+          </div>
+          <div class="pk-raise" id="pk-raise-box">
+            <input type="range" id="pk-raise-range" step="5">
+            <div class="pk-buttons">
+              <button type="button" id="pk-raise">Høyne til <span id="pk-raise-to">0</span></button>
+              <button type="button" class="secondary" id="pk-allin">All in</button>
+            </div>
+          </div>
+        </div>
+        <div id="pk-buyin" class="pk-buyin hidden">
+          <p>Sett deg på plass <strong id="pk-buyin-seat">1</strong>. Hvor mye flus vil du ta med til bordet?</p>
+          <input type="range" id="pk-buyin-range" step="10">
+          <div class="pk-buttons">
+            <button type="button" class="secondary" id="pk-buyin-cancel">Avbryt</button>
+            <button type="button" id="pk-buyin-ok">Sett deg med <span id="pk-buyin-amount">200</span> flus</button>
+          </div>
+        </div>
+        <p id="pk-msg" class="result"></p>
+        <p id="pk-info" class="note center"></p>
+        <button type="button" id="pk-leave" class="secondary small-btn hidden">Reis deg fra bordet (sjetongene går tilbake til flus)</button>
+      </section>
+
       <!-- Baren -->
       <section id="tab-bar" class="card hidden">
         <div id="bar">
@@ -142,6 +184,7 @@
   <script src="/media.js"></script>
   <script src="/kasino.js"></script>
   <script src="/baren.js"></script>
+  <script src="/pokerbord.js"></script>
   <script src="/admin-bubble.js"></script>
 </body>
 </html>

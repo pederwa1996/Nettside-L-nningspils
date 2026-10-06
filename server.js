@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const supabase = require('./supabase');
+const { createPoker, SEATS: POKER_SEATS } = require('./poker');
 const { TASKS: DEFAULT_TASKS, RETIRED: RETIRED_TASKS } = require('./tasks-default');
 
 // ---- Innstillinger (kan overstyres med miljøvariabler) ----
@@ -41,11 +42,18 @@ const PILS_PRICE = Number(process.env.PILS_PRICE) || 250; // pris i flus for én
 // i snitt (ca. 37 flus på hjulet, 30 på automaten), så flus ikke blir en pengemaskin.
 const SPIN_PRICE = Number(process.env.SPIN_PRICE) || 50;
 const MAX_PILS_PER_ORDER = 5;
+const POKER_BLINDS = { small: Number(process.env.POKER_SMALL_BLIND) || 5, big: Number(process.env.POKER_BIG_BLIND) || 10 };
+const POKER_MIN_BUYIN = Number(process.env.POKER_MIN_BUYIN) || 100;
+const POKER_MAX_BUYIN = Number(process.env.POKER_MAX_BUYIN) || 1000;
 const MAX_PENDING_ORDERS = 3;
 
 // ---- Lagring ----
 function freshState() {
-  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {} };
+  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, poker: freshPoker() };
+}
+
+function freshPoker() {
+  return { seats: Array(POKER_SEATS).fill(null), hand: null, button: -1, lastResult: null };
 }
 
 function defaultTasks() {
@@ -209,6 +217,8 @@ function renameEverywhere(oldName, newName) {
     r.likes = r.likes.map((n) => (n === oldName ? newName : n));
     r.comments.forEach((c) => swap(c, 'name'));
   });
+  state.poker.seats.forEach((x) => swap(x, 'name'));
+  if (state.poker.hand) Object.values(state.poker.hand.players).forEach((x) => swap(x, 'name'));
   for (const map of [state.moggBest, state.blackjack]) {
     if (map[oldName]) {
       map[newName] = map[oldName];
@@ -450,7 +460,7 @@ function orderView(o) {
   return { id: o.id, name: o.name, qty: o.qty, pay: o.pay, cost: o.cost, note: o.note, status: o.status, at: o.at, doneAt: o.doneAt || null };
 }
 
-const GAME_NAMES = { slot: 'automaten', roulette: 'roulette', blackjack: 'blackjack' };
+const GAME_NAMES = { slot: 'automaten', roulette: 'roulette', blackjack: 'blackjack', poker: 'pokerbordet' };
 
 // Registrerer et kasinospill. Gevinster vises live i kasinoet, store gevinster havner på profilen.
 // won = det som vises som gevinst, net = hva man faktisk tjente/tapte (til statistikken)
@@ -586,6 +596,23 @@ function spinsLeft(p) {
 function addSpins(p, n) {
   p.bonusSpins = (p.bonusSpins || 0) + n;
 }
+
+// ---- Poker ----
+const poker = createPoker({
+  state: () => state,
+  save: saveState,
+  broadcast,
+  findParticipant,
+  addFlus: (p, n) => addFlus(p, n),
+  shuffle: (arr) => pickRandom(arr, arr.length),
+  onWin: (name, won, net, handName) => {
+    const p = findParticipant(name);
+    if (p) logCasino(p, 'poker', { won: net, net, detail: handName || '' });
+  },
+  blinds: POKER_BLINDS,
+  minBuyIn: POKER_MIN_BUYIN,
+  maxBuyIn: POKER_MAX_BUYIN,
+});
 
 // ---- Aktivitet og reaksjoner (likes/kommentarer) ----
 const MAX_ACTIVITY = 2000;
@@ -1524,6 +1551,33 @@ const routes = {
     sendJson(res, 200, { name: p.name, delta, spinsLeft: spinsLeft(p) });
   },
 
+  // ---- Poker ----
+  'GET /api/poker': (req, res) => {
+    const p = currentParticipant(req);
+    sendJson(res, 200, { me: meView(p), table: poker.view(p, avatars()) });
+  },
+
+  'POST /api/poker/sit': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    poker.sit(p, Number(body.seat), body.buyIn);
+    sendJson(res, 200, { me: meView(p), table: poker.view(p, avatars()) });
+  },
+
+  'POST /api/poker/leave': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    poker.leave(p);
+    sendJson(res, 200, { me: meView(p), table: poker.view(p, avatars()) });
+  },
+
+  'POST /api/poker/action': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    poker.act(p, String(body.action || ''), body.amount);
+    sendJson(res, 200, { me: meView(p), table: poker.view(p, avatars()) });
+  },
+
   // ---- Baren ----
   'GET /api/bar': (req, res) => {
     const p = currentParticipant(req);
@@ -1787,6 +1841,8 @@ async function start() {
     const similar = Object.keys(process.env).filter((k) => /supa|base_url|_key$/i.test(k) && !/^(SUPABASE_URL|SUPABASE_KEY)$/.test(k));
     if (similar.length) console.log('   Lignende variabler funnet:', similar.map((k) => JSON.stringify(k)).join(', '));
   }
+
+  poker.restore(); // avbryt en hånd som var i gang da serveren stoppet
 
   if (removedTasks) {
     console.log(`🧹 Fjernet ${removedTasks} utgåtte oppgaver`);

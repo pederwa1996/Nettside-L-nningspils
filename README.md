@@ -14,6 +14,7 @@ Nettside for lønningspils med lodd, loddtrekning og lykkehjul.
 - **Kasino:** På `/kasino.html`. Alle har **flus** (penger), og starter med `START_FLUS` (100).
   - **Automat:** koster 1 spinn (eller `SPIN_PRICE` flus) per trekk og gir flus (10–500), eller 🍺🍺🍺 (2 % sjanse) som gir én pils til gode. Utfallet avgjøres på serveren.
   - **Roulette** (europeisk, én null) og **blackjack** (dealer trekker til 17, 3:2, doble, ingen splitting) spilles med flus, 10–`CASINO_MAX_BET` (200) per runde.
+- **Poker:** Fane i kasinoet. Ett Texas Hold'em-bord med 9 plasser. Man setter seg med flus (innkjøp `POKER_MIN_BUYIN`–`POKER_MAX_BUYIN`, standard 100–1000) og får sjetongene tilbake som flus når man reiser seg. Blinds `POKER_SMALL_BLIND`/`POKER_BIG_BLIND` (5/10). Kast, sjekk, syn, høyn og all in, med sidepotter. 30 sekunder per handling, ellers sjekkes/kastes det automatisk, og to tidsavbrudd på rad gjør at man reiser seg. Er bordet fullt, kan man se på. Alle kort holdes på serveren, så ingen kan se andres kort. Huset tar ingenting. En hånd som er i gang når serveren starter på nytt, avbrytes og alle får innsatsen tilbake.
 - **Lykkehjulet** kan også spinnes for `SPIN_PRICE` flus (standard 50) når man er tom for spinn. Prisen er satt over det et spinn er verdt i snitt, så flus aldri blir en pengemaskin.
 - **Baren:** Egen fane i kasinoet (`/kasino.html#baren`, gamle `/baren.html` sender dit). Man kan bestille pils man har til gode (lykkehjul, vinnerlodd, automat) eller kjøpe pils for flus (`PILS_PRICE`, standard 250). Bestillingen går til spillmesteren (admin), som får et 🍺-varsel. Man kan avbryte en bestilling som ikke er levert, og får da flusen tilbake. Maks 5 pils per bestilling og 3 bestillinger som venter.
 - **Bestillingsboble (admin):** Når admin er logget inn, vises en 🍺-boble nederst til høyre på alle sider i den fanen. Den viser antall pils som venter, piper og vibrerer når nye bestillinger kommer, og admin markerer dem som levert eller avbryter (flus betales tilbake).
@@ -52,6 +53,8 @@ ADMIN_PASSWORD=hemmelig npm start
 | `START_FLUS` | `100` | Flus alle starter med |
 | `CASINO_MAX_BET` | `200` | Maks innsats i flus per runde i roulette og blackjack |
 | `PILS_PRICE` | `250` | Pris i flus for én pils i baren |
+| `POKER_SMALL_BLIND` / `POKER_BIG_BLIND` | `5` / `10` | Blinds ved pokerbordet |
+| `POKER_MIN_BUYIN` / `POKER_MAX_BUYIN` | `100` / `1000` | Innkjøp ved pokerbordet (flus) |
 | `SPIN_PRICE` | `50` | Pris i flus for ett spinn på lykkehjulet eller automaten |
 | `GAME_FIRST_MILESTONE` | `50` | Poeng for første ekstra spinn i Flappy Sjef (dobles for hver neste) |
 | `DRAW_FROM` | `all` | `all` = trekk blant alle 100 lodd, `assigned` = kun blant utdelte lodd |

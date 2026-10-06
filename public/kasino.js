@@ -316,12 +316,13 @@
   $('bj-double').addEventListener('click', () => bjAction('/api/casino/bj/double'));
 
   // ---------- Felles ----------
-  const TAB_HASH = { slot: 'automat', roulette: 'roulette', blackjack: 'blackjack', bar: 'baren' };
+  const TAB_HASH = { slot: 'automat', roulette: 'roulette', blackjack: 'blackjack', poker: 'poker', bar: 'baren' };
 
   function showTab(name) {
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
     Object.keys(TAB_HASH).forEach((t) => $(`tab-${t}`).classList.toggle('hidden', t !== name));
-    $('bet-card').classList.toggle('hidden', name === 'slot' || name === 'bar');
+    $('bet-card').classList.toggle('hidden', name === 'slot' || name === 'bar' || name === 'poker');
+    if (name === 'poker' && window.refreshPoker) window.refreshPoker();
     history.replaceState(null, '', `#${TAB_HASH[name]}`);
     // Baren har sin egen oversikt over flus og bestillinger: hent den på nytt
     if (name === 'bar' && window.refreshBar) window.refreshBar();
@@ -331,12 +332,13 @@
   document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 
   // ---------- Live gevinster ----------
-  const GAME_ICON = { roulette: '🎡', blackjack: '🃏', slot: '🎰' };
-  const GAME_NAME = { roulette: 'roulette', blackjack: 'blackjack', slot: 'automaten' };
+  const GAME_ICON = { roulette: '🎡', blackjack: '🃏', slot: '🎰', poker: '♠️' };
+  const GAME_NAME = { roulette: 'roulette', blackjack: 'blackjack', slot: 'automaten', poker: 'pokerbordet' };
 
   function winText(e) {
     if (e.beer) return 'fikk 🍺🍺🍺 og vant en pils!';
     if (e.game === 'blackjack' && e.detail === 'blackjack') return `fikk BLACKJACK og vant ${flusWord(e.won)}`;
+    if (e.game === 'poker') return `vant potten på pokerbordet${e.detail ? ` med ${e.detail.toLowerCase()}` : ''}`;
     return `vant på ${GAME_NAME[e.game]}${e.game === 'slot' ? ` ${e.detail}` : ''}`;
   }
 
