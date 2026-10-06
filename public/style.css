@@ -426,3 +426,16 @@ body.no-scroll { overflow: hidden; }
 @keyframes deal { from { opacity: 0; transform: translateY(-30px) rotate(-8deg); } to { opacity: 1; transform: none; } }
 .bj-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .bj-actions button { flex: 1; }
+
+/* Spinn-admin */
+.admin-link { display: block; text-align: center; margin-bottom: 8px; }
+.step-chips { display: flex; gap: 8px; margin-bottom: 12px; }
+.chip { flex: 1; background: #2c2f42; color: var(--text); }
+.chip.active { background: var(--gold); color: #1b1e2e; }
+.chip:hover:not(:disabled):not(.active) { background: #474c6a; }
+.search { width: 100%; }
+.spin-players { list-style: none; padding: 0; margin: 0; }
+.spin-player { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #2c2f42; }
+.sp-name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-count { min-width: 36px; text-align: center; font-size: 1.3rem; font-weight: 800; color: var(--gold); }
+.sp-btn { min-width: 52px; padding: 10px 8px; }

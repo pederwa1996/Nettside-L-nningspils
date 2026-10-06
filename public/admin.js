@@ -188,17 +188,33 @@ function renderDraw(draw) {
   $('draw-result').appendChild(ul);
 }
 
-$('login-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  password = $('password').value;
+async function login() {
   try {
     await load();
     showMsg('Innlogget ✅', true);
+    // Husk passordet i denne fanen, så spinn-admin-siden slipper ny innlogging
+    try {
+      sessionStorage.setItem('adminPassword', password);
+    } catch { /* ignorer */ }
   } catch (err) {
     $('panel').classList.add('hidden');
     showMsg(err.message);
+    try {
+      sessionStorage.removeItem('adminPassword');
+    } catch { /* ignorer */ }
   }
+}
+
+$('login-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  password = $('password').value;
+  login();
 });
+
+try {
+  password = sessionStorage.getItem('adminPassword') || '';
+} catch { /* ignorer */ }
+if (password) login();
 
 $('draw-btn').addEventListener('click', async () => {
   if (!confirm('Kjøre loddtrekningen nå? Den kan bare kjøres én gang.')) return;

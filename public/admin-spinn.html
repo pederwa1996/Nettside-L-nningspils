@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spinn-admin – Lønningspils</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>🎰 Spinn-admin</h1>
+    <p class="sub"><a href="/admin.html">← Tilbake til admin</a></p>
+  </header>
+
+  <main>
+    <section id="login" class="card">
+      <h2>Logg inn</h2>
+      <form id="login-form">
+        <input id="password" type="password" placeholder="Admin-passord" required>
+        <button type="submit">Logg inn</button>
+      </form>
+      <p id="login-msg" class="error"></p>
+    </section>
+
+    <div id="panel" class="hidden">
+      <section class="card">
+        <p class="field-label">Hvor mange spinn per trykk?</p>
+        <div class="step-chips" id="steps">
+          <button type="button" class="chip active" data-step="1">1</button>
+          <button type="button" class="chip" data-step="2">2</button>
+          <button type="button" class="chip" data-step="5">5</button>
+          <button type="button" class="chip" data-step="10">10</button>
+        </div>
+        <input id="search" type="search" placeholder="Søk etter navn ..." class="search">
+        <p id="msg" class="result"></p>
+      </section>
+
+      <section class="card">
+        <h2>Deltakere (<span id="count">0</span>)</h2>
+        <ul id="players" class="spin-players"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Siste endringer</h2>
+        <ul id="log" class="duel-list"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="/media.js"></script>
+  <script src="/admin-spinn.js"></script>
+</body>
+</html>

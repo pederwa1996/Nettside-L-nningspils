@@ -36,7 +36,7 @@ const CASINO_MAX_BET = Number(process.env.CASINO_MAX_BET) || 5;
 
 // ---- Lagring ----
 function freshState() {
-  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [] };
+  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [] };
 }
 
 function defaultTasks() {
@@ -1150,6 +1150,35 @@ const routes = {
     settleBlackjack(p, h, { dealerPlays: handValue(h.player) <= 21 });
     saveState();
     sendJson(res, 200, { blackjack: bjView(h), me: meView(p) });
+  },
+
+  // ---- Admin: gi eller ta spinn ----
+  'POST /api/admin/players': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    sendJson(res, 200, {
+      players: state.participants
+        .map((p) => ({ name: p.name, avatar: p.avatar || null, spinsLeft: spinsLeft(p) }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'no')),
+      log: state.spinLog.slice(-20).reverse(),
+    });
+  },
+
+  'POST /api/admin/spins': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const p = findParticipant(String(body.name || ''));
+    if (!p) return sendJson(res, 404, { error: 'Fant ikke deltakeren.' });
+    let delta = Math.trunc(Number(body.delta));
+    if (!Number.isFinite(delta) || delta === 0 || Math.abs(delta) > 100) {
+      return sendJson(res, 400, { error: 'Antall må være mellom −100 og 100 (og ikke 0).' });
+    }
+    // Kan ikke ta flere spinn enn personen har
+    delta = Math.max(delta, -spinsLeft(p));
+    if (delta === 0) return sendJson(res, 400, { error: `${p.name} har ingen spinn å ta.` });
+    addSpins(p, delta);
+    state.spinLog.push({ name: p.name, delta, at: Date.now() });
+    if (state.spinLog.length > 50) state.spinLog = state.spinLog.slice(-50);
+    saveState();
+    sendJson(res, 200, { name: p.name, delta, spinsLeft: spinsLeft(p) });
   },
 
   'POST /api/admin/login': (req, res, body) => {
