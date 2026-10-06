@@ -1096,3 +1096,23 @@ body.cantina .tile::before {
 }
 body.cantina .tile strong { font-family: 'Bungee', Impact, sans-serif; font-weight: 400; color: var(--warm); }
 body.cantina .home-wallet div { background: rgba(255, 220, 170, 0.07); border: 1px dashed rgba(255, 200, 130, 0.25); }
+
+/* Bakgrunnsbilde fra baren på forsiden. Ligger i et eget fast lag, fordi
+   background-attachment: fixed ikke virker på iPhone. Mørkt lag over for lesbarhet. */
+body.cantina::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(20, 10, 5, 0.55) 0%, rgba(20, 10, 5, 0.78) 45%, rgba(20, 10, 5, 0.92) 100%),
+    url('/bar-bg.jpg') center 30% / cover no-repeat;
+  filter: saturate(1.1);
+}
+body.cantina { background: #1a0f09; }
+/* Litt gjennomsiktige kort så baren skinner gjennom */
+body.cantina .card, body.cantina .tile {
+  background: linear-gradient(180deg, rgba(58, 34, 20, 0.78), rgba(28, 16, 9, 0.86));
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
