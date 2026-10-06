@@ -439,3 +439,87 @@ body.no-scroll { overflow: hidden; }
 .sp-name { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sp-count { min-width: 36px; text-align: center; font-size: 1.3rem; font-weight: 800; color: var(--gold); }
 .sp-btn { min-width: 52px; padding: 10px 8px; }
+.standings th:nth-child(5) { text-align: center; }
+.standings .num { width: 54px; }
+.standings .flus { color: var(--green); font-size: 0.95rem; }
+
+/* Lommebok (spinn / flus / pils) */
+.wallet { display: flex; justify-content: space-around; text-align: center; padding: 14px 10px; }
+.wallet-item { display: flex; flex-direction: column; gap: 2px; }
+.wallet-num { font-size: 1.7rem; font-weight: 900; color: var(--gold); line-height: 1.1; }
+.wallet-label { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+
+/* Automat */
+.slot-machine { background: linear-gradient(#b0281f, #7a1a14); border-radius: 18px; padding: 14px; border: 4px solid var(--gold); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }
+.slot-machine.jackpot { animation: jackpot 0.4s ease-in-out 6 alternate; }
+@keyframes jackpot { from { box-shadow: 0 0 10px var(--gold); } to { box-shadow: 0 0 40px 10px var(--gold); } }
+.slot-top { text-align: center; font-weight: 900; letter-spacing: 1px; color: #fff3c4; margin-bottom: 10px; text-shadow: 0 2px 0 #5a1410; }
+.slot-reels { display: flex; gap: 8px; }
+.reel { flex: 1; height: 84px; overflow: hidden; background: linear-gradient(#ddd, #fff 30%, #fff 70%, #ddd); border-radius: 10px; box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.35); }
+.strip { will-change: transform; }
+.symbol { height: 84px; display: flex; align-items: center; justify-content: center; font-size: 2.8rem; }
+#slot-pull { margin-top: 6px; }
+.paytable { list-style: none; padding: 0; margin: 8px 0 0; }
+.paytable li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #2c2f42; }
+.pt-win { font-weight: 700; color: var(--gold); }
+.bar-link { text-align: center; }
+.bar-link p { margin-top: 0; }
+
+/* Baren */
+.bar-note { margin: 12px 0; }
+.bar-buttons { display: flex; flex-direction: column; gap: 8px; }
+.order-list { list-style: none; padding: 0; margin: 0; }
+.order { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #2c2f42; }
+.order-main { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.order-main .muted { font-size: 0.85rem; }
+.order-status { font-weight: 700; font-size: 0.9rem; }
+.order.pending .order-status { color: var(--gold); }
+.order.delivered .order-status { color: var(--green); }
+.order.cancelled { opacity: 0.6; }
+
+/* Bestillingsboble for admin */
+.admin-bubble {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 90;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 1.9rem;
+  background: #34384f;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+.admin-bubble.has-orders { background: var(--gold); }
+.admin-bubble.pulse { animation: bubble-pulse 0.6s ease-in-out 4; }
+@keyframes bubble-pulse { 50% { transform: scale(1.2); box-shadow: 0 0 0 10px rgba(245, 179, 1, 0.35); } }
+.admin-badge { position: absolute; top: -4px; right: -4px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: var(--red); color: #fff; font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); }
+.chat-page .admin-bubble { bottom: 84px; }
+.chat-page .admin-orders { bottom: 156px; }
+.admin-orders {
+  position: fixed;
+  right: 16px;
+  bottom: 88px;
+  z-index: 91;
+  width: min(360px, calc(100vw - 32px));
+  max-height: 65vh;
+  overflow-y: auto;
+  background: var(--card);
+  border: 2px solid var(--gold);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+.ao-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 1.1rem; }
+.ao-close { background: none; color: var(--muted); padding: 4px 8px; }
+.ao-close:hover:not(:disabled) { background: #2c2f42; }
+.ao-sub { margin: 12px 0 4px; color: var(--muted); font-size: 0.85rem; font-weight: 700; text-transform: uppercase; }
+.ao-order { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #2c2f42; }
+.ao-recent .ao-order { opacity: 0.6; }
+.ao-avatar { width: 36px; height: 36px; }
+.ao-info { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ao-info .muted { font-size: 0.8rem; }
+.ao-note { font-size: 0.85rem; color: var(--gold); }
+.ao-btns { display: flex; gap: 4px; }
+.ao-btns .small-btn { padding: 8px 10px; }

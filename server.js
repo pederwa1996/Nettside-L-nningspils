@@ -32,11 +32,17 @@ const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_STORIES_PER_PERSON = 20;
 const CHAT_HISTORY = 300;
-const CASINO_MAX_BET = Number(process.env.CASINO_MAX_BET) || 5;
+// Kasinoet bruker flus (penger). Alle starter med START_FLUS.
+const START_FLUS = process.env.START_FLUS !== undefined ? Number(process.env.START_FLUS) : 100;
+const CASINO_MIN_BET = 10;
+const CASINO_MAX_BET = Number(process.env.CASINO_MAX_BET) || 200;
+const PILS_PRICE = Number(process.env.PILS_PRICE) || 250; // pris i flus for én pils i baren
+const MAX_PILS_PER_ORDER = 5;
+const MAX_PENDING_ORDERS = 3;
 
 // ---- Lagring ----
 function freshState() {
-  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [] };
+  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [] };
 }
 
 function defaultTasks() {
@@ -73,6 +79,17 @@ function normalizeState(s) {
     removedTasks++;
     return false;
   });
+  out.participants.forEach((p) => {
+    if (p.flus === undefined) p.flus = START_FLUS;
+  });
+  out.casinoLog = out.casinoLog.filter((e) => e.cur); // gamle oppføringer var i spinn
+  // Blackjack-hender fra før kasinoet gikk over til flus ble spilt med spinn: gi innsatsen tilbake
+  for (const [name, h] of Object.entries(out.blackjack)) {
+    if (h.currency === 'flus') continue;
+    const p = out.participants.find((x) => x.name === name);
+    if (h.status === 'playing' && p) p.bonusSpins = (p.bonusSpins || 0) + h.bet;
+    delete out.blackjack[name];
+  }
   return out;
 }
 
@@ -281,16 +298,73 @@ const ROULETTE_BETS = {
   dozen3: { label: '25–36', pays: 2, wins: (n) => n >= 25 },
 };
 
+function addFlus(p, n) {
+  p.flus = (p.flus || 0) + n;
+}
+
 function parseBet(p, amount) {
   const bet = Math.floor(Number(amount));
-  if (!Number.isFinite(bet) || bet < 1) throw new Error('Innsatsen må være minst 1 spinn.');
-  if (bet > CASINO_MAX_BET) throw new Error(`Maks innsats er ${CASINO_MAX_BET} spinn.`);
-  if (bet > spinsLeft(p)) throw new Error(`Du har bare ${spinsLeft(p)} spinn.`);
+  if (!Number.isFinite(bet) || bet < CASINO_MIN_BET) throw new Error(`Minste innsats er ${CASINO_MIN_BET} flus.`);
+  if (bet > CASINO_MAX_BET) throw new Error(`Maks innsats er ${CASINO_MAX_BET} flus.`);
+  if (bet > (p.flus || 0)) throw new Error(`Du har bare ${p.flus || 0} flus.`);
   return bet;
 }
 
+// ---- Automaten (koster 1 spinn, gir flus eller pils) ----
+// Utfallet trekkes fra tabellen (vekter av 1000), hjulene tegnes etterpå så de passer.
+const SLOT_SYMBOLS = ['🍒', '🍋', '🔔', '⭐', '7️⃣', '💎', '🍺'];
+const SLOT_TABLE = [
+  { id: 'pils', weight: 20, symbol: '🍺', flus: 0, beer: 1 }, // 2 % sjanse for tre pils på rad
+  { id: 'diamond', weight: 10, symbol: '💎', flus: 500 },
+  { id: 'seven', weight: 20, symbol: '7️⃣', flus: 250 },
+  { id: 'star', weight: 40, symbol: '⭐', flus: 100 },
+  { id: 'bell', weight: 70, symbol: '🔔', flus: 50 },
+  { id: 'lemon', weight: 100, symbol: '🍋', flus: 30 },
+  { id: 'cherry3', weight: 120, symbol: '🍒', flus: 20 },
+  { id: 'cherry2', weight: 200, flus: 10 }, // to kirsebær
+  { id: 'none', weight: 420, flus: 0 },
+];
+
+function pullSlot() {
+  let roll = randomInt(1000);
+  const outcome = SLOT_TABLE.find((o) => (roll -= o.weight) < 0);
+  let reels;
+  if (outcome.symbol) reels = [outcome.symbol, outcome.symbol, outcome.symbol];
+  else if (outcome.id === 'cherry2') {
+    const other = pickRandom(SLOT_SYMBOLS.filter((x) => x !== '🍒'), 1)[0];
+    reels = pickRandom(['🍒', '🍒', other], 3);
+  } else {
+    // Ingen gevinst: tre forskjellige symboler, maks ett kirsebær
+    reels = pickRandom(SLOT_SYMBOLS, 3);
+  }
+  return { outcome, reels };
+}
+
+// ---- Baren ----
+function beersWon(p) {
+  const winning = new Set(state.draw ? state.draw.winningTickets : []);
+  return {
+    wheel: p.spins.filter(Boolean).length,
+    tickets: p.tickets.filter((t) => winning.has(t)).length,
+    slot: p.slotBeers || 0,
+  };
+}
+
+// Pils til gode = vunnet minus det som allerede er bestilt med tilgode
+function beersOwed(p) {
+  const w = beersWon(p);
+  const used = state.orders
+    .filter((o) => o.name === p.name && o.pay === 'credit' && o.status !== 'cancelled')
+    .reduce((sum, o) => sum + o.qty, 0);
+  return Math.max(0, w.wheel + w.tickets + w.slot - used);
+}
+
+function orderView(o) {
+  return { id: o.id, name: o.name, qty: o.qty, pay: o.pay, cost: o.cost, note: o.note, status: o.status, at: o.at, doneAt: o.doneAt || null };
+}
+
 function logCasino(name, game, bet, net, detail) {
-  state.casinoLog.push({ name, game, bet, net, detail, at: Date.now() });
+  state.casinoLog.push({ name, game, bet, net, detail, cur: 'flus', at: Date.now() });
   if (state.casinoLog.length > 30) state.casinoLog = state.casinoLog.slice(-30);
 }
 
@@ -362,7 +436,7 @@ function settleBlackjack(p, h, { dealerPlays = true } = {}) {
     h.result = 'push';
     payout = h.bet;
   } else h.result = 'lose';
-  addSpins(p, payout);
+  addFlus(p, payout);
   h.net = payout - h.bet;
   h.status = 'done';
   delete h.deck;
@@ -443,12 +517,18 @@ function duelView(d, viewer) {
 
 // Øl vunnet (lykkehjul + vinnerlodd) og spinn igjen per person
 function standings() {
-  const winning = new Set(state.draw ? state.draw.winningTickets : []);
   return state.participants
     .map((p) => {
-      const wheelBeers = p.spins.filter(Boolean).length;
-      const ticketBeers = p.tickets.filter((t) => winning.has(t)).length;
-      return { name: p.name, beers: wheelBeers + ticketBeers, wheelBeers, ticketBeers, spinsLeft: spinsLeft(p) };
+      const w = beersWon(p);
+      return {
+        name: p.name,
+        beers: w.wheel + w.tickets + w.slot,
+        wheelBeers: w.wheel,
+        ticketBeers: w.tickets,
+        slotBeers: w.slot,
+        spinsLeft: spinsLeft(p),
+        flus: p.flus || 0,
+      };
     })
     .sort((a, b) => b.beers - a.beers || b.spinsLeft - a.spinsLeft || a.name.localeCompare(b.name, 'no'));
 }
@@ -483,6 +563,8 @@ function meView(p) {
     nextMilestone: { score: milestoneScore((p.milestones || 0) + 1), spins: (p.milestones || 0) + 1 },
     spinWins: p.spins.filter(Boolean).length,
     winningTickets: winning,
+    flus: p.flus || 0,
+    beersOwed: beersOwed(p),
   };
 }
 
@@ -631,6 +713,7 @@ const routes = {
       avatar: saveImage(body.avatar, 'avatars'),
       tickets: pickRandom(free, TICKETS_PER_PERSON).sort((a, b) => a - b),
       spins: [],
+      flus: START_FLUS,
       joinedAt: new Date().toISOString(),
     };
     state.participants.push(participant);
@@ -1072,6 +1155,8 @@ const routes = {
     sendJson(res, 200, {
       me: meView(p),
       maxBet: CASINO_MAX_BET,
+      minBet: CASINO_MIN_BET,
+      slotTable: SLOT_TABLE.filter((o) => o.flus || o.beer).map((o) => ({ id: o.id, symbol: o.symbol || '🍒🍒', flus: o.flus, beer: o.beer || 0 })),
       blackjack: p ? bjView(state.blackjack[p.name]) : null,
       log: state.casinoLog.slice(-10).reverse(),
       avatars: avatars(),
@@ -1094,10 +1179,25 @@ const routes = {
     const number = randomInt(37);
     const won = kind.wins(number);
     const net = won ? bet * kind.pays : -bet;
-    addSpins(p, net);
+    addFlus(p, net);
     logCasino(p.name, 'roulette', bet, net, `${kind.label} → ${number}`);
     saveState();
     sendJson(res, 200, { number, color: number === 0 ? 'green' : RED_NUMBERS.has(number) ? 'red' : 'black', won, net, me: meView(p) });
+  },
+
+  'POST /api/casino/slot': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    if (spinsLeft(p) < 1) return sendJson(res, 400, { error: 'Du har ingen spinn igjen. Tjen flere med oppgaver, Flappy Sjef eller dueller!' });
+    addSpins(p, -1);
+    const { outcome, reels } = pullSlot();
+    if (outcome.flus) addFlus(p, outcome.flus);
+    if (outcome.beer) p.slotBeers = (p.slotBeers || 0) + outcome.beer;
+    // Bare de store gevinstene havner i «Siste spill», ellers blir det for mye støy
+    if (outcome.beer) logCasino(p.name, 'slot', 1, 0, '🍺🍺🍺 vant en pils!');
+    else if (outcome.flus >= 100) logCasino(p.name, 'slot', 1, outcome.flus, `${reels.join('')} vant ${outcome.flus} flus`);
+    saveState();
+    sendJson(res, 200, { reels, flus: outcome.flus, beer: outcome.beer || 0, me: meView(p) });
   },
 
   'POST /api/casino/bj/deal': (req, res, body) => {
@@ -1106,9 +1206,9 @@ const routes = {
     const cur = state.blackjack[p.name];
     if (cur && cur.status === 'playing') return sendJson(res, 400, { error: 'Du har allerede en hånd i spill.' });
     const bet = parseBet(p, body.amount);
-    addSpins(p, -bet); // innsatsen trekkes med en gang
+    addFlus(p, -bet); // innsatsen trekkes med en gang
     const deck = newDeck();
-    const h = { bet, deck, player: [deck.pop(), deck.pop()], dealer: [deck.pop(), deck.pop()], status: 'playing', doubled: false };
+    const h = { bet, currency: 'flus', deck, player: [deck.pop(), deck.pop()], dealer: [deck.pop(), deck.pop()], status: 'playing', doubled: false };
     state.blackjack[p.name] = h;
     // Blackjack på første to kort avgjøres med en gang
     if (isBlackjack(h.player) || isBlackjack(h.dealer)) settleBlackjack(p, h, { dealerPlays: false });
@@ -1142,8 +1242,8 @@ const routes = {
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
     const h = activeHand(p);
     if (h.player.length !== 2 || h.doubled) return sendJson(res, 400, { error: 'Du kan bare doble på de to første kortene.' });
-    if (spinsLeft(p) < h.bet) return sendJson(res, 400, { error: `Du trenger ${h.bet} spinn til for å doble.` });
-    addSpins(p, -h.bet);
+    if ((p.flus || 0) < h.bet) return sendJson(res, 400, { error: `Du trenger ${h.bet} flus til for å doble.` });
+    addFlus(p, -h.bet);
     h.bet *= 2;
     h.doubled = true;
     h.player.push(h.deck.pop()); // ett kort, så står du
@@ -1181,6 +1281,91 @@ const routes = {
     sendJson(res, 200, { name: p.name, delta, spinsLeft: spinsLeft(p) });
   },
 
+  // ---- Baren ----
+  'GET /api/bar': (req, res) => {
+    const p = currentParticipant(req);
+    sendJson(res, 200, {
+      me: meView(p),
+      price: PILS_PRICE,
+      maxPerOrder: MAX_PILS_PER_ORDER,
+      won: p ? beersWon(p) : null,
+      orders: p ? state.orders.filter((o) => o.name === p.name).slice(-10).reverse().map(orderView) : [],
+    });
+  },
+
+  'POST /api/bar/order': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const qty = Math.floor(Number(body.qty));
+    if (!Number.isFinite(qty) || qty < 1 || qty > MAX_PILS_PER_ORDER) {
+      return sendJson(res, 400, { error: `Du kan bestille 1–${MAX_PILS_PER_ORDER} pils om gangen.` });
+    }
+    const pending = state.orders.filter((o) => o.name === p.name && o.status === 'pending').length;
+    if (pending >= MAX_PENDING_ORDERS) return sendJson(res, 400, { error: 'Du har allerede bestillinger som venter. Vent til spillmesteren har levert!' });
+    const pay = body.pay === 'flus' ? 'flus' : 'credit';
+    let cost = 0;
+    if (pay === 'credit') {
+      if (beersOwed(p) < qty) return sendJson(res, 400, { error: `Du har bare ${beersOwed(p)} pils til gode.` });
+    } else {
+      cost = qty * PILS_PRICE;
+      if ((p.flus || 0) < cost) return sendJson(res, 400, { error: `${qty} pils koster ${cost} flus, men du har bare ${p.flus || 0}.` });
+      addFlus(p, -cost);
+    }
+    const order = {
+      id: crypto.randomBytes(6).toString('hex'),
+      name: p.name,
+      qty,
+      pay,
+      cost,
+      note: String(body.note || '').trim().slice(0, 100),
+      status: 'pending',
+      at: Date.now(),
+    };
+    state.orders.push(order);
+    saveState();
+    broadcast('orders', {});
+    sendJson(res, 200, { order: orderView(order), me: meView(p) });
+  },
+
+  'POST /api/bar/cancel': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const o = state.orders.find((x) => x.id === body.id && x.name === p.name && x.status === 'pending');
+    if (!o) return sendJson(res, 400, { error: 'Fant ikke bestillingen.' });
+    o.status = 'cancelled';
+    o.doneAt = Date.now();
+    if (o.pay === 'flus') addFlus(p, o.cost);
+    saveState();
+    broadcast('orders', {});
+    sendJson(res, 200, { me: meView(p) });
+  },
+
+  'POST /api/admin/orders': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const av = avatars();
+    const withAvatar = (o) => ({ ...orderView(o), avatar: av[o.name] || null });
+    sendJson(res, 200, {
+      pending: state.orders.filter((o) => o.status === 'pending').map(withAvatar),
+      recent: state.orders.filter((o) => o.status !== 'pending').slice(-10).reverse().map(withAvatar),
+    });
+  },
+
+  'POST /api/admin/order-status': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const o = state.orders.find((x) => x.id === body.id && x.status === 'pending');
+    if (!o) return sendJson(res, 400, { error: 'Fant ikke bestillingen.' });
+    if (body.status === 'delivered') o.status = 'delivered';
+    else if (body.status === 'cancelled') {
+      o.status = 'cancelled';
+      const p = findParticipant(o.name);
+      if (p && o.pay === 'flus') addFlus(p, o.cost); // pengene tilbake
+    } else return sendJson(res, 400, { error: 'Ukjent status.' });
+    o.doneAt = Date.now();
+    saveState();
+    broadcast('orders', {});
+    sendJson(res, 200, { ok: true });
+  },
+
   'POST /api/admin/login': (req, res, body) => {
     if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
     sendJson(res, 200, {
@@ -1191,6 +1376,7 @@ const routes = {
         spinsUsed: p.spins.length,
         spinsAllowed: spinsAllowed(p),
         bestScore: p.bestScore || 0,
+        flus: p.flus || 0,
         spinWins: p.spins.filter(Boolean).length,
         avatar: p.avatar || null,
       })),

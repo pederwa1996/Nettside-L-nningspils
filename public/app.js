@@ -112,6 +112,12 @@ function render() {
   $('chat-card').classList.toggle('hidden', !me);
   $('tasks-card').classList.toggle('hidden', !me);
   $('casino-card').classList.toggle('hidden', !me);
+  $('bar-card').classList.toggle('hidden', !me);
+  if (me) {
+    $('bar-info').textContent = me.beersOwed
+      ? `Du har ${me.beersOwed} pils til gode! Bestill, så kommer spillmesteren med den til bordet. Du har også ${me.flus} flus.`
+      : `Du har ${me.flus} flus. Kjøp pils for flus, så kommer spillmesteren med den til bordet.`;
+  }
   $('open-tasks').textContent = data.openTasks ? `${data.openTasks} oppgaver er ledige nå.` : 'Alle oppgavene er tatt!';
   $('mogg-card').classList.toggle('hidden', !me);
   $('mogg-alert').classList.toggle('hidden', !data.incomingMoggs);
@@ -181,7 +187,7 @@ function renderStandings(list, me) {
   const body = $('standings');
   body.innerHTML = '';
   if (!list.length) {
-    body.innerHTML = '<tr><td colspan="4" class="muted">Ingen deltakere ennå.</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" class="muted">Ingen deltakere ennå.</td></tr>';
     return;
   }
   let place = 0;
@@ -201,11 +207,14 @@ function renderStandings(list, me) {
     const beers = document.createElement('td');
     beers.className = 'num beers';
     beers.textContent = e.beers;
-    beers.title = `${e.wheelBeers} fra lykkehjulet, ${e.ticketBeers} fra loddtrekningen`;
+    beers.title = `${e.wheelBeers} fra lykkehjulet, ${e.ticketBeers} fra loddtrekningen, ${e.slotBeers} fra automaten`;
     const spins = document.createElement('td');
     spins.className = 'num';
     spins.textContent = e.spinsLeft;
-    tr.append(rank, who, beers, spins);
+    const flus = document.createElement('td');
+    flus.className = 'num flus';
+    flus.textContent = e.flus;
+    tr.append(rank, who, beers, spins, flus);
     body.appendChild(tr);
   });
 }

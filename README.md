@@ -10,7 +10,11 @@ Nettside for lønningspils med lodd, loddtrekning og lykkehjul.
 - **Flappy Sjef:** På `/spill.html` kan man spille Flappy Bird med sjefens ansikt for å tjene flere spinn. 50 poeng gir 1 nytt spinn, 100 gir 2, 200 gir 3, 400 gir 4 osv. Hver belønning gis én gang per person. Det finnes en toppliste med beste poengsum per person. Serveren avviser poengsummer som er umulige å nå på tiden spillet varte. Sjefens ansikt ligger i `public/boss.png`.
 - **Duell:** På `/duell.html` kan man utfordre en annen deltaker i stein, saks, papir og satse spinn. Utfordreren velger motstander, innsats og sitt hemmelige trekk. Innsatsen holdes av til motstanderen svarer. Motstanderen kan godta (må ha nok spinn) eller avslå. Vinneren tar hele potten. Ved uavgjort eller avslag får utfordreren innsatsen tilbake. Spinn bytter bare eier, så det blir ikke flere spinn totalt.
 - **Mogg-off:** På `/mogg.html` utfordrer man en kollega. Begge tar en selfie med sitt hardeste «chad-ansikt», og ansiktsanalyse (MediaPipe Face Landmarker, kjører i nettleseren) gir en score fra 0.00 til 10.00. Høyest score vinner 1 spinn fra den andre. Scoren måler kun ting man selv styrer: jegerøyne (myse), senkede bryn, lukket/spent kjeve, null smil og rett blikk i kamera. Den vurderer ikke utseende. En bratt kurve gjør at 10.00 nesten er umulig. Beste score per person havner på «Chad-pallen» med bildet. Utfordrerens score holdes hemmelig til motstanderen har svart. Admin kan fjerne folk fra pallen. Biblioteket og modellen ligger i `public/vendor/mediapipe`, så siden ikke er avhengig av en ekstern CDN.
-- **Kasino:** På `/kasino.html` kan man spille roulette (europeisk, én null: rød/svart, partall/oddetall, 1–18/19–36 betaler 1:1, dusin 2:1, enkelttall 35:1) og blackjack (dealer trekker til 17, blackjack betaler 3:2 rundet ned, doble på to første kort, ingen splitting) om spinn. All tilfeldighet skjer på serveren, og en blackjack-hånd i spill lagres så den overlever omstart. Maks innsats per runde styres med `CASINO_MAX_BET` (standard 5).
+- **Kasino:** På `/kasino.html`. Alle har **flus** (penger), og starter med `START_FLUS` (100).
+  - **Automat:** koster 1 spinn per trekk og gir flus (10–500), eller 🍺🍺🍺 (2 % sjanse) som gir én pils til gode. Utfallet avgjøres på serveren.
+  - **Roulette** (europeisk, én null) og **blackjack** (dealer trekker til 17, 3:2, doble, ingen splitting) spilles med flus, 10–`CASINO_MAX_BET` (200) per runde.
+- **Baren:** På `/baren.html` kan man bestille pils man har til gode (lykkehjul, vinnerlodd, automat) eller kjøpe pils for flus (`PILS_PRICE`, standard 250). Bestillingen går til spillmesteren (admin), som får et 🍺-varsel. Man kan avbryte en bestilling som ikke er levert, og får da flusen tilbake. Maks 5 pils per bestilling og 3 bestillinger som venter.
+- **Bestillingsboble (admin):** Når admin er logget inn, vises en 🍺-boble nederst til høyre på alle sider i den fanen. Den viser antall pils som venter, piper og vibrerer når nye bestillinger kommer, og admin markerer dem som levert eller avbryter (flus betales tilbake).
 - **Oppgaver:** På `/oppgaver.html` kan man løse oppgaver i baren (f.eks. «Selfie med en fremmed») mot 1–10 spinn etter hvor krevende de er. Man leverer bevis (bilde og/eller tekst), og oppgaven låses mens admin vurderer. Godkjent: personen får spinnene og oppgaven er løst for godt. Avvist: oppgaven åpnes for alle igjen, og personen ser begrunnelsen. Maks 2 innleveringer som venter per person. Bevisbildene vises bare for admin. Standardoppgavene ligger i `tasks-default.js`, og admin kan legge til og slette oppgaver.
 - **Leaderboard:** På forsiden vises alle deltakere med antall øl vunnet (lykkehjul + vinnerlodd) og antall spinn de har igjen. Like mange øl gir delt plassering.
 - **Profilbilde:** Påkrevd ved registrering. På mobil åpnes frontkameraet direkte. Bildet skaleres ned i nettleseren før opplasting. Man kan bytte bilde ved å trykke på det på forsiden.
@@ -40,7 +44,9 @@ ADMIN_PASSWORD=hemmelig npm start
 | `WINNING_TICKETS` | `10` | Antall vinnerlodd (øl) |
 | `SPINS_PER_PERSON` | `3` | Spinn per deltaker |
 | `SPIN_WIN_CHANCE` | `0.15` | Sjanse for øl per spinn |
-| `CASINO_MAX_BET` | `5` | Maks innsats i spinn per runde i kasinoet |
+| `START_FLUS` | `100` | Flus alle starter med |
+| `CASINO_MAX_BET` | `200` | Maks innsats i flus per runde i roulette og blackjack |
+| `PILS_PRICE` | `250` | Pris i flus for én pils i baren |
 | `GAME_FIRST_MILESTONE` | `50` | Poeng for første ekstra spinn i Flappy Sjef (dobles for hver neste) |
 | `DRAW_FROM` | `all` | `all` = trekk blant alle 100 lodd, `assigned` = kun blant utdelte lodd |
 | `ONE_PER_IP` | `true` | Én registrering per IP-adresse |

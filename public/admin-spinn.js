@@ -96,6 +96,12 @@
       } catch { /* ignorer */ }
       $('login').classList.add('hidden');
       $('panel').classList.remove('hidden');
+      // Vis bestillingsboblen med en gang etter innlogging
+      if (!document.querySelector('.admin-bubble')) {
+        const s = document.createElement('script');
+        s.src = '/admin-bubble.js?' + Date.now();
+        document.body.appendChild(s);
+      }
     } catch (err) {
       $('login-msg').textContent = err.message;
       try {

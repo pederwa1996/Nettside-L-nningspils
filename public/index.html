@@ -66,16 +66,23 @@
     <section class="card">
       <h2>🏆 Leaderboard</h2>
       <table class="standings">
-        <thead><tr><th></th><th>Navn</th><th title="Øl vunnet">🍺 Øl</th><th title="Spinn igjen">🎰 Spinn</th></tr></thead>
+        <thead><tr><th></th><th>Navn</th><th title="Øl vunnet">🍺 Øl</th><th title="Spinn igjen">🎰 Spinn</th><th title="Flus">💰 Flus</th></tr></thead>
         <tbody id="standings"></tbody>
       </table>
-      <p class="note">Øl teller både gevinster på lykkehjulet og vinnerlodd fra trekningen.</p>
+      <p class="note">Øl teller gevinster på lykkehjulet, vinnerlodd og tre pils på rad på automaten.</p>
+    </section>
+
+    <!-- Baren -->
+    <section id="bar-card" class="card hidden">
+      <h2>🍻 Baren</h2>
+      <p id="bar-info"></p>
+      <a class="button" href="/baren.html">Gå til baren 🍺</a>
     </section>
 
     <!-- Kasino -->
     <section id="casino-card" class="card hidden">
       <h2>🎰 Kasino</h2>
-      <p>Prøv lykken i <strong>roulette</strong> eller <strong>blackjack</strong> og vinn flere spinn!</p>
+      <p>Bruk spinn på <strong>automaten</strong> og vinn flus, eller tre 🍺 på rad for en gratis pils! Spill <strong>roulette</strong> og <strong>blackjack</strong> med flusen din.</p>
       <a class="button" href="/kasino.html">Gå til kasinoet 🎰</a>
     </section>
 
@@ -143,5 +150,6 @@
   <script src="/media.js"></script>
   <script src="/stories.js"></script>
   <script src="/app.js"></script>
+  <script src="/admin-bubble.js"></script>
 </body>
 </html>

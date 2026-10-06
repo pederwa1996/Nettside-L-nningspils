@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Baren – Lønningspils</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>🍻 Baren</h1>
+    <p class="sub">Spillmesteren bringer pilsen til bordet · <a href="/">← Tilbake</a></p>
+  </header>
+
+  <main>
+    <section id="not-joined" class="card hidden">
+      <p>Du må <a href="/">registrere deg</a> før du kan bestille.</p>
+    </section>
+
+    <div id="bar" class="hidden">
+      <section class="card wallet">
+        <div class="wallet-item"><span class="wallet-num" id="my-beers">0</span><span class="wallet-label">🍺 til gode</span></div>
+        <div class="wallet-item"><span class="wallet-num" id="my-flus">0</span><span class="wallet-label">💰 flus</span></div>
+      </section>
+
+      <section class="card">
+        <h2>Bestill pils</h2>
+        <p id="won-info" class="note"></p>
+        <div class="stepper center-stepper">
+          <span class="muted">Antall</span>
+          <button type="button" class="secondary" id="qty-minus">−</button>
+          <span id="qty">1</span>
+          <button type="button" class="secondary" id="qty-plus">+</button>
+        </div>
+        <input id="note" type="text" maxlength="100" placeholder="Hvor sitter du? (valgfritt)" class="search bar-note">
+        <div class="bar-buttons">
+          <button id="order-credit" class="big">🍺 Bruk pils til gode</button>
+          <button id="order-flus" class="big secondary">💰 Kjøp for <span id="flus-cost">250</span> flus</button>
+        </div>
+        <p class="note">Én pils koster <strong id="price">250</strong> flus. Vinn flus på automaten, roulette og blackjack i <a href="/kasino.html">kasinoet</a>.</p>
+        <p id="msg" class="result"></p>
+      </section>
+
+      <section class="card">
+        <h2>Dine bestillinger</h2>
+        <ul id="orders" class="order-list"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="/media.js"></script>
+  <script src="/baren.js"></script>
+  <script src="/admin-bubble.js"></script>
+</body>
+</html>

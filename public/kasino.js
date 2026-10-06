@@ -3,7 +3,7 @@
 (function () {
   const $ = (id) => document.getElementById(id);
   let data = null;
-  let bet = 1;
+  let bet = 10;
   let betType = 'red';
   let busy = false;
   let rotation = 0;
@@ -17,19 +17,123 @@
     return json;
   }
 
-  const spinsWord = (n) => `${Math.abs(n)} spinn`;
+  const flusWord = (n) => `${Math.abs(n)} flus`;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  function setSpins(me) {
+  function setWallet(me) {
     data.me = me;
     $('my-spins').textContent = me.spinsLeft;
-    clampBet();
+    $('my-flus').textContent = me.flus;
+    $('my-beers').textContent = me.beersOwed;
+    renderChips();
   }
 
-  function clampBet() {
-    const max = Math.max(1, Math.min(data.maxBet, data.me ? data.me.spinsLeft : 1));
-    bet = Math.max(1, Math.min(bet, max));
+  // ---------- Innsats (flus) ----------
+  const CHIPS = [10, 25, 50, 100, 200];
+
+  function renderChips() {
+    const wrap = $('bet-chips');
+    wrap.innerHTML = '';
+    const flus = data.me ? data.me.flus : 0;
+    const chips = CHIPS.filter((c) => c >= data.minBet && c <= data.maxBet);
+    if (!chips.includes(bet)) bet = chips[0];
+    chips.forEach((c) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (c === bet ? ' active' : '');
+      b.textContent = c;
+      b.disabled = c > flus;
+      b.addEventListener('click', () => {
+        bet = c;
+        renderChips();
+      });
+      wrap.appendChild(b);
+    });
     $('bet').textContent = bet;
+  }
+
+  // ---------- Automat ----------
+  const SYMBOLS = ['🍒', '🍋', '🔔', '⭐', '7️⃣', '💎', '🍺'];
+  const SYMBOL_H = 84;
+  const strips = [...document.querySelectorAll('.reel .strip')];
+
+  function setReel(strip, symbols) {
+    strip.innerHTML = '';
+    symbols.forEach((s) => {
+      const d = document.createElement('div');
+      d.className = 'symbol';
+      d.textContent = s;
+      strip.appendChild(d);
+    });
+  }
+
+  function initReels() {
+    strips.forEach((st) => setReel(st, [SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]]));
+  }
+
+  // Ruller hvert hjul gjennom tilfeldige symboler og stopper på resultatet, ett etter ett
+  function spinReels(result) {
+    return Promise.all(strips.map((st, i) => {
+      const filler = Array.from({ length: 18 + i * 6 }, () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+      const current = st.lastElementChild ? st.lastElementChild.textContent : SYMBOLS[0];
+      setReel(st, [current, ...filler, result[i]]);
+      st.style.transition = 'none';
+      st.style.transform = 'translateY(0)';
+      void st.offsetHeight; // tving omtegning før animasjonen starter
+      const dur = 1.2 + i * 0.5;
+      st.style.transition = `transform ${dur}s cubic-bezier(0.12, 0.7, 0.2, 1)`;
+      st.style.transform = `translateY(-${(filler.length + 1) * SYMBOL_H}px)`;
+      return sleep(dur * 1000 + 50);
+    })).then(() => strips.forEach((st, i) => {
+      st.style.transition = 'none';
+      st.style.transform = 'translateY(0)';
+      setReel(st, [result[i]]);
+    }));
+  }
+
+  $('slot-pull').addEventListener('click', async () => {
+    if (busy) return;
+    busy = true;
+    $('slot-pull').disabled = true;
+    $('slot-result').textContent = '';
+    $('slot-result').className = 'result';
+    document.querySelector('.slot-machine').classList.remove('jackpot');
+    try {
+      const r = await api('/api/casino/slot', {});
+      await spinReels(r.reels);
+      setWallet(r.me);
+      if (r.beer) {
+        $('slot-result').textContent = '🍺🍺🍺 TRE PILS PÅ RAD! Du har vunnet en pils! Hent den i baren 🍻';
+        $('slot-result').classList.add('win');
+        document.querySelector('.slot-machine').classList.add('jackpot');
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+      } else if (r.flus) {
+        $('slot-result').textContent = `🎉 Du vant ${flusWord(r.flus)}!`;
+        $('slot-result').classList.add('win');
+      } else {
+        $('slot-result').textContent = 'Ingen gevinst denne gangen.';
+        $('slot-result').classList.add('lose');
+      }
+    } catch (err) {
+      $('slot-result').textContent = err.message;
+      $('slot-result').classList.add('lose');
+    }
+    busy = false;
+    $('slot-pull').disabled = false;
+    loadLog();
+  });
+
+  function renderPaytable(table) {
+    const ul = $('paytable');
+    ul.innerHTML = '';
+    table.forEach((o) => {
+      const li = document.createElement('li');
+      const sym = o.id === 'cherry2' ? '🍒🍒 (to kirsebær)' : o.symbol.repeat(3);
+      li.innerHTML = '<span class="pt-sym"></span><span class="pt-win"></span>';
+      li.querySelector('.pt-sym').textContent = sym;
+      li.querySelector('.pt-win').textContent = o.beer ? '1 pils 🍺' : `${o.flus} flus`;
+      ul.appendChild(li);
+    });
   }
 
   // ---------- Roulette ----------
@@ -101,11 +205,11 @@
     try {
       const r = await api('/api/casino/roulette', { type: betType, number: Number($('bet-number').value), amount: bet });
       await spinTo(r.number);
-      setSpins(r.me);
+      setWallet(r.me);
       const colorName = r.color === 'green' ? 'grønn' : r.color === 'red' ? 'rød' : 'svart';
       $('roulette-result').textContent = r.won
-        ? `🎉 ${r.number} ${colorName}! Du vant ${spinsWord(r.net)}!`
-        : `${r.number} ${colorName}. Du tapte ${spinsWord(r.net)} 😢`;
+        ? `🎉 ${r.number} ${colorName}! Du vant ${flusWord(r.net)}!`
+        : `${r.number} ${colorName}. Du tapte ${flusWord(r.net)} 😢`;
       $('roulette-result').classList.add(r.won ? 'win' : 'lose');
     } catch (err) {
       $('roulette-result').textContent = err.message;
@@ -123,7 +227,7 @@
       d.className = 'playing-card back';
     } else {
       d.className = 'playing-card' + (c.s === '♥' || c.s === '♦' ? ' red' : '');
-      d.innerHTML = `<span class="pc-corner"></span><span class="pc-suit"></span>`;
+      d.innerHTML = '<span class="pc-corner"></span><span class="pc-suit"></span>';
       d.querySelector('.pc-corner').textContent = `${c.r}${c.s}`;
       d.querySelector('.pc-suit').textContent = c.s;
     }
@@ -132,13 +236,13 @@
   }
 
   const RESULT_TEXT = {
-    blackjack: (n) => [`🃏 BLACKJACK! Du vant ${spinsWord(n)}!`, 'win'],
-    win: (n) => [`🎉 Du vant ${spinsWord(n)}!`, 'win'],
-    'dealer-bust': (n) => [`💥 Dealer gikk over 21! Du vant ${spinsWord(n)}!`, 'win'],
+    blackjack: (n) => [`🃏 BLACKJACK! Du vant ${flusWord(n)}!`, 'win'],
+    win: (n) => [`🎉 Du vant ${flusWord(n)}!`, 'win'],
+    'dealer-bust': (n) => [`💥 Dealer gikk over 21! Du vant ${flusWord(n)}!`, 'win'],
     push: () => ['🤝 Uavgjort. Du får innsatsen tilbake.', ''],
-    lose: (n) => [`Dealer vant. Du tapte ${spinsWord(n)} 😢`, 'lose'],
-    bust: (n) => [`💥 Over 21! Du tapte ${spinsWord(n)} 😢`, 'lose'],
-    'dealer-blackjack': (n) => [`Dealer fikk blackjack. Du tapte ${spinsWord(n)} 😢`, 'lose'],
+    lose: (n) => [`Dealer vant. Du tapte ${flusWord(n)} 😢`, 'lose'],
+    bust: (n) => [`💥 Over 21! Du tapte ${flusWord(n)} 😢`, 'lose'],
+    'dealer-blackjack': (n) => [`Dealer fikk blackjack. Du tapte ${flusWord(n)} 😢`, 'lose'],
   };
 
   let shownCards = { dealer: 0, player: 0 };
@@ -176,7 +280,7 @@
       $('bj-result').textContent = text;
       $('bj-result').className = `result ${cls}`;
     } else {
-      $('bj-result').textContent = `Innsats: ${spinsWord(h.bet)}`;
+      $('bj-result').textContent = `Innsats: ${flusWord(h.bet)}`;
       $('bj-result').className = 'result';
     }
   }
@@ -188,7 +292,7 @@
     try {
       if (path === '/api/casino/bj/deal') shownCards = { dealer: 0, player: 0 };
       const r = await api(path, body || {});
-      setSpins(r.me);
+      setWallet(r.me);
       renderBlackjack(r.blackjack, true);
       if (r.blackjack.status === 'done') loadLog();
     } catch (err) {
@@ -205,21 +309,12 @@
   $('bj-double').addEventListener('click', () => bjAction('/api/casino/bj/double'));
 
   // ---------- Felles ----------
-  document.querySelectorAll('.tab').forEach((t) =>
-    t.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === t));
-      $('tab-roulette').classList.toggle('hidden', t.dataset.tab !== 'roulette');
-      $('tab-blackjack').classList.toggle('hidden', t.dataset.tab !== 'blackjack');
-    }));
-
-  $('bet-minus').addEventListener('click', () => {
-    bet--;
-    clampBet();
-  });
-  $('bet-plus').addEventListener('click', () => {
-    bet++;
-    clampBet();
-  });
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
+    ['slot', 'roulette', 'blackjack'].forEach((t) => $(`tab-${t}`).classList.toggle('hidden', t !== name));
+    $('bet-card').classList.toggle('hidden', name === 'slot');
+  }
+  document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 
   function renderLog(log) {
     const ul = $('casino-log');
@@ -227,10 +322,17 @@
     if (!log.length) ul.innerHTML = '<li class="muted">Ingen har spilt ennå.</li>';
     log.forEach((e) => {
       const li = document.createElement('li');
-      li.className = e.net > 0 ? 'won' : e.net < 0 ? 'lost' : '';
-      const game = e.game === 'roulette' ? '🎡' : '🃏';
-      const res = e.net > 0 ? `vant ${spinsWord(e.net)}` : e.net < 0 ? `tapte ${spinsWord(e.net)}` : 'gikk i null';
-      li.textContent = `${game} ${e.name} ${res}${e.game === 'roulette' ? ` (${e.detail})` : ''}`;
+      const icon = { roulette: '🎡', blackjack: '🃏', slot: '🎰' }[e.game];
+      let text;
+      if (e.game === 'slot') {
+        text = `${icon} ${e.name}: ${e.detail}`;
+        li.className = 'won';
+      } else {
+        li.className = e.net > 0 ? 'won' : e.net < 0 ? 'lost' : '';
+        const res = e.net > 0 ? `vant ${flusWord(e.net)}` : e.net < 0 ? `tapte ${flusWord(e.net)}` : 'gikk i null';
+        text = `${icon} ${e.name} ${res}${e.game === 'roulette' ? ` (${e.detail})` : ''}`;
+      }
+      li.textContent = text;
       ul.appendChild(li);
     });
   }
@@ -246,16 +348,17 @@
     data = await api('/api/casino');
     $('not-joined').classList.toggle('hidden', !!data.me);
     $('casino').classList.toggle('hidden', !data.me);
-    $('max-bet').textContent = data.maxBet;
     renderLog(data.log);
     if (!data.me) return;
-    setSpins(data.me);
+    setWallet(data.me);
+    renderPaytable(data.slotTable);
+    initReels();
     drawRoulette();
     document.querySelector('.bet-opt[data-type="red"]').classList.add('selected');
     if (data.blackjack) {
       shownCards = { dealer: 9, player: 9 };
       renderBlackjack(data.blackjack, false);
-      if (data.blackjack.status === 'playing') document.querySelector('.tab[data-tab="blackjack"]').click();
+      if (data.blackjack.status === 'playing') showTab('blackjack');
     } else renderBlackjack(null);
   }
 

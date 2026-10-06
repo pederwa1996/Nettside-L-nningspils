@@ -35,7 +35,7 @@ async function load() {
   $('rows').innerHTML = '';
   data.participants.forEach((p) => {
     const tr = document.createElement('tr');
-    [p.name, p.tickets.join(', '), `${p.spinsUsed}/${p.spinsAllowed}`, p.spinWins, p.bestScore].forEach((v) => {
+    [p.name, p.tickets.join(', '), `${p.spinsUsed}/${p.spinsAllowed}`, p.spinWins, p.bestScore, p.flus].forEach((v) => {
       const td = document.createElement('td');
       td.textContent = v;
       tr.appendChild(td);
@@ -188,6 +188,14 @@ function renderDraw(draw) {
   $('draw-result').appendChild(ul);
 }
 
+// Vis bestillingsboblen med en gang etter innlogging
+function showBubble() {
+  if (document.querySelector('.admin-bubble')) return;
+  const s = document.createElement('script');
+  s.src = '/admin-bubble.js?' + Date.now();
+  document.body.appendChild(s);
+}
+
 async function login() {
   try {
     await load();
@@ -196,6 +204,7 @@ async function login() {
     try {
       sessionStorage.setItem('adminPassword', password);
     } catch { /* ignorer */ }
+    showBubble();
   } catch (err) {
     $('panel').classList.add('hidden');
     showMsg(err.message);

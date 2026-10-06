@@ -9,7 +9,7 @@
 <body>
   <header class="hero">
     <h1>🎰 Kasino</h1>
-    <p class="sub">Spill om spinn · <a href="/">← Tilbake</a></p>
+    <p class="sub">Spill om flus og pils · <a href="/">← Tilbake</a></p>
   </header>
 
   <main>
@@ -18,24 +18,44 @@
     </section>
 
     <div id="casino" class="hidden">
-      <section class="card sticky-spins">
-        <p class="center big-number">Du har <strong id="my-spins">0</strong> spinn</p>
-        <div class="stepper center-stepper">
-          <span class="muted">Innsats</span>
-          <button type="button" class="secondary" id="bet-minus">−</button>
-          <span id="bet">1</span>
-          <button type="button" class="secondary" id="bet-plus">+</button>
-        </div>
-        <p class="note center">Maks <span id="max-bet">5</span> spinn per runde. Spill med måte 😉</p>
+      <section class="card wallet">
+        <div class="wallet-item"><span class="wallet-num" id="my-spins">0</span><span class="wallet-label">🎰 spinn</span></div>
+        <div class="wallet-item"><span class="wallet-num" id="my-flus">0</span><span class="wallet-label">💰 flus</span></div>
+        <div class="wallet-item"><span class="wallet-num" id="my-beers">0</span><span class="wallet-label">🍺 til gode</span></div>
       </section>
 
       <div class="tabs">
-        <button type="button" class="tab active" data-tab="roulette">🎡 Roulette</button>
+        <button type="button" class="tab active" data-tab="slot">🎰 Automat</button>
+        <button type="button" class="tab" data-tab="roulette">🎡 Roulette</button>
         <button type="button" class="tab" data-tab="blackjack">🃏 Blackjack</button>
       </div>
 
+      <!-- Innsats i flus (roulette og blackjack) -->
+      <section id="bet-card" class="card hidden">
+        <p class="field-label">Innsats: <strong id="bet">10</strong> flus</p>
+        <div class="step-chips" id="bet-chips"></div>
+      </section>
+
+      <!-- Automat -->
+      <section id="tab-slot" class="card">
+        <div class="slot-machine">
+          <div class="slot-top">🍺 LØNNINGSPILS 🍺</div>
+          <div class="slot-reels">
+            <div class="reel"><div class="strip"></div></div>
+            <div class="reel"><div class="strip"></div></div>
+            <div class="reel"><div class="strip"></div></div>
+          </div>
+        </div>
+        <p id="slot-result" class="result"></p>
+        <button id="slot-pull" class="big">Trekk i spaken (1 spinn) 🎰</button>
+        <details class="tips">
+          <summary>Gevinster</summary>
+          <ul id="paytable" class="paytable"></ul>
+        </details>
+      </section>
+
       <!-- Roulette -->
-      <section id="tab-roulette" class="card">
+      <section id="tab-roulette" class="card hidden">
         <div class="wheel-wrap roulette-wrap">
           <div class="pointer">▼</div>
           <canvas id="roulette" width="600" height="600"></canvas>
@@ -75,6 +95,11 @@
         </div>
         <p class="note">Dealer trekker til 17. Blackjack betaler 3:2. Du kan doble på de to første kortene.</p>
       </section>
+
+      <section class="card bar-link">
+        <p>Har du flus eller pils til gode? 🍻</p>
+        <a class="button" href="/baren.html">Gå til baren 🍺</a>
+      </section>
     </div>
 
     <section class="card">
@@ -85,5 +110,6 @@
 
   <script src="/media.js"></script>
   <script src="/kasino.js"></script>
+  <script src="/admin-bubble.js"></script>
 </body>
 </html>
