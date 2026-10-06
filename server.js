@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const supabase = require('./supabase');
-const DEFAULT_TASKS = require('./tasks-default');
+const { TASKS: DEFAULT_TASKS, RETIRED: RETIRED_TASKS } = require('./tasks-default');
 
 // ---- Innstillinger (kan overstyres med miljøvariabler) ----
 const PORT = Number(process.env.PORT) || 3000;
@@ -64,8 +64,18 @@ function loadState() {
 
 // Fyller inn felt som mangler i data lagret av eldre versjoner
 function normalizeState(s) {
-  return { ...freshState(), ...s };
+  const out = { ...freshState(), ...s };
+  // Fjern utgåtte standardoppgaver (spinn som allerede er gitt beholdes)
+  out.tasks = out.tasks.filter((t) => {
+    if (!RETIRED_TASKS.includes(t.title)) return true;
+    t.attempts.forEach((a) => deleteImage(a.url));
+    removedTasks++;
+    return false;
+  });
+  return out;
 }
+
+let removedTasks = 0;
 
 let state = normalizeState(loadState());
 const games = new Map(); // aktive spill: gameId -> { token, start }
@@ -1043,6 +1053,11 @@ async function start() {
     console.log(`   SUPABASE_URL satt: ${process.env.SUPABASE_URL ? 'ja' : 'nei'}, SUPABASE_KEY satt: ${process.env.SUPABASE_KEY ? 'ja' : 'nei'}`);
     const similar = Object.keys(process.env).filter((k) => /supa|base_url|_key$/i.test(k) && !/^(SUPABASE_URL|SUPABASE_KEY)$/.test(k));
     if (similar.length) console.log('   Lignende variabler funnet:', similar.map((k) => JSON.stringify(k)).join(', '));
+  }
+
+  if (removedTasks) {
+    console.log(`🧹 Fjernet ${removedTasks} utgåtte oppgaver`);
+    saveState();
   }
 
   server.listen(PORT, () => {
