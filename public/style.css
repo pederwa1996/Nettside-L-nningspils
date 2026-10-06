@@ -1004,3 +1004,95 @@ a.profile-link:hover span { text-decoration: underline; }
 .pk-buyin { margin-top: 12px; padding: 12px; border-radius: 12px; background: rgba(0, 0, 0, 0.3); border: 1px dashed #d4a530; }
 .pk-buyin p { margin-top: 0; }
 #pk-leave { display: block; margin: 8px auto 0; }
+
+/* =========================================================
+   Forsiden: meny nederst og fliser
+   ========================================================= */
+body:has(.bottom-nav) { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  display: flex;
+  justify-content: space-around;
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+  background: rgba(20, 12, 7, 0.96);
+  border-top: 1px solid rgba(255, 200, 130, 0.2);
+  backdrop-filter: blur(8px);
+}
+.bottom-nav button, .bottom-nav a {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 0;
+  background: none !important;
+  box-shadow: none !important;
+  color: #b89a7a !important;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+}
+.bottom-nav span { font-size: 1.35rem; line-height: 1.2; filter: grayscale(0.4); }
+.bottom-nav .active { color: #ffd38a !important; }
+.bottom-nav .active span { filter: none; transform: scale(1.1); }
+.nav-badge { position: absolute; top: 0; left: 56%; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #ff3b5c; color: #fff; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+/* Bestillingsboblen må ligge over menyen */
+body:has(.bottom-nav) .admin-bubble { bottom: 84px; }
+body:has(.bottom-nav) .admin-orders { bottom: 156px; }
+
+.home-wallet { display: flex; gap: 8px; margin: 10px 0; }
+.home-wallet div { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
+.home-wallet span { font-size: 1.4rem; font-weight: 900; color: var(--gold); }
+.home-wallet small { font-size: 0.75rem; color: var(--muted); }
+#home-alerts a { color: inherit; }
+.me-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.me-links .small-btn, .me-links #profile-btn, .me-links #admin-btn, .me-links #device-btn { margin: 0; }
+
+.tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 12px;
+  border-radius: 16px;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--card);
+  min-height: 120px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 0.1s;
+}
+.tile:active { transform: scale(0.97); }
+.tile.wide { grid-column: span 2; min-height: 0; flex-direction: row; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tile-icon { font-size: 2rem; }
+.tile strong { font-size: 1.05rem; }
+.tile small { color: var(--muted); font-size: 0.8rem; line-height: 1.35; }
+.tile-badge { position: absolute; top: 10px; right: 10px; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 12px; background: #ff3b5c; color: #fff; font-weight: 900; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; animation: pk-pulse 1s ease-in-out infinite alternate; }
+
+/* Taco-temaet på flisene og menyen */
+body.cantina .tile {
+  overflow: hidden;
+  padding-top: 24px;
+  background: linear-gradient(180deg, rgba(58, 34, 20, 0.95), rgba(32, 19, 11, 0.96));
+  border: 1px solid rgba(255, 200, 130, 0.18);
+}
+body.cantina .tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background:
+    radial-gradient(circle, var(--terracotta) 0 2px, transparent 2.5px) 0 0 / 8px 8px,
+    conic-gradient(from 45deg, var(--talavera) 25%, var(--cream) 0 50%, var(--talavera) 0 75%, var(--cream) 0) 0 0 / 8px 8px;
+}
+body.cantina .tile strong { font-family: 'Bungee', Impact, sans-serif; font-weight: 400; color: var(--warm); }
+body.cantina .home-wallet div { background: rgba(255, 220, 170, 0.07); border: 1px dashed rgba(255, 200, 130, 0.25); }

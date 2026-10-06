@@ -106,7 +106,8 @@ function render() {
   $('tickets-left').textContent = data.ticketsLeft;
 
   // Etter trekningen kan man ikke registrere seg, men man kan fortsatt logge inn med kode
-  $('join-section').classList.toggle('hidden', !!me);
+  const onHome = !document.getElementById('view-home').classList.contains('hidden');
+  $('join-section').classList.toggle('hidden', !!me || !onHome);
   $('join-form').classList.toggle('hidden', !!draw);
   $('me-section').classList.toggle('hidden', !me);
   $('wheel-section').classList.toggle('hidden', !me);
@@ -116,21 +117,30 @@ function render() {
   $('tasks-card').classList.toggle('hidden', !me);
   $('casino-card').classList.toggle('hidden', !me);
   $('bar-card').classList.toggle('hidden', !me);
+  $('games-locked').classList.toggle('hidden', !!me);
   if (me) {
-    $('bar-info').textContent = me.beersOwed
-      ? `Du har ${me.beersOwed} pils til gode! Bestill, så kommer spillmesteren med den til bordet. Du har også ${me.flus} flus.`
-      : `Du har ${me.flus} flus. Kjøp pils for flus, så kommer spillmesteren med den til bordet.`;
+    $('bar-info').textContent = me.beersOwed ? `🍺 ${me.beersOwed} pils til gode!` : 'Kjøp pils for flus';
+    $('home-spins').textContent = me.spinsLeft;
+    $('home-flus').textContent = me.flus;
+    $('home-beers').textContent = me.beersOwed;
   }
-  $('open-tasks').textContent = data.openTasks ? `${data.openTasks} oppgaver er ledige nå.` : 'Alle oppgavene er tatt!';
+  $('open-tasks').textContent = data.openTasks ? `${data.openTasks} ledige.` : 'Alle er tatt!';
   $('mogg-card').classList.toggle('hidden', !me);
   $('mogg-alert').classList.toggle('hidden', !data.incomingMoggs);
-  $('mogg-alert').textContent = `🔔 Du er utfordret til ${data.incomingMoggs === 1 ? 'en mogg-off' : `${data.incomingMoggs} mogg-offs`}!`;
+  $('mogg-alert').textContent = data.incomingMoggs;
   $('duel-alert').classList.toggle('hidden', !data.incomingDuels);
-  $('duel-alert').textContent = data.incomingDuels === 1
-    ? '🔔 Du har 1 utfordring som venter på svar!'
-    : `🔔 Du har ${data.incomingDuels} utfordringer som venter på svar!`;
+  $('duel-alert').textContent = data.incomingDuels;
+  // Varsel på Hjem og prikk på «Spill» i menyen når noen har utfordret deg
+  const challenges = (data.incomingDuels || 0) + (data.incomingMoggs || 0);
+  $('nav-badge').classList.toggle('hidden', !challenges);
+  $('nav-badge').textContent = challenges;
+  const alerts = [];
+  if (data.incomingDuels) alerts.push(`<a href="/duell.html">⚔️ ${data.incomingDuels} duell${data.incomingDuels > 1 ? 'er' : ''} venter på svar</a>`);
+  if (data.incomingMoggs) alerts.push(`<a href="/mogg.html">🗿 ${data.incomingMoggs} mogg-off${data.incomingMoggs > 1 ? 's' : ''} venter på deg</a>`);
+  $('home-alerts').innerHTML = alerts.join('<br>');
+  $('home-alerts').classList.toggle('hidden', !alerts.length || !me);
   const first = settings.gameFirstMilestone;
-  $('game-rule').textContent = `${first} poeng gir 1 spinn, ${first * 2} gir 2, ${first * 4} gir 3, ${first * 8} gir 4 osv.`;
+  $('game-rule').textContent = `${first} poeng = 1 spinn, ${first * 2} = 2 …`;
   renderLeaderboard(data.leaderboard, me);
   renderStandings(data.standings, me);
 
@@ -312,6 +322,28 @@ $('join-form').addEventListener('submit', async (e) => {
     $('join-error').textContent = err.message;
   }
   $('join-btn').disabled = false;
+});
+
+// ---------- Meny nederst ----------
+const VIEW_HASH = { home: '', games: '#spill', standings: '#stilling' };
+
+function showView(name, { scroll = true } = {}) {
+  document.querySelectorAll('.view').forEach((v) => v.classList.toggle('hidden', v.id !== `view-${name}`));
+  document.querySelectorAll('.bottom-nav [data-view]').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
+  // Storyen og registreringen hører til Hjem
+  $('stories-bar').classList.toggle('hidden', name !== 'home');
+  if (name !== 'home') $('join-section').classList.add('hidden');
+  else if (data) $('join-section').classList.toggle('hidden', !!data.me);
+  history.replaceState(null, '', VIEW_HASH[name] || location.pathname + location.search);
+  if (scroll) window.scrollTo(0, 0);
+}
+
+document.querySelectorAll('.bottom-nav [data-view]').forEach((b) => b.addEventListener('click', () => showView(b.dataset.view)));
+const startView = Object.keys(VIEW_HASH).find((k) => VIEW_HASH[k] && VIEW_HASH[k] === location.hash);
+if (startView) showView(startView, { scroll: false });
+window.addEventListener('hashchange', () => {
+  const v = Object.keys(VIEW_HASH).find((k) => VIEW_HASH[k] === location.hash) || 'home';
+  showView(v, { scroll: false });
 });
 
 // ---------- Endre navn ----------

@@ -47,133 +47,144 @@
       </details>
     </section>
 
-    <!-- Mine lodd -->
-    <section id="me-section" class="card hidden">
-      <div class="me-head">
-        <div class="me-avatar">
-          <span id="me-avatar"></span>
-          <!-- Bare det lille kameraet åpner kameraet, så man ikke kommer borti det ved et uhell -->
-          <label class="me-avatar-edit" title="Bytt profilbilde">
-            <input id="change-avatar-input" type="file" accept="image/*" capture="user" hidden>📷
-          </label>
+    <!-- ===================== HJEM ===================== -->
+    <div id="view-home" class="view">
+      <section id="me-section" class="card hidden">
+        <div class="me-head">
+          <div class="me-avatar">
+            <span id="me-avatar"></span>
+            <!-- Bare det lille kameraet åpner kameraet, så man ikke kommer borti det ved et uhell -->
+            <label class="me-avatar-edit" title="Bytt profilbilde">
+              <input id="change-avatar-input" type="file" accept="image/*" capture="user" hidden>📷
+            </label>
+          </div>
+          <h2>Hei, <span id="me-name"></span>! 👋 <button type="button" id="rename-btn" class="rename-btn" title="Endre navn">✏️</button></h2>
         </div>
-        <h2>Hei, <span id="me-name"></span>! 👋 <button type="button" id="rename-btn" class="rename-btn" title="Endre navn">✏️</button></h2>
+        <p id="avatar-missing" class="duel-alert hidden">📸 Trykk på det lille kameraet for å legge inn et profilbilde!</p>
+        <div class="home-wallet">
+          <div><span id="home-spins">0</span><small>🎰 spinn</small></div>
+          <div><span id="home-flus">0</span><small>💰 flus</small></div>
+          <div><span id="home-beers">0</span><small>🍺 til gode</small></div>
+        </div>
+        <p id="home-alerts" class="duel-alert hidden"></p>
+        <details class="tips">
+          <summary>🎟️ Dine lodd</summary>
+          <div id="my-tickets" class="tickets"></div>
+        </details>
+        <p id="my-result" class="result"></p>
+        <div class="me-links">
+          <a id="profile-btn" class="button small-btn" href="/profil.html">👤 Min profil</a>
+          <a id="admin-btn" class="button small-btn hidden" href="/admin.html">🔐 Admin</a>
+          <button type="button" id="device-btn" class="secondary small-btn">💻 Annen enhet</button>
+        </div>
+        <div id="device-code-box" class="device-code-box hidden">
+          <p>Skriv inn denne koden på den andre enheten (under «Logg inn med kode»):</p>
+          <p class="device-code" id="device-code"></p>
+          <p class="note">Eller åpn denne lenken der: <a id="device-link" href="#"></a></p>
+          <p class="note">Koden virker én gang og går ut om 10 minutter. Ikke del den med andre, da logger de inn som deg!</p>
+        </div>
+      </section>
+
+      <!-- Lykkehjul -->
+      <section id="wheel-section" class="card hidden">
+        <h2>Lykkehjulet 🎡</h2>
+        <p>Du har <strong id="spins-left">0</strong> spinn og <strong id="wheel-flus">0</strong> flus. Hvert spinn har <strong id="chance">15 %</strong> sjanse for øl.</p>
+        <div class="wheel-wrap">
+          <div class="pointer">▼</div>
+          <canvas id="wheel" width="600" height="600"></canvas>
+        </div>
+        <div class="spin-buttons">
+          <button id="spin-btn">Spinn! 🎰</button>
+          <button id="spin-flus-btn" class="secondary">Spinn for <span id="spin-price">50</span> flus 💰</button>
+        </div>
+        <p id="spin-result" class="result"></p>
+        <p id="spin-total" class="note"></p>
+      </section>
+    </div>
+
+    <!-- ===================== SPILL ===================== -->
+    <div id="view-games" class="view hidden">
+      <p id="games-locked" class="card muted center hidden">Registrer deg under «Hjem» for å spille.</p>
+      <div class="tile-grid">
+        <a id="casino-card" class="tile hidden" href="/kasino.html">
+          <span class="tile-icon">🎰</span><strong>Kasino</strong>
+          <small>Automat, roulette, blackjack og poker</small>
+        </a>
+        <a id="bar-card" class="tile hidden" href="/kasino.html#baren">
+          <span class="tile-icon">🍻</span><strong>Baren</strong>
+          <small id="bar-info"></small>
+        </a>
+        <a id="tasks-card" class="tile hidden" href="/oppgaver.html">
+          <span class="tile-icon">🎯</span><strong>Oppgaver</strong>
+          <small>Opptil 10 spinn per oppgave. <span id="open-tasks"></span></small>
+        </a>
+        <a id="duel-card" class="tile hidden" href="/duell.html">
+          <span class="tile-icon">⚔️</span><strong>Duell</strong>
+          <small>Stein, saks, papir om spinn</small>
+          <span id="duel-alert" class="tile-badge hidden"></span>
+        </a>
+        <a id="mogg-card" class="tile hidden" href="/mogg.html">
+          <span class="tile-icon">🗿</span><strong>Mogg-off</strong>
+          <small>Hardeste chad-ansikt vinner</small>
+          <span id="mogg-alert" class="tile-badge hidden"></span>
+        </a>
+        <a id="game-card" class="tile hidden" href="/spill.html">
+          <span class="tile-icon">🕊️</span><strong>Flappy Sjef</strong>
+          <small id="game-rule"></small>
+        </a>
+        <a id="chat-card" class="tile wide hidden" href="/chat.html">
+          <span class="tile-icon">💬</span><strong>Chat</strong>
+          <small>Prat med alle på lønningspilsen, live</small>
+        </a>
       </div>
-      <p id="avatar-missing" class="duel-alert hidden">📸 Trykk på det lille kameraet for å legge inn et profilbilde!</p>
-      <p>Dine lodd:</p>
-      <div id="my-tickets" class="tickets"></div>
-      <p id="my-result" class="result"></p>
-      <a id="profile-btn" class="button small-btn" href="/profil.html">👤 Min profil</a>
-      <a id="admin-btn" class="button small-btn hidden" href="/admin.html">🔐 Admin</a>
-      <button type="button" id="device-btn" class="secondary small-btn">💻 Bruk på en annen enhet</button>
-      <div id="device-code-box" class="device-code-box hidden">
-        <p>Skriv inn denne koden på den andre enheten (under «Logg inn med kode»):</p>
-        <p class="device-code" id="device-code"></p>
-        <p class="note">Eller åpn denne lenken der: <a id="device-link" href="#"></a></p>
-        <p class="note">Koden virker én gang og går ut om 10 minutter. Ikke del den med andre, da logger de inn som deg!</p>
-      </div>
-    </section>
+    </div>
 
-    <!-- Lykkehjul -->
-    <section id="wheel-section" class="card hidden">
-      <h2>Lykkehjulet 🎡</h2>
-      <p>Du har <strong id="spins-left">0</strong> spinn og <strong id="wheel-flus">0</strong> flus. Hvert spinn har <strong id="chance">15 %</strong> sjanse for øl.</p>
-      <div class="wheel-wrap">
-        <div class="pointer">▼</div>
-        <canvas id="wheel" width="600" height="600"></canvas>
-      </div>
-      <div class="spin-buttons">
-        <button id="spin-btn">Spinn! 🎰</button>
-        <button id="spin-flus-btn" class="secondary">Spinn for <span id="spin-price">50</span> flus 💰</button>
-      </div>
-      <p id="spin-result" class="result"></p>
-      <p id="spin-total" class="note"></p>
-    </section>
+    <!-- ===================== STILLING ===================== -->
+    <div id="view-standings" class="view hidden">
+      <section class="card">
+        <h2>🏆 Leaderboard</h2>
+        <table class="standings">
+          <thead><tr><th></th><th>Navn</th><th title="Øl vunnet">🍺 Øl</th><th title="Spinn igjen">🎰 Spinn</th><th title="Flus">💰 Flus</th></tr></thead>
+          <tbody id="standings"></tbody>
+        </table>
+        <p class="note">Øl teller gevinster på lykkehjulet, vinnerlodd og tre pils på rad på automaten.</p>
+      </section>
 
-    <!-- Leaderboard -->
-    <section class="card">
-      <h2>🏆 Leaderboard</h2>
-      <table class="standings">
-        <thead><tr><th></th><th>Navn</th><th title="Øl vunnet">🍺 Øl</th><th title="Spinn igjen">🎰 Spinn</th><th title="Flus">💰 Flus</th></tr></thead>
-        <tbody id="standings"></tbody>
-      </table>
-      <p class="note">Øl teller gevinster på lykkehjulet, vinnerlodd og tre pils på rad på automaten.</p>
-    </section>
+      <section class="card">
+        <h2>Loddtrekning 🎟️</h2>
+        <p><span id="win-count">10</span> av <span id="total-count">100</span> lodd er verdt én øl hver.</p>
+        <div id="draw-pending">
+          <p class="muted">Trekningen er ikke gjennomført ennå. Følg med!</p>
+          <p class="note"><span id="participant-count">0</span> deltakere · <span id="tickets-left">100</span> lodd igjen</p>
+        </div>
+        <div id="draw-done" class="hidden">
+          <p>Vinnerloddene er:</p>
+          <ul id="winners" class="winners"></ul>
+        </div>
+      </section>
 
-    <!-- Baren -->
-    <section id="bar-card" class="card hidden">
-      <h2>🍻 Baren</h2>
-      <p id="bar-info"></p>
-      <a class="button" href="/kasino.html#baren">Gå til baren 🍺</a>
-    </section>
+      <section class="card">
+        <h2>🕊️ Flappy Sjef-toppliste</h2>
+        <ol id="leaderboard" class="leaderboard"></ol>
+      </section>
 
-    <!-- Kasino -->
-    <section id="casino-card" class="card hidden">
-      <h2>🎰 Kasino</h2>
-      <p>Bruk spinn på <strong>automaten</strong> og vinn flus, eller tre 🍺 på rad for en gratis pils! Spill <strong>roulette</strong> og <strong>blackjack</strong> med flusen din.</p>
-      <a class="button" href="/kasino.html">Gå til kasinoet 🎰</a>
-    </section>
-
-    <!-- Oppgaver -->
-    <section id="tasks-card" class="card hidden">
-      <h2>🎯 Oppgaver</h2>
-      <p>Løs oppgaver i baren og tjen opptil <strong>10 spinn</strong> per oppgave! <span id="open-tasks"></span></p>
-      <a class="button" href="/oppgaver.html">Se oppgavene 🎯</a>
-    </section>
-
-    <!-- Chat -->
-    <section id="chat-card" class="card hidden">
-      <h2>💬 Chat</h2>
-      <p>Prat med alle på lønningspilsen, live.</p>
-      <a class="button" href="/chat.html">Åpne chatten 💬</a>
-    </section>
-
-    <!-- Duell -->
-    <section id="duel-card" class="card hidden">
-      <h2>⚔️ Duell</h2>
-      <p id="duel-alert" class="duel-alert hidden"></p>
-      <p>Utfordre en kollega i stein, saks, papir og sats spinn. Vinneren tar potten!</p>
-      <a class="button" href="/duell.html">Gå til duell ⚔️</a>
-    </section>
-
-    <!-- Mogg-off -->
-    <section id="mogg-card" class="card hidden">
-      <h2>🗿 Mogg-off</h2>
-      <p id="mogg-alert" class="duel-alert hidden"></p>
-      <p>Ta ditt hardeste chad-ansikt og utfordre en kollega. Høyest score tar 1 spinn fra den andre!</p>
-      <a class="button" href="/mogg.html">Gå til mogg-off 🗿</a>
-    </section>
-
-    <!-- Flappy Sjef -->
-    <section id="game-card" class="card hidden">
-      <h2>Tom for spinn? 🕊️</h2>
-      <p>Spill <strong>Flappy Sjef</strong> og tjen nye spinn! <span id="game-rule"></span></p>
-      <a class="button" href="/spill.html">Spill Flappy Sjef 🎮</a>
-      <h3>🏆 Toppliste</h3>
-      <ol id="leaderboard" class="leaderboard"></ol>
-    </section>
-
-    <!-- Loddtrekning -->
-    <section class="card">
-      <h2>Loddtrekning 🎟️</h2>
-      <p><span id="win-count">10</span> av <span id="total-count">100</span> lodd er verdt én øl hver.</p>
-      <div id="draw-pending">
-        <p class="muted">Trekningen er ikke gjennomført ennå. Følg med!</p>
-        <p class="note"><span id="participant-count">0</span> deltakere · <span id="tickets-left">100</span> lodd igjen</p>
-      </div>
-      <div id="draw-done" class="hidden">
-        <p>Vinnerloddene er:</p>
-        <ul id="winners" class="winners"></ul>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Deltakere</h2>
-      <ul id="participants" class="participants"></ul>
-    </section>
+      <section class="card">
+        <h2>Deltakere</h2>
+        <ul id="participants" class="participants"></ul>
+      </section>
+    </div>
   </main>
 
   <footer><a href="/admin.html">Admin</a></footer>
+
+  <!-- Meny nederst, som i en app -->
+  <nav class="bottom-nav">
+    <button type="button" data-view="home" class="active"><span>🏠</span>Hjem</button>
+    <button type="button" data-view="games"><span>🎮</span>Spill<b id="nav-badge" class="nav-badge hidden"></b></button>
+    <button type="button" data-view="standings"><span>🏆</span>Stilling</button>
+    <a href="/chat.html"><span>💬</span>Chat</a>
+    <a href="/profil.html"><span>👤</span>Profil</a>
+  </nav>
 
   <script src="/media.js"></script>
   <script src="/stories.js"></script>
