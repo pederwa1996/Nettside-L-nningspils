@@ -125,5 +125,6 @@
   // Oppdater når spillmesteren leverer
   onLive('orders', () => !busy && refresh());
   setInterval(() => !busy && refresh(), 20000);
+  window.refreshBar = refresh;
   refresh();
 })();

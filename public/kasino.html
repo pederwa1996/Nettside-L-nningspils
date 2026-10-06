@@ -4,12 +4,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kasino – Lønningspils</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;800&display=swap">
   <link rel="stylesheet" href="/style.css">
 </head>
-<body>
-  <header class="hero">
-    <h1>🎰 Kasino</h1>
-    <p class="sub">Spill om flus og pils · <a href="/">← Tilbake</a></p>
+<body class="kasino">
+  <header class="hero casino-hero">
+    <div class="marquee">
+      <h1>Kasino</h1>
+      <p class="casino-tagline">♠ ♥ Lønningspils Royale ♦ ♣</p>
+    </div>
+    <p class="sub"><a href="/">← Tilbake</a></p>
   </header>
 
   <main>
@@ -28,6 +34,7 @@
         <button type="button" class="tab active" data-tab="slot">🎰 Automat</button>
         <button type="button" class="tab" data-tab="roulette">🎡 Roulette</button>
         <button type="button" class="tab" data-tab="blackjack">🃏 Blackjack</button>
+        <button type="button" class="tab" data-tab="bar">🍻 Baren</button>
       </div>
 
       <!-- Innsats i flus (roulette og blackjack) -->
@@ -47,7 +54,10 @@
           </div>
         </div>
         <p id="slot-result" class="result"></p>
-        <button id="slot-pull" class="big">Trekk i spaken (1 spinn) 🎰</button>
+        <div class="spin-buttons">
+          <button id="slot-pull" class="big">Trekk i spaken (1 spinn) 🎰</button>
+          <button id="slot-pull-flus" class="big secondary">Trekk for <span class="spin-price">50</span> flus 💰</button>
+        </div>
         <details class="tips">
           <summary>Gevinster</summary>
           <ul id="paytable" class="paytable"></ul>
@@ -96,9 +106,28 @@
         <p class="note">Dealer trekker til 17. Blackjack betaler 3:2. Du kan doble på de to første kortene.</p>
       </section>
 
-      <section class="card bar-link">
-        <p>Har du flus eller pils til gode? 🍻</p>
-        <a class="button" href="/baren.html">Gå til baren 🍺</a>
+      <!-- Baren -->
+      <section id="tab-bar" class="card hidden">
+        <div id="bar">
+          <h2>🍻 Bestill pils</h2>
+          <p class="note">Spillmesteren kommer med pilsen til bordet ditt.</p>
+          <p id="won-info" class="note"></p>
+          <div class="stepper center-stepper">
+            <span class="muted">Antall</span>
+            <button type="button" class="secondary" id="qty-minus">−</button>
+            <span id="qty">1</span>
+            <button type="button" class="secondary" id="qty-plus">+</button>
+          </div>
+          <input id="note" type="text" maxlength="100" placeholder="Hvor sitter du? (valgfritt)" class="search bar-note">
+          <div class="bar-buttons">
+            <button id="order-credit" class="big">🍺 Bruk pils til gode</button>
+            <button id="order-flus" class="big secondary">💰 Kjøp for <span id="flus-cost">250</span> flus</button>
+          </div>
+          <p class="note">Én pils koster <strong id="price">250</strong> flus.</p>
+          <p id="msg" class="result"></p>
+          <h3>Dine bestillinger</h3>
+          <ul id="orders" class="order-list"></ul>
+        </div>
       </section>
     </div>
 
@@ -110,6 +139,7 @@
 
   <script src="/media.js"></script>
   <script src="/kasino.js"></script>
+  <script src="/baren.js"></script>
   <script src="/admin-bubble.js"></script>
 </body>
 </html>

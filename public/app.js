@@ -73,14 +73,15 @@ function spinTo(win) {
   return new Promise((resolve) => setTimeout(resolve, 5200));
 }
 
-async function onSpin() {
+async function onSpin(pay) {
   if (spinning) return;
   spinning = true;
   $('spin-btn').disabled = true;
+  $('spin-flus-btn').disabled = true;
   $('spin-result').textContent = '';
   $('spin-result').className = 'result';
   try {
-    const result = await api('/api/spin', {});
+    const result = await api('/api/spin', { pay });
     await spinTo(result.win);
     data.me = result.me;
     $('spin-result').textContent = result.win ? '🎉 Gratulerer! Du vant en øl! 🍺' : '😢 Ingen øl denne gangen.';
@@ -152,7 +153,12 @@ function render() {
       $('my-result').textContent = '';
     }
     $('spins-left').textContent = me.spinsLeft;
-    if (!spinning) $('spin-btn').disabled = me.spinsLeft <= 0;
+    $('wheel-flus').textContent = me.flus;
+    $('spin-price').textContent = settings.spinPrice;
+    if (!spinning) {
+      $('spin-btn').disabled = me.spinsLeft <= 0;
+      $('spin-flus-btn').disabled = me.flus < settings.spinPrice;
+    }
     $('spin-btn').textContent = me.spinsLeft > 0 ? 'Spinn! 🎰' : 'Ingen spinn igjen';
     $('spin-total').textContent = me.spinWins
       ? `Du har vunnet ${me.spinWins} øl på hjulet totalt 🍺`
@@ -295,7 +301,8 @@ $('join-form').addEventListener('submit', async (e) => {
   $('join-btn').disabled = false;
 });
 
-$('spin-btn').addEventListener('click', onSpin);
+$('spin-btn').addEventListener('click', () => onSpin('spin'));
+$('spin-flus-btn').addEventListener('click', () => onSpin('flus'));
 
 drawWheel();
 refresh();

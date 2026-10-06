@@ -523,3 +523,181 @@ body.no-scroll { overflow: hidden; }
 .ao-note { font-size: 0.85rem; color: var(--gold); }
 .ao-btns { display: flex; gap: 4px; }
 .ao-btns .small-btn { padding: 8px 10px; }
+.spin-buttons { display: flex; flex-direction: column; gap: 8px; align-items: stretch; max-width: 360px; margin: 0 auto; }
+#spin-btn { min-width: 0; width: 100%; }
+.tabs .tab { padding: 10px 4px; font-size: 0.85rem; }
+
+/* =========================================================
+   Kasino-tema: rød velur, gullrammer og lyspærer
+   ========================================================= */
+body.kasino {
+  --velvet: #5c0a12;
+  --velvet-dark: #2a0307;
+  --gold-1: #f9e29c;
+  --gold-2: #d4a530;
+  --gold-3: #8a6514;
+  --felt: #1f6b3f;
+  background-color: var(--velvet-dark);
+  /* Velur: myk lysglans + fine fibre */
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(255, 90, 90, 0.35), transparent 60%),
+    radial-gradient(ellipse at 50% 120%, rgba(0, 0, 0, 0.7), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 2px),
+    linear-gradient(180deg, #8b1420 0%, var(--velvet) 35%, var(--velvet-dark) 100%);
+  background-attachment: fixed;
+}
+
+body.kasino h2, body.kasino h3, body.kasino .field-label, body.kasino .tab {
+  font-family: 'Cinzel', Georgia, serif;
+}
+
+/* Gulltekst */
+body.kasino h1,
+body.kasino h2,
+body.kasino .wallet-num,
+body.kasino .mogg-score {
+  background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 55%, var(--gold-3) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Skilt med blinkende lyspærer */
+.casino-hero { padding-top: 24px; }
+.marquee {
+  position: relative;
+  display: inline-block;
+  padding: 18px 34px 14px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #7a0d17, #3d0409);
+  border: 4px solid var(--gold-2);
+  box-shadow: 0 0 0 3px var(--gold-3), 0 0 30px rgba(255, 200, 80, 0.35), inset 0 0 25px rgba(0, 0, 0, 0.6);
+}
+.marquee::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 13px;
+  border: 5px dotted #ffe27a;
+  filter: drop-shadow(0 0 3px #ffcc33);
+  animation: bulbs 0.9s steps(1) infinite;
+  pointer-events: none;
+}
+@keyframes bulbs { 50% { border-color: #9c7418; filter: none; } }
+body.kasino .marquee h1 {
+  font-family: 'Cinzel Decorative', Georgia, serif;
+  font-size: 2.6rem;
+  letter-spacing: 2px;
+  filter: drop-shadow(0 2px 0 #3a0006) drop-shadow(0 0 12px rgba(255, 210, 90, 0.4));
+}
+.casino-tagline { margin: 2px 0 0; color: var(--gold-1); font-family: 'Cinzel', serif; font-weight: 800; letter-spacing: 3px; font-size: 0.8rem; }
+body.kasino .sub a { color: var(--gold-1); }
+
+/* Kort med gullramme */
+body.kasino .card {
+  background: linear-gradient(180deg, rgba(70, 6, 14, 0.92), rgba(35, 3, 8, 0.95));
+  border: 2px solid var(--gold-2);
+  box-shadow:
+    0 0 0 4px rgba(0, 0, 0, 0.35),
+    0 0 0 5px var(--gold-3),
+    inset 0 0 0 1px rgba(249, 226, 156, 0.25),
+    inset 0 0 30px rgba(0, 0, 0, 0.5),
+    0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* Lommebok som sjetonger */
+body.kasino .wallet { gap: 8px; }
+body.kasino .wallet-item {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.3));
+  border: 1px dashed rgba(249, 226, 156, 0.4);
+}
+body.kasino .wallet-label { color: var(--gold-1); opacity: 0.8; }
+
+/* Gullknapper */
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble),
+body.kasino .button {
+  background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 50%, #b88a1e 51%, var(--gold-2) 100%);
+  color: #3a0006;
+  border: 1px solid var(--gold-3);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 3px 0 var(--gold-3), 0 6px 14px rgba(0, 0, 0, 0.5);
+}
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+body.kasino button.secondary {
+  background: linear-gradient(180deg, #4a0810, #2a0307);
+  color: var(--gold-1);
+  border: 1px solid var(--gold-3);
+}
+body.kasino button.secondary:hover:not(:disabled) { background: linear-gradient(180deg, #62101a, #3a050c); }
+
+/* Faner */
+body.kasino .tab {
+  background: linear-gradient(180deg, #4a0810, #2a0307);
+  color: var(--gold-1);
+  border: 1px solid var(--gold-3);
+  font-weight: 800;
+}
+body.kasino .tab.active {
+  background: linear-gradient(180deg, var(--gold-1), var(--gold-2));
+  color: #3a0006;
+  box-shadow: 0 0 14px rgba(249, 226, 156, 0.5);
+}
+
+/* Sjetonger for innsats */
+body.kasino .chip {
+  aspect-ratio: 1;
+  flex: 0 0 54px;
+  padding: 0;
+  border-radius: 50%;
+  font-weight: 900;
+  color: #fff;
+  font-size: 0.9rem;
+  /* Sjetong: hel rød midt, hvite striper langs kanten */
+  background:
+    radial-gradient(circle, #b3121f 0 54%, rgba(255, 255, 255, 0.85) 55% 58%, transparent 59%),
+    repeating-conic-gradient(#b3121f 0 30deg, #fff 30deg 45deg);
+  border: 3px solid #7a0b14;
+  box-shadow: 0 4px 0 #3a0006;
+  text-shadow: 0 1px 2px #000;
+}
+body.kasino .chip.active { transform: translateY(-4px); box-shadow: 0 8px 0 #3a0006, 0 0 16px var(--gold-1); }
+body.kasino .chip:disabled { opacity: 0.35; }
+body.kasino .step-chips { justify-content: center; flex-wrap: wrap; }
+
+/* Automat */
+body.kasino .slot-machine {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.15), transparent 30%),
+    linear-gradient(180deg, #c0182a, #6e0710);
+  border: 5px solid var(--gold-2);
+  box-shadow: 0 0 0 3px var(--gold-3), 0 0 25px rgba(255, 190, 60, 0.35), 0 10px 26px rgba(0, 0, 0, 0.6);
+}
+body.kasino .slot-top { font-family: 'Cinzel Decorative', serif; color: var(--gold-1); }
+body.kasino .reel { border: 2px solid var(--gold-3); }
+
+/* Roulette og blackjack i gullramme */
+body.kasino .roulette-wrap canvas { box-shadow: 0 0 0 8px #4a2a0e, 0 0 0 12px var(--gold-2), 0 0 0 14px var(--gold-3), 0 0 30px rgba(255, 200, 80, 0.3), 0 12px 30px rgba(0, 0, 0, 0.6); }
+body.kasino .bj-table {
+  border: 6px solid var(--gold-2);
+  box-shadow: 0 0 0 3px var(--gold-3), inset 0 0 40px rgba(0, 0, 0, 0.5);
+  background:
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08), transparent 70%),
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.04) 0 2px, transparent 2px 4px),
+    radial-gradient(ellipse at center, #22784a 0%, #134428 100%);
+}
+body.kasino .bet-opt { border: 1px solid var(--gold-3); }
+body.kasino .bet-opt.selected { border: 2px solid var(--gold-1); box-shadow: 0 0 14px rgba(249, 226, 156, 0.6); }
+body.kasino .bet-opt:not(.red):not(.black) { background: linear-gradient(180deg, #1d6b40, #12462a); }
+
+/* Diverse */
+body.kasino input, body.kasino select { background: rgba(0, 0, 0, 0.35); border-color: var(--gold-3); }
+body.kasino .duel-list li, body.kasino .order, body.kasino .paytable li { border-color: rgba(249, 226, 156, 0.15); }
+body.kasino .pt-win, body.kasino .tips summary { color: var(--gold-1); }
+body.kasino .result.win { color: #ffe27a; text-shadow: 0 0 12px rgba(255, 210, 90, 0.6); }
+body.kasino .note, body.kasino .muted { color: #d9b8a0; }

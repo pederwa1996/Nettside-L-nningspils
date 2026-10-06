@@ -25,6 +25,9 @@
     $('my-spins').textContent = me.spinsLeft;
     $('my-flus').textContent = me.flus;
     $('my-beers').textContent = me.beersOwed;
+    document.querySelectorAll('.spin-price').forEach((el) => (el.textContent = data.spinPrice));
+    $('slot-pull').disabled = busy || me.spinsLeft < 1;
+    $('slot-pull-flus').disabled = busy || me.flus < data.spinPrice;
     renderChips();
   }
 
@@ -91,15 +94,16 @@
     }));
   }
 
-  $('slot-pull').addEventListener('click', async () => {
+  async function pullSlot(pay) {
     if (busy) return;
     busy = true;
     $('slot-pull').disabled = true;
+    $('slot-pull-flus').disabled = true;
     $('slot-result').textContent = '';
     $('slot-result').className = 'result';
     document.querySelector('.slot-machine').classList.remove('jackpot');
     try {
-      const r = await api('/api/casino/slot', {});
+      const r = await api('/api/casino/slot', { pay });
       await spinReels(r.reels);
       setWallet(r.me);
       if (r.beer) {
@@ -119,9 +123,12 @@
       $('slot-result').classList.add('lose');
     }
     busy = false;
-    $('slot-pull').disabled = false;
+    if (data.me) setWallet(data.me);
     loadLog();
-  });
+  }
+
+  $('slot-pull').addEventListener('click', () => pullSlot('spin'));
+  $('slot-pull-flus').addEventListener('click', () => pullSlot('flus'));
 
   function renderPaytable(table) {
     const ul = $('paytable');
@@ -309,10 +316,17 @@
   $('bj-double').addEventListener('click', () => bjAction('/api/casino/bj/double'));
 
   // ---------- Felles ----------
+  const TAB_HASH = { slot: 'automat', roulette: 'roulette', blackjack: 'blackjack', bar: 'baren' };
+
   function showTab(name) {
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
-    ['slot', 'roulette', 'blackjack'].forEach((t) => $(`tab-${t}`).classList.toggle('hidden', t !== name));
-    $('bet-card').classList.toggle('hidden', name === 'slot');
+    Object.keys(TAB_HASH).forEach((t) => $(`tab-${t}`).classList.toggle('hidden', t !== name));
+    $('bet-card').classList.toggle('hidden', name === 'slot' || name === 'bar');
+    history.replaceState(null, '', `#${TAB_HASH[name]}`);
+    // Baren har sin egen oversikt over flus og bestillinger: hent den på nytt
+    if (name === 'bar' && window.refreshBar) window.refreshBar();
+    // Oppdater lommeboken når man kommer tilbake fra baren (flus kan ha blitt brukt der)
+    if (name !== 'bar') api('/api/casino').then((d) => d.me && setWallet(d.me)).catch(() => {});
   }
   document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
 
@@ -355,11 +369,14 @@
     initReels();
     drawRoulette();
     document.querySelector('.bet-opt[data-type="red"]').classList.add('selected');
+    const fromHash = Object.keys(TAB_HASH).find((t) => `#${TAB_HASH[t]}` === location.hash);
     if (data.blackjack) {
       shownCards = { dealer: 9, player: 9 };
       renderBlackjack(data.blackjack, false);
-      if (data.blackjack.status === 'playing') showTab('blackjack');
     } else renderBlackjack(null);
+    // Lenken bestemmer fanen (f.eks. #baren). Ellers: fortsett en uferdig blackjack-hånd.
+    if (fromHash) showTab(fromHash);
+    else if (data.blackjack && data.blackjack.status === 'playing') showTab('blackjack');
   }
 
   init();

@@ -37,6 +37,9 @@ const START_FLUS = process.env.START_FLUS !== undefined ? Number(process.env.STA
 const CASINO_MIN_BET = 10;
 const CASINO_MAX_BET = Number(process.env.CASINO_MAX_BET) || 200;
 const PILS_PRICE = Number(process.env.PILS_PRICE) || 250; // pris i flus for én pils i baren
+// Pris i flus for ett spinn på lykkehjulet eller automaten. Holdes over det et spinn er verdt
+// i snitt (ca. 37 flus på hjulet, 30 på automaten), så flus ikke blir en pengemaskin.
+const SPIN_PRICE = Number(process.env.SPIN_PRICE) || 50;
 const MAX_PILS_PER_ORDER = 5;
 const MAX_PENDING_ORDERS = 3;
 
@@ -340,11 +343,27 @@ function pullSlot() {
   return { outcome, reels };
 }
 
+// Pils vunnet på lykkehjulet: spinn betalt med spinn + spinn betalt med flus
+function wheelWins(p) {
+  return p.spins.filter(Boolean).length + (p.paidWheelWins || 0);
+}
+
+// Betal for ett trekk med spinn eller flus. Kaster feil hvis man ikke har nok.
+function payForSpin(p, pay, { wheel = false } = {}) {
+  if (pay === 'flus') {
+    if ((p.flus || 0) < SPIN_PRICE) throw new Error(`Det koster ${SPIN_PRICE} flus, men du har bare ${p.flus || 0}.`);
+    addFlus(p, -SPIN_PRICE);
+    return;
+  }
+  if (spinsLeft(p) < 1) throw new Error(`Du har ingen spinn igjen. Betal med flus (${SPIN_PRICE} per spinn), eller tjen flere med oppgaver, Flappy Sjef eller dueller!`);
+  if (!wheel) addSpins(p, -1); // lykkehjulet teller brukte spinn selv i p.spins
+}
+
 // ---- Baren ----
 function beersWon(p) {
   const winning = new Set(state.draw ? state.draw.winningTickets : []);
   return {
-    wheel: p.spins.filter(Boolean).length,
+    wheel: wheelWins(p),
     tickets: p.tickets.filter((t) => winning.has(t)).length,
     slot: p.slotBeers || 0,
   };
@@ -561,7 +580,7 @@ function meView(p) {
     bonusSpins: p.bonusSpins || 0,
     bestScore: p.bestScore || 0,
     nextMilestone: { score: milestoneScore((p.milestones || 0) + 1), spins: (p.milestones || 0) + 1 },
-    spinWins: p.spins.filter(Boolean).length,
+    spinWins: wheelWins(p),
     winningTickets: winning,
     flus: p.flus || 0,
     beersOwed: beersOwed(p),
@@ -576,6 +595,7 @@ function settings() {
     spinsPerPerson: SPINS_PER_PERSON,
     spinWinChance: SPIN_WIN_CHANCE,
     gameFirstMilestone: GAME_FIRST_MILESTONE,
+    spinPrice: SPIN_PRICE,
   };
 }
 
@@ -723,13 +743,17 @@ const routes = {
     sendJson(res, 200, { me: meView(participant) }, { 'Set-Cookie': cookie });
   },
 
-  'POST /api/spin': (req, res) => {
+  'POST /api/spin': (req, res, body) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    if (p.spins.length >= spinsAllowed(p)) return sendJson(res, 400, { error: 'Du har brukt opp alle spinnene dine.' });
+    const pay = body.pay === 'flus' ? 'flus' : 'spin';
+    payForSpin(p, pay, { wheel: true });
 
     const win = crypto.randomInt(1_000_000) < SPIN_WIN_CHANCE * 1_000_000;
-    p.spins.push(win);
+    if (pay === 'flus') {
+      p.paidWheelSpins = (p.paidWheelSpins || 0) + 1;
+      if (win) p.paidWheelWins = (p.paidWheelWins || 0) + 1;
+    } else p.spins.push(win);
     saveState();
     sendJson(res, 200, { win, me: meView(p) });
   },
@@ -1156,6 +1180,7 @@ const routes = {
       me: meView(p),
       maxBet: CASINO_MAX_BET,
       minBet: CASINO_MIN_BET,
+      spinPrice: SPIN_PRICE,
       slotTable: SLOT_TABLE.filter((o) => o.flus || o.beer).map((o) => ({ id: o.id, symbol: o.symbol || '🍒🍒', flus: o.flus, beer: o.beer || 0 })),
       blackjack: p ? bjView(state.blackjack[p.name]) : null,
       log: state.casinoLog.slice(-10).reverse(),
@@ -1185,11 +1210,10 @@ const routes = {
     sendJson(res, 200, { number, color: number === 0 ? 'green' : RED_NUMBERS.has(number) ? 'red' : 'black', won, net, me: meView(p) });
   },
 
-  'POST /api/casino/slot': (req, res) => {
+  'POST /api/casino/slot': (req, res, body) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    if (spinsLeft(p) < 1) return sendJson(res, 400, { error: 'Du har ingen spinn igjen. Tjen flere med oppgaver, Flappy Sjef eller dueller!' });
-    addSpins(p, -1);
+    payForSpin(p, body.pay === 'flus' ? 'flus' : 'spin');
     const { outcome, reels } = pullSlot();
     if (outcome.flus) addFlus(p, outcome.flus);
     if (outcome.beer) p.slotBeers = (p.slotBeers || 0) + outcome.beer;
@@ -1377,7 +1401,7 @@ const routes = {
         spinsAllowed: spinsAllowed(p),
         bestScore: p.bestScore || 0,
         flus: p.flus || 0,
-        spinWins: p.spins.filter(Boolean).length,
+        spinWins: wheelWins(p),
         avatar: p.avatar || null,
       })),
       stories: (pruneStories(), state.stories.map((x) => ({ id: x.id, name: x.name, url: x.url, caption: x.caption, at: x.at }))),

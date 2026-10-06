@@ -52,12 +52,15 @@
     <!-- Lykkehjul -->
     <section id="wheel-section" class="card hidden">
       <h2>Lykkehjulet 🎡</h2>
-      <p>Du har <strong id="spins-left">0</strong> spinn igjen. Hvert spinn har <strong id="chance">15 %</strong> sjanse for øl.</p>
+      <p>Du har <strong id="spins-left">0</strong> spinn og <strong id="wheel-flus">0</strong> flus. Hvert spinn har <strong id="chance">15 %</strong> sjanse for øl.</p>
       <div class="wheel-wrap">
         <div class="pointer">▼</div>
         <canvas id="wheel" width="600" height="600"></canvas>
       </div>
-      <button id="spin-btn">Spinn! 🎰</button>
+      <div class="spin-buttons">
+        <button id="spin-btn">Spinn! 🎰</button>
+        <button id="spin-flus-btn" class="secondary">Spinn for <span id="spin-price">50</span> flus 💰</button>
+      </div>
       <p id="spin-result" class="result"></p>
       <p id="spin-total" class="note"></p>
     </section>
@@ -76,7 +79,7 @@
     <section id="bar-card" class="card hidden">
       <h2>🍻 Baren</h2>
       <p id="bar-info"></p>
-      <a class="button" href="/baren.html">Gå til baren 🍺</a>
+      <a class="button" href="/kasino.html#baren">Gå til baren 🍺</a>
     </section>
 
     <!-- Kasino -->
