@@ -906,6 +906,10 @@ async function start() {
     }
   } else {
     console.log('💾 Lagrer lokalt i', DATA_FILE, '(sett SUPABASE_URL og SUPABASE_KEY for varig lagring)');
+    // Feilsøking: vis navnene (aldri verdiene) på variabler som ligner, f.eks. feil skrivemåte eller mellomrom
+    console.log(`   SUPABASE_URL satt: ${process.env.SUPABASE_URL ? 'ja' : 'nei'}, SUPABASE_KEY satt: ${process.env.SUPABASE_KEY ? 'ja' : 'nei'}`);
+    const similar = Object.keys(process.env).filter((k) => /supa|base_url|_key$/i.test(k) && !/^(SUPABASE_URL|SUPABASE_KEY)$/.test(k));
+    if (similar.length) console.log('   Lignende variabler funnet:', similar.map((k) => JSON.stringify(k)).join(', '));
   }
 
   server.listen(PORT, () => {
