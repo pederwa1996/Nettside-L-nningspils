@@ -132,7 +132,7 @@ async function deleteImages(objectPaths) {
 }
 
 async function deleteAllImages() {
-  for (const folder of ['avatars', 'stories', 'mogg']) {
+  for (const folder of ['avatars', 'stories', 'mogg', 'tasks']) {
     for (;;) {
       const res = await request('POST', `/storage/v1/object/list/${MEDIA_BUCKET}`, {
         body: JSON.stringify({ prefix: folder, limit: 1000, offset: 0 }),

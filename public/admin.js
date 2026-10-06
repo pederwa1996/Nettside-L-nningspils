@@ -43,6 +43,73 @@ async function load() {
     $('rows').appendChild(tr);
   });
 
+  // ---- Oppgaver ----
+  const pending = data.tasks.filter((t) => t.status === 'pending');
+  $('review-count').textContent = pending.length;
+  $('admin-review').innerHTML = pending.length ? '' : '<p class="muted">Ingen innleveringer venter.</p>';
+  pending.forEach((t) => {
+    const a = t.attempts[t.attempts.length - 1];
+    const box = document.createElement('div');
+    box.className = 'review-box';
+    const h = document.createElement('p');
+    h.innerHTML = '<strong></strong> leverte <strong></strong> (🎰 <span></span> spinn)';
+    h.querySelectorAll('strong')[0].textContent = a.name;
+    h.querySelectorAll('strong')[1].textContent = t.title;
+    h.querySelector('span').textContent = t.reward;
+    box.appendChild(h);
+    if (a.url) {
+      const img = document.createElement('img');
+      img.src = a.url;
+      img.className = 'task-preview';
+      box.appendChild(img);
+    }
+    if (a.text) {
+      const q = document.createElement('blockquote');
+      q.textContent = a.text;
+      box.appendChild(q);
+    }
+    const row = document.createElement('div');
+    row.className = 'story-actions';
+    const ok = document.createElement('button');
+    ok.textContent = '✅ Godkjenn';
+    ok.addEventListener('click', async () => {
+      await post('/api/admin/task-review', { id: t.id, approve: true });
+      await load();
+    });
+    const no = document.createElement('button');
+    no.className = 'secondary';
+    no.textContent = '❌ Avvis';
+    no.addEventListener('click', async () => {
+      const reason = prompt('Hvorfor avvises den? (vises for deltakeren, valgfritt)');
+      if (reason === null) return;
+      await post('/api/admin/task-review', { id: t.id, approve: false, reason });
+      await load();
+    });
+    row.append(ok, no);
+    box.appendChild(row);
+    $('admin-review').appendChild(box);
+  });
+
+  $('admin-tasks').innerHTML = data.tasks.length ? '' : '<li class="muted">Ingen oppgaver.</li>';
+  data.tasks.forEach((t) => {
+    const li = document.createElement('li');
+    li.className = 'duel-row';
+    const span = document.createElement('span');
+    const last = t.attempts[t.attempts.length - 1];
+    const status = t.status === 'done' ? `✅ ${last.name}` : t.status === 'pending' ? `⏳ ${last.name}` : '🟢 ledig';
+    span.textContent = `${t.title} · 🎰 ${t.reward} · ${status}`;
+    const del = document.createElement('button');
+    del.className = 'secondary small-btn';
+    del.textContent = 'Slett';
+    del.addEventListener('click', async () => {
+      if (!confirm(`Slette oppgaven «${t.title}»?`)) return;
+      await post('/api/admin/task-delete', { id: t.id });
+      await load();
+    });
+    li.append(span, del);
+    $('admin-tasks').appendChild(li);
+  });
+
   $('story-count').textContent = data.stories.length;
   $('admin-stories').innerHTML = data.stories.length ? '' : '<p class="muted">Ingen bilder i storyen.</p>';
   data.stories.forEach((s) => {
@@ -138,6 +205,23 @@ $('draw-btn').addEventListener('click', async () => {
   try {
     const { draw } = await post('/api/admin/draw');
     renderDraw(draw);
+  } catch (err) {
+    showMsg(err.message);
+  }
+});
+
+$('new-task-btn').addEventListener('click', async () => {
+  try {
+    await post('/api/admin/task-add', {
+      title: $('new-task-title').value,
+      desc: $('new-task-desc').value,
+      reward: Number($('new-task-reward').value),
+      proof: $('new-task-proof').value,
+    });
+    $('new-task-title').value = '';
+    $('new-task-desc').value = '';
+    await load();
+    showMsg('Oppgaven er lagt til ✅', true);
   } catch (err) {
     showMsg(err.message);
   }

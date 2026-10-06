@@ -67,6 +67,6 @@ function onLive(event, fn) {
 (function connectLive() {
   if (!window.EventSource) return;
   const es = new EventSource('/api/events');
-  ['chat', 'chat-reload', 'stories', 'avatars'].forEach((ev) =>
+  ['chat', 'chat-reload', 'stories', 'avatars', 'tasks'].forEach((ev) =>
     es.addEventListener(ev, (e) => (liveHandlers[ev] || []).forEach((fn) => fn(JSON.parse(e.data)))));
 })();

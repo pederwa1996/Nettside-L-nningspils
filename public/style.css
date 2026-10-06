@@ -362,3 +362,33 @@ body.no-scroll { overflow: hidden; }
 .standings .who span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .standings .num { text-align: center; font-weight: 800; width: 64px; }
 .standings .beers { color: var(--gold); font-size: 1.15rem; }
+
+/* Oppgaver */
+.task-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.task-title { margin: 0; font-size: 1.15rem; }
+.task-reward { flex-shrink: 0; background: rgba(245, 179, 1, 0.15); color: var(--gold); font-weight: 800; padding: 4px 10px; border-radius: 999px; font-size: 0.9rem; }
+.task-desc { margin: 8px 0 4px; }
+.task-done, .task-pending:not(.mine) { opacity: 0.75; }
+.task-status { font-weight: 700; margin: 8px 0 0; }
+.task-status.done { color: var(--green); }
+.task-status.pending { color: var(--gold); }
+.task-status.locked { color: var(--muted); }
+.task-rejected { color: var(--red); font-weight: 600; }
+.task-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.task-form { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.task-preview { width: 100%; max-height: 50vh; object-fit: contain; border-radius: 10px; background: #000; }
+.task-text {
+  width: 100%;
+  min-height: 70px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 2px solid #34384f;
+  background: #14161f;
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+.task-text:focus { outline: none; border-color: var(--gold); }
+.review-box { padding: 12px 0; border-bottom: 1px solid #2c2f42; }
+.review-box blockquote { margin: 8px 0; padding: 8px 12px; border-left: 3px solid var(--gold); background: #14161f; border-radius: 6px; white-space: pre-wrap; }
+.field input[type=number] { display: block; width: 100%; margin-top: 6px; }

@@ -27,6 +27,29 @@
       <button id="draw-btn" class="big">🎲 Kjør loddtrekning</button>
       <div id="draw-result"></div>
 
+      <h2>🎯 Til godkjenning (<span id="review-count">0</span>)</h2>
+      <div id="admin-review"></div>
+
+      <h2>Alle oppgaver</h2>
+      <ul id="admin-tasks" class="duel-list"></ul>
+      <details class="tips">
+        <summary>➕ Legg til oppgave</summary>
+        <div class="task-form">
+          <input id="new-task-title" type="text" maxlength="80" placeholder="Tittel">
+          <textarea id="new-task-desc" class="task-text" maxlength="400" placeholder="Beskrivelse"></textarea>
+          <label class="field">Belønning (spinn, 1–10)
+            <input id="new-task-reward" type="number" min="1" max="10" value="3">
+          </label>
+          <label class="field">Bevis
+            <select id="new-task-proof">
+              <option value="photo">Bilde kreves</option>
+              <option value="text">Tekst holder (bilde valgfritt)</option>
+            </select>
+          </label>
+          <button id="new-task-btn">Legg til oppgave</button>
+        </div>
+      </details>
+
       <h2>Deltakere (<span id="count">0</span>)</h2>
       <table class="admin-table">
         <thead><tr><th>Navn</th><th>Lodd</th><th>Spinn</th><th>Øl fra hjul</th><th>Flappy</th></tr></thead>

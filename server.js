@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const supabase = require('./supabase');
+const DEFAULT_TASKS = require('./tasks-default');
 
 // ---- Innstillinger (kan overstyres med miljøvariabler) ----
 const PORT = Number(process.env.PORT) || 3000;
@@ -34,7 +35,23 @@ const CHAT_HISTORY = 300;
 
 // ---- Lagring ----
 function freshState() {
-  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {} };
+  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks() };
+}
+
+function defaultTasks() {
+  return DEFAULT_TASKS.map((t) => newTask(t));
+}
+
+function newTask({ title, desc, reward, proof }) {
+  return {
+    id: crypto.randomBytes(6).toString('hex'),
+    title: String(title).slice(0, 80),
+    desc: String(desc || '').slice(0, 400),
+    reward: Math.max(1, Math.min(10, Math.round(Number(reward) || 1))),
+    proof: proof === 'text' ? 'text' : 'photo',
+    status: 'open', // open | pending | done
+    attempts: [], // { name, status: pending|approved|rejected, text, url, reason, at }
+  };
 }
 
 function loadState() {
@@ -137,7 +154,7 @@ function saveImage(dataUrl, kind) {
 }
 
 function deleteImage(url) {
-  const m = /^\/media\/(avatars|stories|mogg)\/([a-f0-9]+)\.jpg$/.exec(url || '');
+  const m = /^\/media\/(avatars|stories|mogg|tasks)\/([a-f0-9]+)\.jpg$/.exec(url || '');
   if (!m) return;
   fs.rm(path.join(MEDIA_DIR, m[1], `${m[2]}.jpg`), { force: true }, () => {});
   if (supabase.enabled) supabase.deleteImages([`${m[1]}/${m[2]}.jpg`]);
@@ -234,6 +251,33 @@ function moggView(m, viewer) {
     Object.assign(v, { challengerUrl: m.challengerUrl, challengerScore: m.challengerScore });
   }
   return v;
+}
+
+// ---- Oppgaver ----
+const MAX_PENDING_TASKS = 2;
+
+function currentAttempt(t) {
+  return t.attempts[t.attempts.length - 1] || null;
+}
+
+// Offentlig visning: bevis (bilde/tekst) vises bare for den som leverte
+function taskView(t, viewer) {
+  const cur = currentAttempt(t);
+  const v = { id: t.id, title: t.title, desc: t.desc, reward: t.reward, proof: t.proof, status: t.status };
+  if (t.status === 'pending') v.claimedBy = cur.name;
+  if (t.status === 'done') v.completedBy = cur.name;
+  if (viewer) {
+    const mine = t.attempts.filter((a) => a.name === viewer.name);
+    if (mine.length) {
+      const last = mine[mine.length - 1];
+      v.myAttempt = { status: last.status, reason: last.reason || '', at: last.at };
+    }
+  }
+  return v;
+}
+
+function adminTaskView(t) {
+  return { ...t, attempts: t.attempts.slice(-5) };
 }
 
 // ---- Duell (stein, saks, papir med innsats) ----
@@ -376,7 +420,7 @@ const MIME = {
 };
 
 function serveMedia(pathname, res) {
-  const m = /^\/media\/(avatars|stories|mogg)\/([a-f0-9]+)\.jpg$/.exec(pathname);
+  const m = /^\/media\/(avatars|stories|mogg|tasks)\/([a-f0-9]+)\.jpg$/.exec(pathname);
   if (!m) {
     res.writeHead(404);
     return res.end();
@@ -429,6 +473,7 @@ const routes = {
       leaderboard: leaderboard(),
       standings: standings(),
       incomingDuels: me ? state.duels.filter((d) => d.status === 'pending' && d.opponent === me.name).length : 0,
+      openTasks: state.tasks.filter((t) => t.status === 'open').length,
       incomingMoggs: me ? state.moggs.filter((m) => m.status === 'pending' && m.opponent === me.name).length : 0,
     });
   },
@@ -812,6 +857,93 @@ const routes = {
     sendJson(res, 200, { ok: true });
   },
 
+  // ---- Oppgaver ----
+  'GET /api/tasks': (req, res) => {
+    const p = currentParticipant(req);
+    sendJson(res, 200, { me: meView(p), tasks: state.tasks.map((t) => taskView(t, p)) });
+  },
+
+  'POST /api/tasks/submit': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const t = state.tasks.find((x) => x.id === body.id);
+    if (!t) return sendJson(res, 404, { error: 'Fant ikke oppgaven.' });
+    if (t.status === 'done') return sendJson(res, 400, { error: `Oppgaven er allerede løst av ${currentAttempt(t).name}.` });
+    if (t.status === 'pending') return sendJson(res, 400, { error: `${currentAttempt(t).name} har allerede levert denne og venter på godkjenning.` });
+    const pending = state.tasks.filter((x) => x.status === 'pending' && currentAttempt(x).name === p.name).length;
+    if (pending >= MAX_PENDING_TASKS) return sendJson(res, 400, { error: `Du kan ha maks ${MAX_PENDING_TASKS} oppgaver som venter på godkjenning om gangen.` });
+    const text = String(body.text || '').trim().slice(0, 500);
+    if (t.proof === 'photo' && !body.image) return sendJson(res, 400, { error: 'Denne oppgaven krever et bilde som bevis 📸' });
+    if (t.proof === 'text' && !text && !body.image) return sendJson(res, 400, { error: 'Skriv hva du gjorde som bevis.' });
+
+    const url = body.image ? saveImage(body.image, 'tasks') : null;
+    t.attempts.push({ name: p.name, status: 'pending', text, url, at: Date.now() });
+    t.status = 'pending';
+    saveState();
+    broadcast('tasks', {});
+    sendJson(res, 200, { task: taskView(t, p) });
+  },
+
+  'POST /api/tasks/withdraw': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const t = state.tasks.find((x) => x.id === body.id && x.status === 'pending');
+    const cur = t && currentAttempt(t);
+    if (!cur || cur.name !== p.name) return sendJson(res, 400, { error: 'Fant ikke innleveringen din.' });
+    deleteImage(cur.url);
+    t.attempts.pop();
+    t.status = 'open';
+    saveState();
+    broadcast('tasks', {});
+    sendJson(res, 200, { ok: true });
+  },
+
+  'POST /api/admin/task-review': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const t = state.tasks.find((x) => x.id === body.id && x.status === 'pending');
+    if (!t) return sendJson(res, 400, { error: 'Fant ikke innleveringen.' });
+    const cur = currentAttempt(t);
+    cur.reviewedAt = Date.now();
+    if (body.approve) {
+      cur.status = 'approved';
+      t.status = 'done';
+      const p = findParticipant(cur.name);
+      if (p) addSpins(p, t.reward);
+    } else {
+      // Avvist: oppgaven blir åpen for alle igjen
+      cur.status = 'rejected';
+      cur.reason = String(body.reason || '').trim().slice(0, 200);
+      deleteImage(cur.url);
+      cur.url = null;
+      t.status = 'open';
+    }
+    saveState();
+    broadcast('tasks', {});
+    sendJson(res, 200, { ok: true });
+  },
+
+  'POST /api/admin/task-add': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const title = String(body.title || '').trim();
+    if (title.length < 3) return sendJson(res, 400, { error: 'Oppgaven trenger en tittel.' });
+    state.tasks.push(newTask({ ...body, title }));
+    saveState();
+    broadcast('tasks', {});
+    sendJson(res, 200, { ok: true });
+  },
+
+  'POST /api/admin/task-delete': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const t = state.tasks.find((x) => x.id === body.id);
+    if (t) {
+      t.attempts.forEach((a) => deleteImage(a.url));
+      state.tasks = state.tasks.filter((x) => x !== t);
+      saveState();
+      broadcast('tasks', {});
+    }
+    sendJson(res, 200, { ok: true });
+  },
+
   'POST /api/admin/login': (req, res, body) => {
     if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
     sendJson(res, 200, {
@@ -828,6 +960,7 @@ const routes = {
       stories: (pruneStories(), state.stories.map((x) => ({ id: x.id, name: x.name, url: x.url, caption: x.caption, at: x.at }))),
       chat: state.chat.slice(-50).reverse(),
       moggPodium: moggPodium(),
+      tasks: state.tasks.map(adminTaskView),
     });
   },
 

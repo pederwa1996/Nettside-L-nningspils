@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oppgaver – Lønningspils</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>🎯 Oppgaver</h1>
+    <p class="sub">Løs oppgaver og tjen spinn · <a href="/">← Tilbake</a></p>
+  </header>
+
+  <main>
+    <section id="not-joined" class="card hidden">
+      <p>Du må <a href="/">registrere deg</a> før du kan løse oppgaver.</p>
+    </section>
+
+    <section id="intro" class="card hidden">
+      <p class="center big-number">Du har <strong id="my-spins">0</strong> spinn</p>
+      <p class="note center">Hver oppgave kan bare løses av én person. Lever bevis, så godkjenner admin. Blir det avvist, åpnes oppgaven for alle igjen. Spør alltid fremmede om lov før du tar bilde av dem!</p>
+      <p id="msg" class="result"></p>
+    </section>
+
+    <div id="tasks"></div>
+  </main>
+
+  <input id="proof-input" type="file" accept="image/*" hidden>
+
+  <script src="/media.js"></script>
+  <script src="/oppgaver.js"></script>
+</body>
+</html>
