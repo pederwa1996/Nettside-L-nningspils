@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kasino – Lønningspils</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>🎰 Kasino</h1>
+    <p class="sub">Spill om spinn · <a href="/">← Tilbake</a></p>
+  </header>
+
+  <main>
+    <section id="not-joined" class="card hidden">
+      <p>Du må <a href="/">registrere deg</a> før du kan spille.</p>
+    </section>
+
+    <div id="casino" class="hidden">
+      <section class="card sticky-spins">
+        <p class="center big-number">Du har <strong id="my-spins">0</strong> spinn</p>
+        <div class="stepper center-stepper">
+          <span class="muted">Innsats</span>
+          <button type="button" class="secondary" id="bet-minus">−</button>
+          <span id="bet">1</span>
+          <button type="button" class="secondary" id="bet-plus">+</button>
+        </div>
+        <p class="note center">Maks <span id="max-bet">5</span> spinn per runde. Spill med måte 😉</p>
+      </section>
+
+      <div class="tabs">
+        <button type="button" class="tab active" data-tab="roulette">🎡 Roulette</button>
+        <button type="button" class="tab" data-tab="blackjack">🃏 Blackjack</button>
+      </div>
+
+      <!-- Roulette -->
+      <section id="tab-roulette" class="card">
+        <div class="wheel-wrap roulette-wrap">
+          <div class="pointer">▼</div>
+          <canvas id="roulette" width="600" height="600"></canvas>
+        </div>
+        <p id="roulette-result" class="result"></p>
+        <p class="field-label">Velg hva du satser på</p>
+        <div class="bet-grid" id="bet-grid">
+          <button type="button" class="bet-opt red" data-type="red">Rød<small>1:1</small></button>
+          <button type="button" class="bet-opt black" data-type="black">Svart<small>1:1</small></button>
+          <button type="button" class="bet-opt" data-type="even">Partall<small>1:1</small></button>
+          <button type="button" class="bet-opt" data-type="odd">Oddetall<small>1:1</small></button>
+          <button type="button" class="bet-opt" data-type="low">1–18<small>1:1</small></button>
+          <button type="button" class="bet-opt" data-type="high">19–36<small>1:1</small></button>
+          <button type="button" class="bet-opt" data-type="dozen1">1–12<small>2:1</small></button>
+          <button type="button" class="bet-opt" data-type="dozen2">13–24<small>2:1</small></button>
+          <button type="button" class="bet-opt" data-type="dozen3">25–36<small>2:1</small></button>
+          <button type="button" class="bet-opt wide" data-type="number">Ett tall<small>35:1</small></button>
+          <input id="bet-number" class="bet-number hidden" type="number" min="0" max="36" value="7" inputmode="numeric">
+        </div>
+        <button id="roulette-spin" class="big">Spinn hjulet 🎡</button>
+      </section>
+
+      <!-- Blackjack -->
+      <section id="tab-blackjack" class="card hidden">
+        <div class="bj-table">
+          <p class="bj-label">Dealer <span id="dealer-value" class="bj-value"></span></p>
+          <div id="dealer-cards" class="bj-cards"></div>
+          <p class="bj-label">Deg <span id="player-value" class="bj-value"></span></p>
+          <div id="player-cards" class="bj-cards"></div>
+        </div>
+        <p id="bj-result" class="result"></p>
+        <div class="bj-actions">
+          <button id="bj-deal" class="big">Del ut 🃏</button>
+          <button id="bj-hit" class="hidden">Trekk</button>
+          <button id="bj-stand" class="secondary hidden">Stå</button>
+          <button id="bj-double" class="secondary hidden">Doble</button>
+        </div>
+        <p class="note">Dealer trekker til 17. Blackjack betaler 3:2. Du kan doble på de to første kortene.</p>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>📣 Siste spill</h2>
+      <ul id="casino-log" class="duel-list"></ul>
+    </section>
+  </main>
+
+  <script src="/media.js"></script>
+  <script src="/kasino.js"></script>
+</body>
+</html>

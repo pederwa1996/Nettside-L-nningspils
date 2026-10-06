@@ -111,6 +111,7 @@ function render() {
   $('duel-card').classList.toggle('hidden', !me);
   $('chat-card').classList.toggle('hidden', !me);
   $('tasks-card').classList.toggle('hidden', !me);
+  $('casino-card').classList.toggle('hidden', !me);
   $('open-tasks').textContent = data.openTasks ? `${data.openTasks} oppgaver er ledige nå.` : 'Alle oppgavene er tatt!';
   $('mogg-card').classList.toggle('hidden', !me);
   $('mogg-alert').classList.toggle('hidden', !data.incomingMoggs);
