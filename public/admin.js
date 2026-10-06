@@ -19,6 +19,15 @@ function showMsg(text, ok = false) {
   $('msg').className = ok ? 'success' : 'error';
 }
 
+function avatarImg(url) {
+  const img = document.createElement('img');
+  img.src = url;
+  img.className = 'avatar';
+  img.style.width = img.style.height = '40px';
+  img.style.verticalAlign = 'middle';
+  return img;
+}
+
 async function load() {
   const data = await post('/api/admin/login');
   $('panel').classList.remove('hidden');
@@ -52,6 +61,24 @@ async function load() {
     });
     fig.append(img, cap, del);
     $('admin-stories').appendChild(fig);
+  });
+
+  $('admin-mogg').innerHTML = data.moggPodium.length ? '' : '<li class="muted">Ingen på pallen.</li>';
+  data.moggPodium.forEach((e) => {
+    const li = document.createElement('li');
+    li.className = 'duel-row';
+    const span = document.createElement('span');
+    span.append(avatarImg(e.url), document.createTextNode(` ${e.name} · ${e.score.toFixed(2)}`));
+    const del = document.createElement('button');
+    del.className = 'secondary small-btn';
+    del.textContent = 'Fjern';
+    del.addEventListener('click', async () => {
+      if (!confirm(`Fjerne ${e.name} fra pallen?`)) return;
+      await post('/api/admin/mogg-remove', { name: e.name });
+      await load();
+    });
+    li.append(span, del);
+    $('admin-mogg').appendChild(li);
   });
 
   $('admin-chat').innerHTML = data.chat.length ? '' : '<li class="muted">Ingen meldinger.</li>';

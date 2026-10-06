@@ -110,6 +110,9 @@ function render() {
   $('game-card').classList.toggle('hidden', !me);
   $('duel-card').classList.toggle('hidden', !me);
   $('chat-card').classList.toggle('hidden', !me);
+  $('mogg-card').classList.toggle('hidden', !me);
+  $('mogg-alert').classList.toggle('hidden', !data.incomingMoggs);
+  $('mogg-alert').textContent = `🔔 Du er utfordret til ${data.incomingMoggs === 1 ? 'en mogg-off' : `${data.incomingMoggs} mogg-offs`}!`;
   $('duel-alert').classList.toggle('hidden', !data.incomingDuels);
   $('duel-alert').textContent = data.incomingDuels === 1
     ? '🔔 Du har 1 utfordring som venter på svar!'

@@ -33,7 +33,7 @@ const CHAT_HISTORY = 300;
 
 // ---- Lagring ----
 function freshState() {
-  return { participants: [], draw: null, duels: [], chat: [], stories: [] };
+  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {} };
 }
 
 function loadState() {
@@ -48,6 +48,8 @@ let state = loadState();
 state.duels = state.duels || [];
 state.chat = state.chat || [];
 state.stories = state.stories || [];
+state.moggs = state.moggs || [];
+state.moggBest = state.moggBest || {};
 const games = new Map(); // aktive spill: gameId -> { token, start }
 
 function saveState() {
@@ -131,7 +133,7 @@ function saveImage(dataUrl, kind) {
 }
 
 function deleteImage(url) {
-  const m = /^\/media\/(avatars|stories)\/([a-f0-9]+)\.jpg$/.exec(url || '');
+  const m = /^\/media\/(avatars|stories|mogg)\/([a-f0-9]+)\.jpg$/.exec(url || '');
   if (m) fs.rm(path.join(MEDIA_DIR, m[1], `${m[2]}.jpg`), { force: true }, () => {});
 }
 
@@ -180,6 +182,52 @@ function storyGroups() {
 
 function chatView(m) {
   return { ...m, avatar: avatars()[m.name] || null };
+}
+
+// ---- Mogg-off ----
+// Poengsummen regnes ut i nettleseren (ansiktsanalyse), serveren sjekker bare at den er gyldig.
+function parseMoggScore(v) {
+  const n = Math.floor(Number(v) * 100) / 100;
+  if (!Number.isFinite(n) || n < 0 || n > 10) throw new Error('Ugyldig poengsum.');
+  return n;
+}
+
+function parseMoggParts(parts) {
+  const out = {};
+  for (const k of ['eyes', 'brow', 'jaw', 'stone', 'frame']) {
+    const n = Number(parts && parts[k]);
+    out[k] = Number.isFinite(n) ? Math.max(0, Math.min(10, Math.round(n * 10) / 10)) : 0;
+  }
+  return out;
+}
+
+function recordMoggBest(name, url, score) {
+  const cur = state.moggBest[name];
+  if (cur && cur.score >= score) return;
+  state.moggBest[name] = { url, score, at: Date.now() };
+}
+
+function moggPodium() {
+  return Object.entries(state.moggBest)
+    .filter(([name]) => findParticipant(name))
+    .map(([name, b]) => ({ name, url: b.url, score: b.score, avatar: avatars()[name] || null }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+}
+
+function moggView(m, viewer) {
+  const v = { id: m.id, challenger: m.challenger, opponent: m.opponent, status: m.status, at: m.at };
+  if (m.status === 'done') {
+    Object.assign(v, {
+      challengerUrl: m.challengerUrl, challengerScore: m.challengerScore, challengerParts: m.challengerParts,
+      opponentUrl: m.opponentUrl, opponentScore: m.opponentScore, opponentParts: m.opponentParts,
+      winner: m.winner,
+    });
+  } else if (viewer && viewer.name === m.challenger) {
+    // Motstanderen får ikke se utfordrerens poeng før hen har tatt sitt eget bilde
+    Object.assign(v, { challengerUrl: m.challengerUrl, challengerScore: m.challengerScore });
+  }
+  return v;
 }
 
 // ---- Duell (stein, saks, papir med innsats) ----
@@ -304,10 +352,13 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.ico': 'image/x-icon',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.wasm': 'application/wasm',
+  '.task': 'application/octet-stream',
 };
 
 function serveMedia(pathname, res) {
-  const m = /^\/media\/(avatars|stories)\/([a-f0-9]+)\.jpg$/.exec(pathname);
+  const m = /^\/media\/(avatars|stories|mogg)\/([a-f0-9]+)\.jpg$/.exec(pathname);
   if (!m) {
     res.writeHead(404);
     return res.end();
@@ -334,7 +385,9 @@ function serveStatic(req, res) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       return res.end('Fant ikke siden');
     }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
+    const headers = { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' };
+    if (urlPath.startsWith('/vendor/')) headers['Cache-Control'] = 'public, max-age=604800';
+    res.writeHead(200, headers);
     res.end(content);
   });
 }
@@ -352,6 +405,7 @@ const routes = {
       draw: publicDraw(),
       leaderboard: leaderboard(),
       incomingDuels: me ? state.duels.filter((d) => d.status === 'pending' && d.opponent === me.name).length : 0,
+      incomingMoggs: me ? state.moggs.filter((m) => m.status === 'pending' && m.opponent === me.name).length : 0,
     });
   },
 
@@ -633,6 +687,107 @@ const routes = {
     sendJson(res, 200, { ok: true });
   },
 
+  // ---- Mogg-off ----
+  'GET /api/mogg': (req, res) => {
+    const p = currentParticipant(req);
+    const mine = p ? state.moggs.filter((m) => m.challenger === p.name || m.opponent === p.name) : [];
+    sendJson(res, 200, {
+      me: meView(p),
+      avatars: avatars(),
+      opponents: state.participants.filter((o) => !p || o.name !== p.name).map((o) => o.name),
+      incoming: mine.filter((m) => m.status === 'pending' && m.opponent === p.name).map((m) => moggView(m, p)),
+      outgoing: mine.filter((m) => m.status === 'pending' && m.challenger === p.name).map((m) => moggView(m, p)),
+      feed: state.moggs.filter((m) => m.status === 'done').slice(-10).reverse().map((m) => moggView(m, null)),
+      podium: moggPodium(),
+    });
+  },
+
+  'POST /api/mogg/challenge': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const opponent = findParticipant(String(body.opponent || ''));
+    if (!opponent) return sendJson(res, 400, { error: 'Fant ikke motstanderen.' });
+    if (opponent.name === p.name) return sendJson(res, 400, { error: 'Du kan ikke mogge deg selv 🗿' });
+    if (spinsLeft(p) < 1) return sendJson(res, 400, { error: 'Du trenger minst 1 spinn for å utfordre.' });
+    const open = state.moggs.filter((m) => m.status === 'pending' && m.challenger === p.name).length;
+    if (open >= MAX_OPEN_DUELS) return sendJson(res, 400, { error: `Du kan ha maks ${MAX_OPEN_DUELS} åpne utfordringer.` });
+    const score = parseMoggScore(body.score);
+    const parts = parseMoggParts(body.parts);
+    const url = saveImage(body.image, 'mogg');
+
+    addSpins(p, -1); // innsatsen holdes av til duellen er ferdig
+    const m = {
+      id: crypto.randomBytes(8).toString('hex'),
+      challenger: p.name,
+      opponent: opponent.name,
+      challengerUrl: url,
+      challengerScore: score,
+      challengerParts: parts,
+      status: 'pending',
+      at: Date.now(),
+    };
+    state.moggs.push(m);
+    recordMoggBest(p.name, url, score);
+    saveState();
+    sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
+  },
+
+  'POST /api/mogg/respond': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const m = state.moggs.find((x) => x.id === body.id && x.status === 'pending' && x.opponent === p.name);
+    if (!m) return sendJson(res, 400, { error: 'Fant ikke utfordringen. Kanskje den er trukket tilbake?' });
+    const challenger = findParticipant(m.challenger);
+
+    if (body.decline) {
+      m.status = 'declined';
+      if (challenger) addSpins(challenger, 1);
+      saveState();
+      return sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
+    }
+
+    if (spinsLeft(p) < 1) return sendJson(res, 400, { error: 'Du trenger minst 1 spinn for å godta.' });
+    const score = parseMoggScore(body.score);
+    const parts = parseMoggParts(body.parts);
+    m.opponentUrl = saveImage(body.image, 'mogg');
+    m.opponentScore = score;
+    m.opponentParts = parts;
+    m.status = 'done';
+    m.finishedAt = Date.now();
+    if (m.challengerScore === score) {
+      m.winner = null; // uavgjort: utfordreren får innsatsen tilbake
+      if (challenger) addSpins(challenger, 1);
+    } else if (m.challengerScore > score) {
+      m.winner = m.challenger;
+      addSpins(p, -1);
+      if (challenger) addSpins(challenger, 2);
+    } else {
+      m.winner = p.name;
+      addSpins(p, 1);
+    }
+    recordMoggBest(p.name, m.opponentUrl, score);
+    saveState();
+    sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
+  },
+
+  'POST /api/mogg/cancel': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const m = state.moggs.find((x) => x.id === body.id && x.status === 'pending' && x.challenger === p.name);
+    if (!m) return sendJson(res, 400, { error: 'Fant ikke utfordringen.' });
+    m.status = 'cancelled';
+    addSpins(p, 1);
+    saveState();
+    sendJson(res, 200, { me: meView(p) });
+  },
+
+  'POST /api/admin/mogg-remove': (req, res, body) => {
+    if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
+    delete state.moggBest[String(body.name || '')];
+    saveState();
+    sendJson(res, 200, { ok: true });
+  },
+
   'POST /api/admin/login': (req, res, body) => {
     if (!checkAdmin(body)) return sendJson(res, 403, { error: 'Feil passord.' });
     sendJson(res, 200, {
@@ -648,6 +803,7 @@ const routes = {
       })),
       stories: (pruneStories(), state.stories.map((x) => ({ id: x.id, name: x.name, url: x.url, caption: x.caption, at: x.at }))),
       chat: state.chat.slice(-50).reverse(),
+      moggPodium: moggPodium(),
     });
   },
 

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mogg-off – Lønningspils</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="hero">
+    <h1>🗿 Mogg-off</h1>
+    <p class="sub">Hvem tar det hardeste chad-ansiktet? · <a href="/">← Tilbake</a></p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>🏆 Chad-pallen</h2>
+      <div id="podium" class="podium"></div>
+      <ol id="podium-rest" class="leaderboard" start="4"></ol>
+    </section>
+
+    <section id="not-joined" class="card hidden">
+      <p>Du må <a href="/">registrere deg</a> før du kan mogge.</p>
+    </section>
+
+    <div id="mogg-app" class="hidden">
+      <section class="card">
+        <p class="center big-number">Du har <strong id="my-spins">0</strong> spinn</p>
+        <p id="msg" class="result"></p>
+      </section>
+
+      <section id="incoming-section" class="card hidden highlight">
+        <h2>🔔 Du er utfordret!</h2>
+        <div id="incoming"></div>
+      </section>
+
+      <section class="card">
+        <h2>Utfordre noen</h2>
+        <p>Begge tar en selfie med sitt hardeste chad-ansikt. Høyest score vinner <strong>1 spinn</strong> fra den andre.</p>
+        <label class="field">Motstander
+          <select id="opponent"></select>
+        </label>
+        <button id="challenge-btn" class="big">📸 Ta selfie og utfordre</button>
+        <button id="practice-btn" class="secondary practice-btn">Øv deg først (lagres ikke)</button>
+        <details class="tips">
+          <summary>Hvordan får jeg høy score?</summary>
+          <ul>
+            <li><strong>Jegerøyne:</strong> myse litt, men ikke lukk øynene</li>
+            <li><strong>Intense bryn:</strong> senk brynene</li>
+            <li><strong>Kjevelinje:</strong> munnen igjen, bit sammen</li>
+            <li><strong>Steinansikt:</strong> ikke et snev av smil</li>
+            <li><strong>Rett i kamera:</strong> hodet rett, ansiktet godt synlig</li>
+          </ul>
+          <p class="note">Scoren måler kun hvor godt du tar chad-ansiktet, ikke hvordan du ser ut. 10.00 er nesten umulig.</p>
+        </details>
+      </section>
+
+      <section id="outgoing-section" class="card hidden">
+        <h2>Venter på svar</h2>
+        <div id="outgoing"></div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>📣 Siste mogg-offs</h2>
+      <div id="feed"></div>
+    </section>
+  </main>
+
+  <!-- Analyse og resultat -->
+  <div id="analyze" class="story-overlay hidden">
+    <div class="analyze-box">
+      <img id="analyze-img" class="analyze-img" alt="">
+      <div id="analyze-busy">
+        <div class="scanline"></div>
+        <p id="analyze-step" class="center">Analyserer ...</p>
+      </div>
+      <div id="analyze-result" class="hidden">
+        <p class="mogg-score" id="analyze-score">0.00</p>
+        <p class="mogg-verdict" id="analyze-verdict"></p>
+        <div id="analyze-parts" class="mogg-parts"></div>
+      </div>
+      <p id="analyze-error" class="error"></p>
+      <div class="story-actions">
+        <button type="button" class="secondary" id="analyze-cancel">Avbryt</button>
+        <button type="button" class="secondary hidden" id="analyze-retake">📸 Nytt bilde</button>
+        <button type="button" class="hidden" id="analyze-submit">Send inn</button>
+      </div>
+    </div>
+  </div>
+  <input id="camera" type="file" accept="image/*" capture="user" hidden>
+
+  <script src="/media.js"></script>
+  <script type="module" src="/mogg.js"></script>
+</body>
+</html>
