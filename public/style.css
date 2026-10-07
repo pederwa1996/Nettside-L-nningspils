@@ -496,11 +496,20 @@ body.no-scroll { overflow: hidden; }
 @keyframes bubble-pulse { 50% { transform: scale(1.2); box-shadow: 0 0 0 10px rgba(245, 179, 1, 0.35); } }
 .admin-badge { position: absolute; top: -4px; right: -4px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: var(--red); color: #fff; font-size: 0.85rem; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid var(--bg); }
 .chat-page .admin-bubble { bottom: 84px; }
-.chat-page .admin-orders { bottom: 156px; }
+.chat-page .admin-orders { bottom: 228px; }
+/* 🎯-boblen ligger rett over 🍺-boblen */
+.admin-bubble.task-bubble { margin-bottom: 72px; }
+.ao-task { padding: 8px 0 10px; border-bottom: 1px solid #2c2f42; }
+.ao-task .ao-order { border-bottom: 0; padding-bottom: 4px; }
+.ao-proof { display: block; max-width: 100%; max-height: 160px; border-radius: 10px; margin: 4px 0 6px; cursor: zoom-in; object-fit: cover; }
+.ao-proof.big { max-height: 70vh; cursor: zoom-out; }
+.ao-quote { margin: 4px 0 6px; padding: 6px 10px; border-left: 3px solid var(--gold); background: rgba(255, 255, 255, 0.05); border-radius: 6px; font-size: 0.9rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ao-task-btns { justify-content: flex-end; }
+.ao-sub a { color: var(--gold); text-transform: none; }
 .admin-orders {
   position: fixed;
   right: 16px;
-  bottom: 88px;
+  bottom: 160px;
   z-index: 91;
   width: min(360px, calc(100vw - 32px));
   max-height: 65vh;
@@ -1042,7 +1051,7 @@ body:has(.bottom-nav) { padding-bottom: calc(70px + env(safe-area-inset-bottom))
 .nav-badge { position: absolute; top: 0; left: 56%; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #ff3b5c; color: #fff; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
 /* Bestillingsboblen må ligge over menyen */
 body:has(.bottom-nav) .admin-bubble { bottom: 84px; }
-body:has(.bottom-nav) .admin-orders { bottom: 156px; }
+body:has(.bottom-nav) .admin-orders { bottom: 228px; }
 
 .home-wallet { display: flex; gap: 8px; margin: 10px 0; }
 .home-wallet div, .home-wallet a { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }

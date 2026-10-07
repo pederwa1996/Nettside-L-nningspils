@@ -1,7 +1,8 @@
 'use strict';
 
-// Bestillingsboble for spillmesteren (admin). Vises på alle sider så lenge admin
-// er logget inn i denne fanen (passordet ligger i sessionStorage).
+// Bobler for spillmesteren (admin): 🍺 bestillinger og 🎯 oppgaver som må godkjennes.
+// Vises på alle sider så lenge admin er logget inn i denne fanen (passordet ligger
+// i sessionStorage), eller når admin-profilen er innlogget.
 (function () {
   let password = '';
   try {
@@ -45,8 +46,7 @@
       try {
         sessionStorage.removeItem('adminPassword');
       } catch { /* ignorer */ }
-      bubble.remove();
-      panel.remove();
+      document.querySelectorAll('.admin-bubble, .admin-orders').forEach((el) => el.remove());
       throw new Error('Ikke innlogget');
     }
     if (!res.ok) throw new Error(json.error || 'Noe gikk galt');
@@ -171,11 +171,129 @@
   bubble.addEventListener('click', () => {
     open = !open;
     panel.classList.toggle('hidden', !open);
+    if (open) closeTasks();
   });
   panel.querySelector('.ao-close').addEventListener('click', () => {
     open = false;
     panel.classList.add('hidden');
   });
+
+  // ---------- 🎯 Oppgaver som venter på godkjenning ----------
+  let lastTasks = null;
+  const tBubble = document.createElement('button');
+  tBubble.type = 'button';
+  tBubble.className = 'admin-bubble task-bubble';
+  tBubble.title = 'Oppgaver som må godkjennes';
+  tBubble.innerHTML = '🎯<span class="admin-badge hidden">0</span>';
+  const tPanel = document.createElement('div');
+  tPanel.className = 'admin-orders hidden';
+  tPanel.innerHTML = `
+    <div class="ao-head"><strong>🎯 Til godkjenning</strong><button type="button" class="ao-close" title="Lukk">✕</button></div>
+    <div class="ao-list"></div>
+    <p class="ao-sub"><a href="/admin.html">Alle oppgaver i admin ›</a></p>`;
+  document.body.append(tBubble, tPanel);
+  const tBadge = tBubble.querySelector('.admin-badge');
+
+  function closeTasks() {
+    tPanel.classList.add('hidden');
+  }
+  tBubble.addEventListener('click', () => {
+    const show = tPanel.classList.contains('hidden');
+    tPanel.classList.toggle('hidden', !show);
+    if (show) {
+      open = false;
+      panel.classList.add('hidden');
+    }
+  });
+  tPanel.querySelector('.ao-close').addEventListener('click', closeTasks);
+
+  function taskRow(t) {
+    const box = document.createElement('div');
+    box.className = 'ao-task';
+    const head = document.createElement('div');
+    head.className = 'ao-order';
+    const info = document.createElement('div');
+    info.className = 'ao-info';
+    const title = document.createElement('strong');
+    title.textContent = `${t.name}: ${t.title}`;
+    const meta = document.createElement('span');
+    meta.className = 'muted';
+    meta.textContent = `🎰 ${t.reward} spinn · ${ago(t.at)}`;
+    info.append(title, meta);
+    head.append(avatar(t.avatar, t.name), info);
+    box.appendChild(head);
+    if (t.url) {
+      const img = document.createElement('img');
+      img.src = t.url;
+      img.className = 'ao-proof';
+      img.alt = 'Bevis';
+      img.title = 'Trykk for større bilde';
+      img.addEventListener('click', () => img.classList.toggle('big'));
+      box.appendChild(img);
+    }
+    if (t.text) {
+      const q = document.createElement('blockquote');
+      q.className = 'ao-quote';
+      q.textContent = t.text;
+      box.appendChild(q);
+    }
+    const ok = document.createElement('button');
+    ok.type = 'button';
+    ok.className = 'small-btn';
+    ok.textContent = '✅ Godkjenn';
+    ok.addEventListener('click', () => review(t, true));
+    const no = document.createElement('button');
+    no.type = 'button';
+    no.className = 'secondary small-btn';
+    no.textContent = '❌ Avvis';
+    no.addEventListener('click', () => {
+      const reason = prompt(`Hvorfor avvises «${t.title}»? (vises for ${t.name}, valgfritt)`);
+      if (reason !== null) review(t, false, reason);
+    });
+    const btns = document.createElement('div');
+    btns.className = 'ao-btns ao-task-btns';
+    btns.append(ok, no);
+    box.appendChild(btns);
+    return box;
+  }
+
+  async function review(t, approve, reason = '') {
+    try {
+      await post('/api/admin/task-review', { id: t.id, approve, reason });
+    } catch (err) {
+      alert(err.message);
+    }
+    loadTasks();
+  }
+
+  async function loadTasks() {
+    let data;
+    try {
+      data = await post('/api/admin/task-queue');
+    } catch {
+      return;
+    }
+    const count = data.pending.length;
+    tBadge.textContent = count;
+    tBadge.classList.toggle('hidden', count === 0);
+    tBubble.classList.toggle('has-orders', count > 0);
+    if (lastTasks !== null && count > lastTasks) {
+      ding();
+      tBubble.classList.remove('pulse');
+      void tBubble.offsetWidth;
+      tBubble.classList.add('pulse');
+    }
+    lastTasks = count;
+    const list = tPanel.querySelector('.ao-list');
+    list.innerHTML = '';
+    if (!count) list.innerHTML = '<p class="muted">Ingen oppgaver venter på godkjenning 🎉</p>';
+    data.pending.forEach((t) => list.appendChild(taskRow(t)));
+  }
+
+  if (window.onLive) window.onLive('tasks', loadTasks);
+  else if (window.EventSource) new EventSource('/api/events').addEventListener('tasks', loadTasks);
+  setInterval(loadTasks, 15000);
+  loadTasks();
 
   // Live-varsel når det kommer nye bestillinger
   if (window.onLive) window.onLive('orders', load);

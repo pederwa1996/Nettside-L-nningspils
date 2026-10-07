@@ -1453,6 +1453,20 @@ const routes = {
     sendJson(res, 200, { ok: true });
   },
 
+  // Innleveringer som venter på godkjenning (til 🎯-boblen)
+  'POST /api/admin/task-queue': (req, res, body) => {
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const pending = state.tasks
+      .filter((t) => t.status === 'pending')
+      .map((t) => {
+        const a = currentAttempt(t);
+        const p = findParticipant(a.name);
+        return { id: t.id, title: t.title, reward: t.reward, name: a.name, avatar: (p && p.avatar) || null, text: a.text, url: a.url, at: a.at };
+      })
+      .sort((a, b) => a.at - b.at);
+    sendJson(res, 200, { pending });
+  },
+
   'POST /api/admin/task-add': (req, res, body) => {
     if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const title = String(body.title || '').trim();
