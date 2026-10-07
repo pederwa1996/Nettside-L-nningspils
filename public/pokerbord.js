@@ -6,6 +6,7 @@
   const SEATS = 9;
   let t = null; // bordet slik serveren viser det for meg
   let me = null;
+  let celebrated; // id på siste hånd vi har feiret (undefined = ikke lastet ennå)
   let busy = false;
   let buyInSeat = -1;
   let tick = null;
@@ -121,6 +122,15 @@
       status = seated < 2 ? 'Venter på spillere … (minst 2)' : 'Ny hånd starter snart …';
     } else status = PHASE[t.phase] || '';
     $('pk-status').textContent = status;
+
+    // Vant jeg potten? Feire én gang per hånd (ikke for en hånd som var ferdig da siden ble åpnet)
+    if (t.result && t.result.id !== celebrated) {
+      const mine = t.result.winners.find((w) => w.seat === t.mySeat);
+      if (mine && celebrated !== undefined && window.celebrate) {
+        celebrate({ tier: mine.amount >= 200 ? 'big' : 'win', amount: mine.amount, title: 'POTTEN ER DIN!', icon: '♠️', sub: mine.hand ? `Med ${mine.hand.toLowerCase()}` : 'Alle de andre kastet seg' });
+      }
+      celebrated = t.result.id;
+    } else if (!t.result && celebrated === undefined) celebrated = null;
 
     // Mine kort og handlinger
     const mine = t.mySeat >= 0 ? t.seats[t.mySeat] : null;

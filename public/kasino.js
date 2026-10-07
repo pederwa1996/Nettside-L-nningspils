@@ -118,13 +118,15 @@
         $('slot-result').textContent = '🍺🍺🍺 TRE PILS PÅ RAD! Du har vunnet en pils! Hent den i baren 🍻';
         $('slot-result').classList.add('win');
         document.querySelector('.slot-machine').classList.add('jackpot');
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+        beerWin('🍺🍺🍺 Tre pils på rad på automaten!');
       } else if (r.flus) {
         $('slot-result').textContent = `🎉 Du vant ${flusWord(r.flus)}!`;
         $('slot-result').classList.add('win');
+        celebrate({ tier: r.flus >= 100 ? 'big' : 'win', amount: r.flus, icon: r.reels[0], sub: r.reels.join(' ') });
       } else {
         $('slot-result').textContent = 'Ingen gevinst denne gangen.';
         $('slot-result').classList.add('lose');
+        loseNudge($('slot-result'));
       }
     } catch (err) {
       $('slot-result').textContent = err.message;
@@ -225,6 +227,8 @@
         ? `🎉 ${r.number} ${colorName}! Du vant ${flusWord(r.payout)}! (${r.bet} i innsats + ${r.net} i gevinst)`
         : `${r.number} ${colorName}. Du tapte ${flusWord(r.net)} 😢`;
       $('roulette-result').classList.add(r.won ? 'win' : 'lose');
+      if (r.won) celebrate({ tier: r.payout >= 200 ? 'big' : 'win', amount: r.payout, icon: r.color === 'red' ? '🔴' : '⚫', sub: `${r.number} ${colorName}! Innsats ${r.bet} → ${r.payout} tilbake` });
+      else loseNudge($('roulette-result'));
     } catch (err) {
       $('roulette-result').textContent = err.message;
       $('roulette-result').classList.add('lose');
@@ -309,13 +313,31 @@
       const r = await api(path, body || {});
       setWallet(r.me);
       renderBlackjack(r.blackjack, true);
-      if (r.blackjack.status === 'done') loadLog();
+      if (r.blackjack.status === 'done') {
+        loadLog();
+        celebrateBlackjack(r.blackjack);
+      }
     } catch (err) {
       $('bj-result').textContent = err.message;
       $('bj-result').className = 'result lose';
     }
     busy = false;
     document.querySelectorAll('.bj-actions button').forEach((b) => (b.disabled = false));
+  }
+
+  function celebrateBlackjack(h) {
+    const payout = h.bet + h.net;
+    // Vent til dealerens kort er delt ut før popupen kommer
+    setTimeout(() => {
+      if (h.result === 'blackjack') celebrate({ tier: 'big', amount: payout, title: 'BLACKJACK!', icon: '🃏', sub: `Innsats ${h.bet} → ${payout} tilbake` });
+      else if (h.net > 0) celebrate({ tier: payout >= 200 ? 'big' : 'win', amount: payout, icon: h.result === 'dealer-bust' ? '💥' : '🃏', sub: h.result === 'dealer-bust' ? 'Dealeren gikk over 21!' : `${h.playerValue} slår ${h.dealerValue}` });
+      else if (h.net < 0) loseNudge($('bj-result'));
+    }, 700);
+  }
+
+  // Pils vunnet: størst feiring, med snarvei til baren
+  function beerWin(sub) {
+    celebrate({ tier: 'beer', sub: `${sub} Løs den inn i baren, så kommer spillmesteren med den til bordet.`, action: { label: '🍻 Til baren', onClick: () => showTab('bar') } });
   }
 
   $('bj-deal').addEventListener('click', () => bjAction('/api/casino/bj/deal', { amount: bet }));
@@ -392,6 +414,8 @@
       await wheelSpinTo(result.win);
       $('spin-result').textContent = result.win ? '🎉 Gratulerer! Du vant en øl! 🍺 Hent den i baren.' : '😢 Ingen øl denne gangen.';
       $('spin-result').classList.add(result.win ? 'win' : 'lose');
+      if (result.win) beerWin('Lykkehjulet ga deg en ekte pils!');
+      else loseNudge($('spin-result'));
       wheelSpinning = false;
       setWallet(result.me);
     } catch (err) {

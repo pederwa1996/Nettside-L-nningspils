@@ -336,7 +336,7 @@ function createPoker(ctx) {
       prev = level;
     }
 
-    const result = { board: h.board.slice(), winners: [], shown: {}, showdown };
+    const result = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, board: h.board.slice(), winners: [], shown: {}, showdown };
     Object.entries(won).forEach(([i, amount]) => {
       i = Number(i);
       const name = h.players[i].name;

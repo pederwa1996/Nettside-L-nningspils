@@ -627,7 +627,7 @@ body.kasino .wallet-item {
 body.kasino .wallet-label { color: var(--gold-1); opacity: 0.8; }
 
 /* Gullknapper */
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.wallet-link),
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.cb-close):not(.wall-more):not(.wallet-link),
 body.kasino .button {
   background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 50%, #b88a1e 51%, var(--gold-2) 100%);
   color: #3a0006;
@@ -635,7 +635,7 @@ body.kasino .button {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
   box-shadow: 0 3px 0 var(--gold-3), 0 6px 14px rgba(0, 0, 0, 0.5);
 }
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.wallet-link):hover:not(:disabled) {
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.cb-close):not(.wall-more):not(.wallet-link):hover:not(:disabled) {
   filter: brightness(1.08);
 }
 body.kasino button.secondary {
@@ -828,13 +828,13 @@ body.cantina h3 {
 }
 
 /* Knapper i ølfarge med varm glød */
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab),
 body.cantina .button {
   background: linear-gradient(180deg, #ffcf5a, #f2a516);
   color: #2a1608;
   box-shadow: 0 3px 0 #a86a0b, 0 0 16px rgba(255, 180, 60, 0.3);
 }
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab):hover:not(:disabled),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab):hover:not(:disabled),
 body.cantina .button:hover {
   background: linear-gradient(180deg, #ffd977, #f7b02a);
 }
@@ -1203,7 +1203,7 @@ body.kasino[data-tab="slot"] .wallet-num {
 }
 body.kasino[data-tab="slot"] .tab { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
 body.kasino[data-tab="slot"] .tab.active { background: #ff2ec4; color: #fff; box-shadow: 0 0 16px #ff2ec4; }
-body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.wallet-link) {
+body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.cb-close):not(.wall-more):not(.wallet-link) {
   background: linear-gradient(180deg, #00f0ff, #00a8c6);
   color: #08010f;
   border-color: #00e5ff;
@@ -1820,3 +1820,59 @@ body:has(.bottom-nav) .chatbox { bottom: calc(var(--nav-h) + 8px + env(safe-area
 .gs-icon { flex: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: rgba(245, 179, 1, 0.18); }
 .guide-box .note { color: #e0c9a8; }
 .guide-go { width: 100%; margin-top: 6px; }
+
+/* =========================================================
+   🎉 Gevinst-popup i kasinoet
+   ========================================================= */
+.celebrate {
+  position: fixed; inset: 0; z-index: 150;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 200, 60, 0.35), rgba(0, 0, 0, 0.82) 60%);
+  animation: cel-fade 0.25s ease;
+  cursor: pointer; overflow: hidden;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+.celebrate.cel-beer { background: radial-gradient(circle at 50% 45%, rgba(255, 210, 60, 0.6), rgba(40, 20, 0, 0.88) 65%); }
+.celebrate.out { animation: cel-fade 0.3s ease reverse forwards; }
+@keyframes cel-fade { from { opacity: 0; } }
+.cel-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.cel-drops { position: absolute; inset: 0; pointer-events: none; }
+.cel-drop { position: absolute; top: -60px; animation: cel-fall linear forwards; }
+@keyframes cel-fall { to { transform: translateY(115vh) rotate(540deg); } }
+.cel-card {
+  position: relative; z-index: 1; width: min(340px, 100%);
+  padding: 26px 20px 16px; border-radius: 26px; text-align: center; color: #fff;
+  background: linear-gradient(180deg, #4a0b14, #1e0408);
+  border: 3px solid #ffd34d;
+  box-shadow: 0 0 0 6px rgba(255, 211, 77, 0.25), 0 0 60px rgba(255, 200, 60, 0.6), 0 20px 50px rgba(0, 0, 0, 0.7);
+  animation: cel-pop 0.55s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+.cel-beer .cel-card { background: linear-gradient(180deg, #6b4204, #2a1500); border-color: #fff3c4; }
+@keyframes cel-pop { 0% { transform: scale(0.2) rotate(-8deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+.cel-rays {
+  position: absolute; left: 50%; top: 58px; width: 260px; height: 260px; margin: -130px 0 0 -130px; z-index: -1;
+  background: repeating-conic-gradient(rgba(255, 220, 100, 0.35) 0 10deg, transparent 10deg 20deg);
+  border-radius: 50%; -webkit-mask: radial-gradient(circle, #000 30%, transparent 70%); mask: radial-gradient(circle, #000 30%, transparent 70%);
+  animation: cel-spin 6s linear infinite;
+}
+@keyframes cel-spin { to { transform: rotate(360deg); } }
+.cel-icon { font-size: 4.2rem; line-height: 1; animation: cel-bounce 0.9s ease-in-out infinite alternate; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); }
+.cel-beer .cel-icon { font-size: 5.2rem; }
+@keyframes cel-bounce { from { transform: translateY(0) scale(1); } to { transform: translateY(-8px) scale(1.08); } }
+.cel-title {
+  margin-top: 8px; font-size: 2rem; font-weight: 900; letter-spacing: 1px;
+  background: linear-gradient(90deg, #fff3c4, #ffd34d, #fff, #ffd34d, #fff3c4); background-size: 200% auto;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: cel-shine 1.4s linear infinite;
+}
+@keyframes cel-shine { to { background-position: 200% center; } }
+.cel-amount { margin-top: 4px; font-size: 1.4rem; font-weight: 800; color: #9dffb4; }
+.cel-amount span { display: inline-block; font-size: 3rem; font-weight: 900; color: #39ff6a; text-shadow: 0 0 18px rgba(57, 255, 106, 0.8); font-variant-numeric: tabular-nums; }
+.cel-amount span.done { animation: cel-thump 0.35s ease; }
+@keyframes cel-thump { 50% { transform: scale(1.25); } }
+.cel-sub { margin-top: 8px; font-size: 1rem; line-height: 1.4; color: #ffe9c2; }
+.cel-action { margin: 14px auto 0; display: block; padding: 12px 22px !important; border-radius: 999px !important; font-size: 1.05rem; font-weight: 900; background: linear-gradient(180deg, #ffd977, #f5a301) !important; color: #2a1500 !important; border: 0 !important; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4) !important; }
+.cel-tap { margin-top: 12px; font-size: 0.75rem; opacity: 0.6; }
+/* Tap: bare en liten risting, ikke noe mer */
+.lose-shake { animation: lose-shake 0.4s ease; }
+@keyframes lose-shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
