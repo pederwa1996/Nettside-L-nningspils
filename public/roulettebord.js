@@ -16,6 +16,7 @@
   let busy = false;
   let rotation = 0;
   let spunRound = null; // runden hjulet allerede har spunnet for
+  let loaded = false;
   let settledRound; // runden vi har vist resultat for (undefined = ikke lastet ennå)
 
   async function api(path, body) {
@@ -89,6 +90,7 @@
     const c = $('roulette');
     c.style.transition = `transform ${Math.max(1.5, ms / 1000)}s cubic-bezier(0.15, 0.85, 0.2, 1)`;
     c.style.transform = `rotate(${rotation}deg)`;
+    if (window.sfx && document.body.dataset.tab === 'roulette') sfx.ballRoll(Math.max(1500, ms));
   }
 
   // ---------- Visning ----------
@@ -144,6 +146,9 @@
       spot.classList.toggle('won', !!won);
       spot.classList.toggle('mine', t.myBets.some((x) => x.type === spot.dataset.type));
     });
+
+    // Sjetonger på bordet (alles innsatser) og ny runde
+    if (window.sfx && document.body.dataset.tab === 'roulette') sfx.watch('rl-bets', Object.values(t.bets).reduce((n, b) => n + b.total, 0), 'chip');
 
     // Mine innsatser
     const mineTotal = t.myBets.reduce((s, b) => s + b.amount, 0);
@@ -212,8 +217,9 @@
       t = r.table;
       me = r.me;
       if (r.me && window.casinoSetWallet) window.casinoSetWallet(r.me);
-      // Kommer man inn midt i et spinn, står hjulet bare på tallet
-      if (spunRound === null && t.phase === 'spinning') spunRound = t.round;
+      // Kommer man inn midt i et spinn (første lasting), står hjulet bare på tallet
+      if (!loaded && t.phase === 'spinning') spunRound = t.round;
+      loaded = true;
       render();
     } catch { /* ignorer */ }
   }

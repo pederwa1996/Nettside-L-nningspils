@@ -627,7 +627,7 @@ body.kasino .wallet-item {
 body.kasino .wallet-label { color: var(--gold-1); opacity: 0.8; }
 
 /* Gullknapper */
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link),
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.sfx-toggle),
 body.kasino .button {
   background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 50%, #b88a1e 51%, var(--gold-2) 100%);
   color: #3a0006;
@@ -635,7 +635,7 @@ body.kasino .button {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
   box-shadow: 0 3px 0 var(--gold-3), 0 6px 14px rgba(0, 0, 0, 0.5);
 }
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):hover:not(:disabled) {
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.sfx-toggle):hover:not(:disabled) {
   filter: brightness(1.08);
 }
 body.kasino button.secondary {
@@ -1151,7 +1151,7 @@ body.kasino[data-tab="slot-neon"] .wallet-num {
 }
 body.kasino[data-tab="slot-neon"] .tab { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
 body.kasino[data-tab="slot-neon"] .tab.active { background: #ff2ec4; color: #fff; box-shadow: 0 0 16px #ff2ec4; }
-body.kasino[data-tab="slot-neon"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.ag):not(.sg) {
+body.kasino[data-tab="slot-neon"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.sfx-toggle):not(.ag):not(.sg) {
   background: linear-gradient(180deg, #00f0ff, #00a8c6);
   color: #08010f;
   border-color: #00e5ff;
@@ -2869,3 +2869,11 @@ body.kasino .casino-games .tab.cg { min-height: 0; padding: 16px 3px 7px !import
 .cg-foot { min-height: 0; margin-top: 3px; }
 .cg-chip { padding: 1px 6px; font-size: 0.6rem; }
 .cg-live { padding: 1px 5px; font-size: 0.56rem; }
+
+/* 🔊/🔇 lyd av/på i kasinoet, øverst til venstre */
+.sfx-toggle {
+  position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 10px; z-index: 88;
+  width: 36px; height: 36px; padding: 0 !important; border-radius: 50% !important; font-size: 1rem !important; line-height: 1;
+  background: rgba(10, 10, 20, 0.7) !important; border: 2px solid rgba(249, 226, 156, 0.6) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+body.kasino:has(.sfx-toggle) .hero { padding-top: 52px; }

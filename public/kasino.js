@@ -70,12 +70,30 @@
       const dur = 1.2 + i * 0.5;
       st.style.transition = `transform ${dur}s cubic-bezier(0.12, 0.7, 0.2, 1)`;
       st.style.transform = `translateY(-${(current.length + filler.length) * SYMBOL_H}px)`;
-      return sleep(dur * 1000 + 50);
+      reelSound(st, dur * 1000);
+      return sleep(dur * 1000 + 50).then(() => window.sfx && sfx.play('reelStop'));
     })).then(() => strips.forEach((st, i) => {
       st.style.transition = 'none';
       st.style.transform = 'translateY(0)';
       setReel(st, result[i]);
     }));
+  }
+
+  // Lavt tikk hver gang et symbol passerer, så hjulene høres ut som de går rundt
+  function reelSound(st, ms) {
+    if (!window.sfx) return;
+    let last = 0;
+    const end = performance.now() + ms;
+    (function frame() {
+      const m = getComputedStyle(st).transform.match(/matrix\(([^)]+)\)/);
+      const y = m ? Math.abs(Number(m[1].split(',')[5])) : 0;
+      const n = Math.floor(y / SYMBOL_H);
+      if (n !== last) {
+        last = n;
+        sfx.play('reelTick');
+      }
+      if (performance.now() < end) requestAnimationFrame(frame);
+    })();
   }
 
   function markLines(lines) {
@@ -130,6 +148,7 @@
     lever.classList.remove('pulled');
     void lever.offsetWidth;
     lever.classList.add('pulled');
+    if (window.sfx) sfx.play('lever');
   }
   $('sm-lever').addEventListener('click', () => {
     if (busy || !data || !data.me) return;
@@ -293,6 +312,7 @@
     const current = ((wheelRotation % 360) + 360) % 360;
     wheelRotation += 360 * 6 + ((wanted - current + 360) % 360);
     $('wheel').style.transform = `rotate(${wheelRotation}deg)`;
+    if (window.sfx) sfx.follow($('wheel'), segDeg, 5300); // pila tikker mot hver pinne
     return sleep(5200);
   }
 
@@ -325,6 +345,7 @@
       const r = await api('/api/spins/buy', { n: pk.n });
       $('shop-msg').textContent = `✅ Du kjøpte ${r.bought} spinn for ${pk.price} cash. Lykke til! 🍀`;
       $('shop-msg').className = 'result win';
+      if (window.sfx) sfx.play('coin');
       buying = false;
       setWallet(r.me);
     } catch (err) {
@@ -349,7 +370,10 @@
       await wheelSpinTo(result.win ? 'beer' : result.lose ? 'lose' : 'miss');
       fortune.classList.remove('spinning');
       if (result.win) fortune.classList.add('won');
-      else if (result.lose) fortune.classList.add('lost');
+      else if (result.lose) {
+        fortune.classList.add('lost');
+        if (window.sfx) sfx.play('skull');
+      }
       $('spin-result').textContent = result.win
         ? '🎉 Gratulerer! Du vant en øl! 🍺 Hent den i baren.'
         : result.lose
@@ -386,7 +410,10 @@
     // Oppdater lommeboken når man kommer tilbake fra baren (flus kan ha blitt brukt der)
     if (name !== 'bar') api('/api/casino').then((d) => d.me && setWallet(d.me)).catch(() => {});
   }
-  document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
+  document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
+    if (window.sfx) sfx.play('tap');
+    showTab(t.dataset.tab);
+  }));
   // Lenker til en annen fane på samme side (f.eks. #roulette) bytter fane
   window.addEventListener('hashchange', () => {
     const tab = Object.keys(TAB_HASH).find((t) => `#${TAB_HASH[t]}` === location.hash);

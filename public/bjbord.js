@@ -130,6 +130,13 @@
       seatsEl.appendChild(wrap);
     });
 
+    // Lyd: kort som deles ut og sjetonger som settes
+    if (window.sfx && document.body.dataset.tab === 'blackjack') {
+      const cards = t.dealer.length + t.seats.reduce((n, s) => n + (s && s.cards ? s.cards.length : 0), 0);
+      sfx.watch('bj-cards', cards, 'card');
+      sfx.watch('bj-bets', t.seats.reduce((n, s) => n + (s ? s.bet || 0 : 0), 0), 'chip');
+    }
+
     // Kontroller
     const seated = t.mySeat >= 0;
     const mine = seated ? t.seats[t.mySeat] : null;

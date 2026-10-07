@@ -164,6 +164,12 @@
     }
     $('pk-info').textContent = info;
     updateTimer();
+
+    // Lyd: kort som deles ut og sjetonger på bordet
+    if (window.sfx && document.body.dataset.tab === 'poker') {
+      sfx.watch('pk-cards', document.querySelectorAll('#tab-poker .pk-card:not(.slot)').length, 'card');
+      sfx.watch('pk-chips', t.pot + t.seats.reduce((n, s) => n + (s ? s.bet || 0 : 0), 0), 'chip');
+    }
   }
 
   function updateTimer() {

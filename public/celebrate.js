@@ -13,6 +13,7 @@
   }
 
   function tone(freq, start, dur, type = 'triangle', vol = 0.12) {
+    if (window.sfx && window.sfx.muted) return; // 🔇 i kasinoet
     const a = ctx();
     if (!a) return;
     const o = a.createOscillator();
