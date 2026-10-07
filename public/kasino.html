@@ -30,13 +30,21 @@
         <button type="button" class="wallet-item wallet-link" id="wallet-beers" title="Gå til baren"><span class="wallet-num" id="my-beers">0</span><span class="wallet-label">🍺 til gode ›</span></button>
       </section>
 
-      <div class="tabs casino-tabs">
-        <button type="button" class="tab active" data-tab="wheel">🎡 Lykkehjul</button>
-        <button type="button" class="tab" data-tab="slot">🎰 Automat</button>
-        <button type="button" class="tab" data-tab="roulette">🔴 Roulette</button>
-        <button type="button" class="tab" data-tab="blackjack">🃏 Blackjack</button>
-        <button type="button" class="tab" data-tab="poker">♠️ Poker</button>
-        <button type="button" class="tab" data-tab="bar">🍻 Baren</button>
+      <!-- Lykkehjulet (spinn) som stor knapp, så det man spiller med cash -->
+      <div class="tabs casino-menu">
+        <button type="button" class="tab tab-wheel active" data-tab="wheel">
+          <span class="tw-icon">🎡</span>
+          <span class="tw-text"><b>Lykkehjulet</b><small>Her bruker du spinnene dine · 15 % sjanse for pils</small></span>
+          <span class="tw-count" id="tw-spins">0 spinn</span>
+        </button>
+        <p class="casino-menu-label">💰 Spill om cash</p>
+        <div class="casino-cash-grid">
+          <button type="button" class="tab" data-tab="slot">🎰<span>Automat</span></button>
+          <button type="button" class="tab" data-tab="roulette">🔴<span>Roulette</span></button>
+          <button type="button" class="tab" data-tab="blackjack">🃏<span>Blackjack</span></button>
+          <button type="button" class="tab" data-tab="poker">♠️<span>Poker</span></button>
+        </div>
+        <button type="button" class="tab tab-bar-link" data-tab="bar">🍻 Baren · løs inn pils til gode ›</button>
       </div>
 
       <!-- Lykkehjulet -->
@@ -76,7 +84,7 @@
               <div class="sm-payline" data-row="1"><b>2</b></div>
               <div class="sm-payline" data-row="2"><b>3</b></div>
             </div>
-            <button type="button" class="sm-lever" id="sm-lever" title="Trekk i spaken (1 spinn)" aria-label="Trekk i spaken">
+            <button type="button" class="sm-lever" id="sm-lever" title="Trekk i spaken (50 cash)" aria-label="Trekk i spaken">
               <span class="sm-arm"><span class="sm-knob"></span></span>
               <span class="sm-hub"></span>
             </button>
@@ -86,8 +94,7 @@
         </div>
         <p id="slot-result" class="result"></p>
         <div class="spin-buttons">
-          <button id="slot-pull" class="big">Trekk i spaken (1 spinn) 🎰</button>
-          <button id="slot-pull-flus" class="big secondary">Trekk for <span class="spin-price">50</span> cash 💰</button>
+          <button id="slot-pull" class="big">Trekk i spaken – <span class="spin-price">50</span> cash 🎰</button>
         </div>
         <details class="tips paytable-box" open>
           <summary>🏆 Gevinster og sannsynlighet</summary>

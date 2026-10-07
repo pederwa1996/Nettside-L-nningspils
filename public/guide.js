@@ -12,7 +12,7 @@
       title: 'Slik funker lønningspilsen',
       lines: () => [
         '🍺 <b>Målet er å vinne pils til gode, altså ekte pils.</b> Du løser dem inn i <b>Kasino → 🍻 Baren</b>, og spillmesteren kommer med pilsen til bordet ditt.',
-        `🎡 Du starter med <b>${S.spins} spinn</b> og <b>${S.cash} cash</b>. Spinn bruker du på lykkehjulet og automaten i kasinoet.`,
+        `🎡 Du starter med <b>${S.spins} spinn</b> og <b>${S.cash} cash</b>. Spinnene bruker du på lykkehjulet; resten av kasinoet spiller du med cash.`,
         '🎯 Tjen flere spinn og cash med <b>oppgaver</b>, og vinn spinn fra de andre i <b>PvP</b>.',
         '💬 Chatten er boblen nede til venstre, og 🔔 viser varslene dine.',
       ],
@@ -21,10 +21,10 @@
       title: 'Slik funker kasinoet',
       lines: () => [
         `🎡 <b>Lykkehjul:</b> 1 spinn per runde, ${S.chance} % sjanse for en pils. Et lite 💀-felt tar et ekstra spinn.`,
-        '🎰 <b>Automat:</b> 3 linjer (topp, midt, bunn) som betaler hver for seg. Tre 🍺 på en linje gir en pils; mange cash-premier fra 25 og opp. Se sannsynlighetene under automaten.',
+        `🎰 <b>Automat:</b> ${S.price} cash per trekk, 3 linjer som betaler hver for seg. Tre 🍺 på en linje gir en pils. Se sannsynlighetene under automaten.`,
         '🃏 <b>Blackjack</b> og ♠️ <b>Poker</b> er felles bord: sett deg på en ledig plass for å spille, ellers ser du på.',
         '🔴 <b>Roulette</b> er ett hjul for alle: første innsats starter nedtellingen, og hjulet spinner for alle samtidig.',
-        `💰 Tom for spinn? Kjøp et spinn for ${S.price} cash.`,
+        `🎡 Spinn kan bare brukes på lykkehjulet. Tom for spinn? Spinn hjulet for ${S.price} cash.`,
         '🍻 <b>Baren:</b> har du pils til gode, trykk «Bruk pils til gode», så kommer spillmesteren med den til bordet.',
       ],
     },
@@ -171,7 +171,7 @@
     if (document.querySelector('.guide-welcome')) return;
     const steps = [
       ['🍺', 'Vinn ekte pils!', 'Hovedpoenget er å vinne <b>pils til gode</b>, og hver av dem er <b>en ekte pils</b> du får servert her i kveld. Du løser dem inn i <b>Baren</b> i kasinoet, og spillmesteren kommer med pilsen til bordet ditt.'],
-      ['🎡', `${S.spins} spinn og ${S.cash} cash`, `Det er det du starter med. Spinn bruker du på <b>lykkehjulet</b> (${S.chance} % sjanse for pils) og <b>automaten</b>. Cash spiller du for i kasinoet, og ${S.price} cash gir et ekstra spinn.`],
+      ['🎡', `${S.spins} spinn og ${S.cash} cash`, `Det er det du starter med. Spinnene bruker du på <b>lykkehjulet</b> (${S.chance} % sjanse for pils). Med cash spiller du automat, roulette, blackjack og poker, og ${S.price} cash gir et ekstra spinn på hjulet.`],
       ['🎯', 'Tjen mer', 'Løs <b>oppgaver</b> for spinn og cash, og utfordre kollegaene i <b>PvP</b> for å vinne spinnene deres.'],
       ['🍻', 'Slik løser du inn', 'Gå til <b>Kasino → 🍻 Baren</b>, trykk «Bruk pils til gode» og skriv gjerne hvor du sitter. <b>Spillmesteren</b> kommer med pilsen til bordet ditt. Skål!'],
     ];

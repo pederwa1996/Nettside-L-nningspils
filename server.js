@@ -2023,15 +2023,15 @@ const routes = {
   'POST /api/casino/slot': (req, res, body) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    const pay = body.pay === 'flus' ? 'flus' : 'spin';
-    payForSpin(p, pay);
+    // Spinn er bare for lykkehjulet; automaten koster alltid cash
+    payForSpin(p, 'flus');
     const r = pullSlot();
     if (r.flus) addFlus(p, r.flus);
     if (r.beer) p.slotBeers = (p.slotBeers || 0) + r.beer;
     logCasino(p, 'slot', {
       won: r.flus,
       beer: r.beer,
-      net: r.flus - (pay === 'flus' ? SPIN_PRICE : 0),
+      net: r.flus - SPIN_PRICE,
       detail: r.lines.map((l) => l.combo).join(' + '),
     });
     saveState();

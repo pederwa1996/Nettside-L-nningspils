@@ -25,8 +25,8 @@
     $('my-flus').textContent = me.flus;
     $('my-beers').textContent = me.beersOwed;
     document.querySelectorAll('.spin-price').forEach((el) => (el.textContent = data.spinPrice));
-    $('slot-pull').disabled = busy || me.spinsLeft < 1;
-    $('slot-pull-flus').disabled = busy || me.flus < data.spinPrice;
+    $('slot-pull').disabled = busy || me.flus < data.spinPrice;
+    $('tw-spins').textContent = `${me.spinsLeft} spinn`;
     if (!wheelSpinning) {
       $('spin-btn').disabled = me.spinsLeft <= 0;
       $('spin-flus-btn').disabled = me.flus < data.spinPrice;
@@ -89,14 +89,13 @@
     if (busy) return;
     busy = true;
     $('slot-pull').disabled = true;
-    $('slot-pull-flus').disabled = true;
     $('slot-result').textContent = '';
     $('slot-result').className = 'result';
     document.querySelector('.slot-machine').classList.remove('jackpot');
     markLines([]);
     pullLever();
     try {
-      const r = await api('/api/casino/slot', { pay });
+      const r = await api('/api/casino/slot', { pay: 'flus' });
       await spinReels(r.reels);
       setWallet(r.me);
       markLines(r.lines);
@@ -134,8 +133,7 @@
   }
   $('sm-lever').addEventListener('click', () => {
     if (busy || !data || !data.me) return;
-    if (data.me.spinsLeft >= 1) pullSlot('spin');
-    else pullSlot('flus');
+    pullSlot('flus'); // automaten koster alltid cash
   });
   // Lyspærer rundt toppen av automaten og rundt lykkehjulet
   (function bulbs() {
@@ -153,8 +151,7 @@
     }
   })();
 
-  $('slot-pull').addEventListener('click', () => pullSlot('spin'));
-  $('slot-pull-flus').addEventListener('click', () => pullSlot('flus'));
+  $('slot-pull').addEventListener('click', () => pullSlot('flus'));
 
   // Prosent med fornuftig antall desimaler («1 av N» for de sjeldne)
   function pct(p) {

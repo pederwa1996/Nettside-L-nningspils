@@ -2599,3 +2599,27 @@ body.minimal.home .mb-chip, body.minimal.home .go-live, body.minimal.home .wall-
 .task-edit { display: flex; flex-direction: column; gap: 8px; }
 .task-edit > *, .task-edit input, .task-edit textarea, .task-edit select { flex: none; margin: 0; }
 .task-edit textarea { min-height: 70px; }
+
+/* Kasino-menyen: lykkehjulet stort (spinn), resten med cash under */
+.casino-menu { display: block; margin-bottom: 14px; }
+.casino-menu .tab { margin: 0; }
+body.kasino .casino-menu .tab-wheel {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 14px !important; text-align: left;
+  border-radius: 18px !important; font-family: inherit !important;
+  background: linear-gradient(135deg, #2b6fd6, #13357d) !important; color: #fff !important;
+  border: 2px solid #f2cf6b !important; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25), 0 8px 20px rgba(0, 0, 0, 0.45) !important;
+}
+body.kasino .casino-menu .tab-wheel.active { background: linear-gradient(135deg, #3d84f0, #1a47a3) !important; box-shadow: 0 0 0 3px #ffe08a, 0 0 24px rgba(255, 224, 138, 0.55) !important; }
+.tw-icon { font-size: 2.4rem; line-height: 1; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4)); }
+.tab-wheel.active .tw-icon { animation: tw-spin 6s linear infinite; }
+@keyframes tw-spin { to { transform: rotate(360deg); } }
+.tw-text { flex: 1; display: flex; flex-direction: column; line-height: 1.25; }
+.tw-text b { font-size: 1.25rem; font-family: 'Cinzel Decorative', Georgia, serif; letter-spacing: 0.5px; }
+.tw-text small { font-size: 0.75rem; opacity: 0.85; font-weight: 600; font-family: system-ui, sans-serif; }
+.tw-count { flex: none; padding: 5px 11px; border-radius: 999px; background: #ffd34d; color: #2a1500; font-weight: 900; font-size: 0.85rem; font-family: system-ui, sans-serif; }
+.casino-menu-label { margin: 12px 2px 6px; font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #f9e29c; opacity: 0.85; }
+.casino-cash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+body.kasino .casino-cash-grid .tab { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 2px !important; font-size: 1.45rem; line-height: 1; border-radius: 14px !important; }
+.casino-cash-grid .tab span { font-size: 0.72rem; font-weight: 800; }
+body.kasino .casino-menu .tab-bar-link { display: block; width: 100%; margin-top: 8px; padding: 7px !important; font-size: 0.82rem; border-radius: 12px !important; background: rgba(0, 0, 0, 0.25) !important; border: 1px dashed rgba(249, 226, 156, 0.5) !important; color: #f9e29c !important; box-shadow: none !important; }
+body.kasino .casino-menu .tab-bar-link.active { background: rgba(249, 226, 156, 0.18) !important; border-style: solid !important; }
