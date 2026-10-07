@@ -2542,3 +2542,23 @@ body.minimal.home .home-hero .sub { color: #7a5a2a; }
 body.minimal.home .card { border-radius: 18px !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important; }
 body.minimal.home .wall-head h2 { line-height: 1.15; }
 body.minimal.home .me-bar { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06); }
+
+/* Forsiden: mer kontrast mellom bakgrunn og kort/fliser */
+body.minimal.home { --bg: #ece3d3; --line: #d9cdb8; background: linear-gradient(180deg, #f7dca8 0, #f1e3c8 200px, #ece3d3 440px) !important; }
+body.minimal.home .card,
+body.minimal.home .go-tile,
+body.minimal.home .me-bar {
+  background: #ffffff !important;
+  border: 1px solid #d9cdb8 !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 4px 14px rgba(90, 60, 20, 0.14) !important;
+}
+body.minimal.home .go-casino { border-top: 5px solid #d0344d !important; }
+body.minimal.home .go-bar { border-top: 5px solid #f5b301 !important; }
+body.minimal.home .go-pvp { border-top: 5px solid #4f5bd5 !important; }
+body.minimal.home .go-tasks { border-top: 5px solid #7b4fd6 !important; }
+body.minimal.home .home-h { color: #3a2a12; }
+body.minimal.home .story-bubble span, body.minimal.home .bar-icon small { color: #3a2a12; font-weight: 700; }
+body.minimal.home .wall-item { border-bottom-color: #ece3d3 !important; }
+body.minimal.home .ff { background: #faf6ee !important; border-color: #d9cdb8 !important; }
+body.minimal.home .ff.active { background: #1d1c1a !important; border-color: #1d1c1a !important; }
+body.minimal.home .mb-chip, body.minimal.home .go-live, body.minimal.home .wall-more { background: #f3ecdf !important; }
