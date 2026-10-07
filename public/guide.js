@@ -11,7 +11,7 @@
     home: {
       title: 'Slik funker lønningspilsen',
       lines: () => [
-        '🍺 <b>Målet er å vinne pils til gode.</b> Dem løser du inn i baren, og spillmesteren kommer med pilsen til bordet ditt.',
+        '🍺 <b>Målet er å vinne pils til gode, altså ekte pils.</b> Du løser dem inn i <b>Kasino → 🍻 Baren</b>, og spillmesteren kommer med pilsen til bordet ditt.',
         `🎡 Du starter med <b>${S.spins} spinn</b> og <b>${S.cash} cash</b>. Spinn bruker du på lykkehjulet og automaten i kasinoet.`,
         '🎯 Tjen flere spinn og cash med <b>oppgaver</b>, og vinn spinn fra de andre i <b>PvP</b>.',
         '💬 Chatten er boblen nede til venstre, og 🔔 viser varslene dine.',
@@ -135,10 +135,10 @@
   function showWelcome() {
     if (document.querySelector('.guide-welcome')) return;
     const steps = [
-      ['🍺', 'Vinn pils!', 'Hovedpoenget er å vinne <b>pils til gode</b>. Jo flere du vinner, jo høyere kommer du på stillingen.'],
+      ['🍺', 'Vinn ekte pils!', 'Hovedpoenget er å vinne <b>pils til gode</b>, og hver av dem er <b>en ekte pils</b> du får servert her i kveld. Du løser dem inn i <b>Baren</b> i kasinoet, og spillmesteren kommer med pilsen til bordet ditt.'],
       ['🎡', `${S.spins} spinn og ${S.cash} cash`, `Det er det du starter med. Spinn bruker du på <b>lykkehjulet</b> (${S.chance} % sjanse for pils) og <b>automaten</b>. Cash spiller du for i kasinoet, og ${S.price} cash gir et ekstra spinn.`],
       ['🎯', 'Tjen mer', 'Løs <b>oppgaver</b> for spinn og cash, og utfordre kollegaene i <b>PvP</b> for å vinne spinnene deres.'],
-      ['🍻', 'Hent pilsen', 'Har du pils til gode, går du til <b>Baren</b> i kasinoet og trykker «Bruk pils til gode». <b>Spillmesteren</b> kommer med pilsen til bordet ditt!'],
+      ['🍻', 'Slik løser du inn', 'Gå til <b>Kasino → 🍻 Baren</b>, trykk «Bruk pils til gode» og skriv gjerne hvor du sitter. <b>Spillmesteren</b> kommer med pilsen til bordet ditt. Skål!'],
     ];
     const overlay = el('div', 'guide-welcome');
     const box = el('div', 'guide-box');
