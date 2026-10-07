@@ -217,6 +217,7 @@ function renameEverywhere(oldName, newName) {
     r.likes = r.likes.map((n) => (n === oldName ? newName : n));
     r.comments.forEach((c) => swap(c, 'name'));
   });
+  state.participants.forEach((p) => (p.notes || []).forEach((n) => swap(n, 'from')));
   state.poker.seats.forEach((x) => swap(x, 'name'));
   if (state.poker.hand) Object.values(state.poker.hand.players).forEach((x) => swap(x, 'name'));
   for (const map of [state.moggBest, state.blackjack]) {
@@ -657,6 +658,32 @@ function addActivity(name, icon, text, extra = {}) {
   if (state.activity.length > MAX_ACTIVITY) state.activity = state.activity.slice(-MAX_ACTIVITY);
   broadcast('activity', { name });
   return a;
+}
+
+// ---- Varsler til én bruker (🔔-boblen) ----
+// Lagres på deltakeren, så de følger med ved navnebytte.
+const MAX_NOTES = 50;
+
+function notify(name, icon, text, { url = '', from = null, key = null } = {}) {
+  const p = findParticipant(name);
+  if (!p) return;
+  p.notes = p.notes || [];
+  // Samme hendelse to ganger (f.eks. like, fjern like, like igjen) gir bare ett varsel
+  if (key && p.notes.some((n) => n.key === key)) return;
+  const note = { id: crypto.randomBytes(6).toString('hex'), icon, text, url, from, at: Date.now(), read: false };
+  if (key) note.key = key;
+  p.notes.push(note);
+  if (p.notes.length > MAX_NOTES) p.notes = p.notes.slice(-MAX_NOTES);
+  broadcast('notify', { to: p.name });
+}
+
+function postWord(a) {
+  if (a.story) return 'storyen din';
+  return a.url ? 'bildet ditt' : 'innlegget ditt';
+}
+
+function postUrl(a) {
+  return `/profil.html?navn=${encodeURIComponent(a.name)}&innlegg=${a.id}`;
 }
 
 function reactionsFor(id) {
@@ -1117,6 +1144,7 @@ const routes = {
       createdAt: new Date().toISOString(),
     };
     state.duels.push(duel);
+    notify(opponent.name, '⚔️', `${p.name} utfordret deg til stein, saks, papir om ${stake} spinn!`, { url: '/duell.html', from: p.name });
     saveState();
     sendJson(res, 200, { duel: duelView(duel, p), me: meView(p) });
   },
@@ -1132,6 +1160,7 @@ const routes = {
       d.status = 'declined';
       d.finishedAt = new Date().toISOString();
       if (challenger) addSpins(challenger, d.stake);
+      notify(d.challenger, '🙅', `${p.name} takket nei til duellen. Du fikk ${d.stake} spinn tilbake.`, { url: '/duell.html', from: p.name });
       saveState();
       return sendJson(res, 200, { duel: duelView(d, p), me: meView(p) });
     }
@@ -1164,6 +1193,7 @@ const routes = {
         : `${mine} tapte mot ${theirs}: ${other} vant ${d.stake} spinn`;
     };
     addActivity(d.challenger, '⚔️', duelText(d.challenger));
+    notify(d.challenger, '⚔️', `${p.name} svarte på duellen: ${duelText(d.challenger)}`, { url: '/duell.html', from: p.name });
     addActivity(d.opponent, '⚔️', duelText(d.opponent));
     saveState();
     sendJson(res, 200, { duel: duelView(d, p), me: meView(p) });
@@ -1324,6 +1354,7 @@ const routes = {
       at: Date.now(),
     };
     state.moggs.push(m);
+    notify(opponent.name, '🗿', `${p.name} utfordret deg til mogg-off!`, { url: '/mogg.html', from: p.name });
     recordMoggBest(p.name, url, score);
     saveState();
     sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
@@ -1339,6 +1370,7 @@ const routes = {
     if (body.decline) {
       m.status = 'declined';
       if (challenger) addSpins(challenger, 1);
+      notify(m.challenger, '🙅', `${p.name} takket nei til mogg-off. Du fikk spinnet tilbake.`, { url: '/mogg.html', from: p.name });
       saveState();
       return sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
     }
@@ -1364,6 +1396,7 @@ const routes = {
     }
     recordMoggBest(p.name, m.opponentUrl, score);
     addActivity(m.challenger, '🗿', moggText(m, m.challenger), { url: m.challengerUrl });
+    notify(m.challenger, '🗿', `${p.name} svarte på mogg-off: ${m.winner ? 'du ' : ''}${moggText(m, m.challenger)}`, { url: '/mogg.html', from: p.name });
     addActivity(m.opponent, '🗿', moggText(m, m.opponent), { url: m.opponentUrl });
     saveState();
     sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
@@ -1440,10 +1473,12 @@ const routes = {
       const p = findParticipant(cur.name);
       if (p) addSpins(p, t.reward);
       addActivity(cur.name, '🎯', `fullførte «${t.title}» og fikk ${t.reward} spinn`, { url: cur.url });
+      notify(cur.name, '✅', `Spillmesteren godkjente «${t.title}»! Du fikk ${t.reward} spinn 🎰`, { url: '/oppgaver.html' });
     } else {
       // Avvist: oppgaven blir åpen for alle igjen
       cur.status = 'rejected';
       cur.reason = String(body.reason || '').trim().slice(0, 200);
+      notify(cur.name, '❌', `«${t.title}» ble ikke godkjent${cur.reason ? `: ${cur.reason}` : ''}. Oppgaven er åpen igjen.`, { url: '/oppgaver.html' });
       deleteImage(cur.url);
       cur.url = null;
       t.status = 'open';
@@ -1614,6 +1649,7 @@ const routes = {
     delta = Math.max(delta, -spinsLeft(p));
     if (delta === 0) return sendJson(res, 400, { error: `${p.name} har ingen spinn å ta.` });
     addSpins(p, delta);
+    notify(p.name, delta > 0 ? '🎁' : '➖', delta > 0 ? `Spillmesteren ga deg ${delta} spinn! 🎰` : `Spillmesteren tok ${-delta} spinn fra deg`, { url: '/' });
     state.spinLog.push({ name: p.name, delta, at: Date.now() });
     if (state.spinLog.length > 50) state.spinLog = state.spinLog.slice(-50);
     saveState();
@@ -1720,11 +1756,14 @@ const routes = {
     if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const o = state.orders.find((x) => x.id === body.id && x.status === 'pending');
     if (!o) return sendJson(res, 400, { error: 'Fant ikke bestillingen.' });
-    if (body.status === 'delivered') o.status = 'delivered';
-    else if (body.status === 'cancelled') {
+    if (body.status === 'delivered') {
+      o.status = 'delivered';
+      notify(o.name, '🍺', `Spillmesteren har levert ${o.qty > 1 ? `${o.qty} pils` : 'pilsen'} din. Skål! 🍻`, { url: '/kasino.html#baren' });
+    } else if (body.status === 'cancelled') {
       o.status = 'cancelled';
       const p = findParticipant(o.name);
       if (p && o.pay === 'flus') addFlus(p, o.cost); // pengene tilbake
+      notify(o.name, '🚫', `Spillmesteren avbrøt bestillingen din${o.pay === 'flus' ? ` (${o.cost} flus er betalt tilbake)` : ' (pilsen er fortsatt til gode)'}`, { url: '/kasino.html#baren' });
     } else return sendJson(res, 400, { error: 'Ukjent status.' });
     o.doneAt = Date.now();
     saveState();
@@ -1755,7 +1794,10 @@ const routes = {
     const r = (state.reactions[a.id] = state.reactions[a.id] || { likes: [], comments: [] });
     const i = r.likes.indexOf(p.name);
     if (i >= 0) r.likes.splice(i, 1);
-    else r.likes.push(p.name);
+    else {
+      r.likes.push(p.name);
+      if (a.name !== p.name) notify(a.name, '❤️', `${p.name} likte ${postWord(a)}`, { url: postUrl(a), from: p.name, key: `like:${a.id}:${p.name}` });
+    }
     saveState();
     broadcast('reactions', { id: a.id, name: a.name });
     sendJson(res, 200, { activity: activityView(a, p) });
@@ -1772,8 +1814,13 @@ const routes = {
     if (p.lastCommentAt && now - p.lastCommentAt < 1500) return sendJson(res, 429, { error: 'Rolig nå 😄' });
     p.lastCommentAt = now;
     const r = (state.reactions[a.id] = state.reactions[a.id] || { likes: [], comments: [] });
+    // Varsle eieren, og andre som har kommentert på samme innlegg
+    const others = [...new Set(r.comments.map((c) => c.name))].filter((n) => n !== p.name && n !== a.name);
     r.comments.push({ id: crypto.randomBytes(5).toString('hex'), name: p.name, text, at: now });
     if (r.comments.length > 100) r.comments = r.comments.slice(-100);
+    const short = text.length > 60 ? `${text.slice(0, 57)}…` : text;
+    if (a.name !== p.name) notify(a.name, '💬', `${p.name} kommenterte ${postWord(a)}: «${short}»`, { url: postUrl(a), from: p.name });
+    others.forEach((n) => notify(n, '💬', a.name === p.name ? `${p.name} svarte på ${a.url ? 'bildet' : 'innlegget'} sitt: «${short}»` : `${p.name} kommenterte også på innlegget til ${a.name}: «${short}»`, { url: postUrl(a), from: p.name }));
     saveState();
     broadcast('reactions', { id: a.id, name: a.name });
     sendJson(res, 200, { activity: activityView(a, p) });
@@ -1791,6 +1838,27 @@ const routes = {
     saveState();
     broadcast('reactions', { id: a.id, name: a.name });
     sendJson(res, 200, { activity: activityView(a, p) });
+  },
+
+  // ---- Varsler ----
+  'GET /api/notifications': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const notes = (p.notes || []).slice().reverse();
+    const av = avatars();
+    sendJson(res, 200, {
+      name: p.name,
+      unread: notes.filter((n) => !n.read).length,
+      items: notes.map(({ key, ...n }) => ({ ...n, avatar: n.from ? av[n.from] || null : null })),
+    });
+  },
+
+  'POST /api/notifications/read': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    (p.notes || []).forEach((n) => (n.read = true));
+    saveState();
+    sendJson(res, 200, { ok: true });
   },
 
   'GET /api/admin/me': (req, res) => {

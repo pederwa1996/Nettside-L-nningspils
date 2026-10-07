@@ -9,6 +9,8 @@
 
   const params = new URLSearchParams(location.search);
   let name = params.get('navn') || '';
+  // Fra et varsel: ?innlegg=<id> åpner det innlegget
+  let jumpTo = params.get('innlegg');
 
   let adminPassword = '';
   try {
@@ -286,7 +288,9 @@
       data = await api(url);
       name = data.profile.name;
       $('error').textContent = '';
+      if (jumpTo) openComments.add(jumpTo); // vis alle kommentarene på innlegget
       render();
+      if (jumpTo) showPost(jumpTo);
     } catch (err) {
       $('error').innerHTML = '';
       $('error').append(document.createTextNode(err.message + ' '));
@@ -294,6 +298,17 @@
       a.href = '/';
       $('error').appendChild(a);
     }
+  }
+
+  function showPost(id) {
+    jumpTo = null;
+    const a = data.activity.find((x) => x.id === id);
+    if (!a) return;
+    if (a.url) return openLightbox(id); // bilder vises stort, med kommentarene under
+    const item = document.querySelector(`.feed-item[data-id="${id}"]`);
+    if (!item) return;
+    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    item.classList.add('highlight');
   }
 
   function typingSomewhere() {
