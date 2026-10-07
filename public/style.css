@@ -3101,3 +3101,15 @@ body.lostacos {
 body.kasino #tab-bar.card { background: #fffaf2 !important; border-color: #ead9bf !important; color: #2b1d12; box-shadow: 0 0 0 3px #c8553d, 0 10px 30px rgba(0, 0, 0, 0.45) !important; }
 #tab-bar, #tab-bar p, #tab-bar li, #tab-bar strong { color: #2b1d12; }
 #tab-bar .order-status { color: #b8651a; }
+
+/* Sosialt: profilkortet går over hele bredden, storyene under */
+.social-card .story-row { flex-direction: column; align-items: stretch; gap: 10px; }
+.social-card .me-card { width: auto; display: flex; align-items: center; gap: 12px; padding: 10px 12px; text-align: left; }
+.social-card .mc-who { flex-direction: row; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.social-card .mc-who .me-av-wrap { margin: 0; flex: none; }
+.social-card .mc-who > b, .social-card .mc-who > small { display: block; }
+.social-card .mc-name-wrap { display: flex; flex-direction: column; min-width: 0; }
+.social-card .mc-name { font-size: 1rem; }
+.social-card .mc-stats { flex: none; margin: 0; padding: 0 0 0 10px; border-top: 0; border-left: 1px solid #ead9b5; gap: 2px; }
+.social-card .mc-stats a { min-width: 42px; padding: 4px 2px; }
+.social-card .mc-stats b { font-size: 0.95rem; }
