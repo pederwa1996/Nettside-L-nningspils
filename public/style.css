@@ -627,7 +627,7 @@ body.kasino .wallet-item {
 body.kasino .wallet-label { color: var(--gold-1); opacity: 0.8; }
 
 /* Gullknapper */
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.sfx-toggle),
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.sfx-toggle):not(.glass):not(.tap-handle):not(.be-glass),
 body.kasino .button {
   background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 50%, #b88a1e 51%, var(--gold-2) 100%);
   color: #3a0006;
@@ -635,7 +635,7 @@ body.kasino .button {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
   box-shadow: 0 3px 0 var(--gold-3), 0 6px 14px rgba(0, 0, 0, 0.5);
 }
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.sfx-toggle):hover:not(:disabled) {
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.sfx-toggle):not(.glass):not(.tap-handle):not(.be-glass):hover:not(:disabled) {
   filter: brightness(1.08);
 }
 body.kasino button.secondary {
@@ -2473,10 +2473,7 @@ body.minimal.home .home-hero .sub { color: #7a5a2a; }
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 45%);
 }
-.go-grid .go-tile:nth-child(1) { border-radius: 13px 4px 4px 4px; }
-.go-grid .go-tile:nth-child(2) { border-radius: 4px 13px 4px 4px; }
-.go-grid .go-tile:nth-child(3) { border-radius: 4px 4px 4px 13px; }
-.go-grid .go-tile:nth-child(4) { border-radius: 4px 4px 13px 4px; }
+
 .go-tile:active { transform: scale(0.97); filter: brightness(1.1); }
 .go-tile b { font-size: 1.2rem; font-weight: 900; letter-spacing: 0.3px; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.35); }
 .go-tile small { font-size: 0.76rem; line-height: 1.3; color: rgba(255, 255, 255, 0.88); }
@@ -2787,20 +2784,7 @@ body.kasino #tab-wheel .wheel-title { display: flex; align-items: center; justif
 body.kasino #tab-wheel > p { color: #e8f0ff; }
 body.kasino #tab-wheel .spin-shop { background: rgba(0, 20, 60, 0.35); }
 
-/* Forsiden: lykkehjulet midt mellom de fire dørene */
-.go-wheel {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3;
-  width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #3d84f0, #1a47a3); border: 3px solid #f2cf6b;
-  box-shadow: 0 0 0 3px #1c1233, 0 0 18px rgba(255, 224, 138, 0.6), 0 6px 14px rgba(0, 0, 0, 0.45);
-  text-decoration: none; transition: transform 0.15s;
-}
-.go-wheel:active { transform: translate(-50%, -50%) scale(0.92); }
-.go-wheel .tw-icon { width: 52px; height: 52px; }
-.go-wheel .mini-wheel { border-width: 2px; }
-/* Litt luft rundt hjulet så det ikke dekker tekst og ikoner */
-.go-hub .go-grid .go-tile:nth-child(odd) { padding-right: 34px; }
-.go-hub .go-grid .go-tile:nth-child(even) { padding-left: 36px; }
+
 
 /* Kasino: spillene som fristende «reklameplakater». Spillet du er på, er skjult. */
 .casino-menu-label { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 8px !important; font-family: 'Cinzel Decorative', Georgia, serif; font-size: 0.95rem !important; letter-spacing: 1.5px !important; color: #ffe08a !important; opacity: 1 !important; text-shadow: 0 0 10px rgba(255, 170, 0, 0.6); }
@@ -2881,3 +2865,84 @@ body.kasino:has(.sfx-toggle) .hero { padding-top: 52px; }
 body.minimal .sfx-toggle { background: #fff !important; border: 1px solid var(--line) !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12) !important; font-size: 0.95rem !important; }
 body.minimal:not(.home):has(.sfx-toggle) .hero { padding-top: 54px; }
 body:has(.sfx-toggle):not(:has(.hero)) main { padding-top: 50px; }
+
+/* 🍻 Baren: tapp pilsen selv */
+.tap-order h2 { text-align: center; }
+.tap-help { text-align: center; }
+.tap-glasses { display: flex; justify-content: center; gap: 10px; margin: 14px 0 12px; min-height: 76px; align-items: flex-end; }
+button.glass {
+  position: relative; width: 46px; height: 66px; padding: 0 !important; margin: 0; overflow: hidden;
+  background: rgba(255, 255, 255, 0.08) !important; border: 2px solid rgba(255, 255, 255, 0.35) !important; box-shadow: none !important;
+  border-radius: 4px 4px 12px 12px !important; clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%); transition: transform 0.15s, opacity 0.2s;
+  opacity: 0.45;
+}
+button.glass.on { opacity: 1; border-color: #ffe08a !important; transform: translateY(-3px); }
+.g-beer { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--fill, 0) * 86%); background: linear-gradient(180deg, #ffcf3f, #e89a00); }
+.g-foam { position: absolute; left: 0; right: 0; height: 10px; bottom: calc(var(--fill, 0) * 86%); background: #fffaf0; border-radius: 6px 6px 2px 2px; opacity: var(--fill, 0); }
+button.glass.on::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.18) 30%, transparent 40%); }
+.tap-handle {
+  position: relative; display: block; width: 100%; max-width: 360px; margin: 10px auto 6px; height: 58px; overflow: hidden;
+  border-radius: 16px !important; padding: 0 !important; border: 2px solid #f2cf6b !important;
+  background: linear-gradient(180deg, #5a3a1c, #2e1c0c) !important; color: #ffe8b0 !important; font-weight: 900; font-size: 1.05rem;
+  box-shadow: 0 4px 0 #1a0f05, 0 8px 18px rgba(0, 0, 0, 0.4) !important; touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.tap-handle.pouring { transform: translateY(3px); box-shadow: 0 1px 0 #1a0f05 !important; }
+.th-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, #e89a00, #ffcf3f); }
+.th-text { position: relative; z-index: 1; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); }
+
+/* Ingen pils til gode: kjipt */
+.bar-empty { text-align: center; padding: 6px 4px 4px; }
+.bar-empty h2 { margin: 6px 0 4px; }
+button.be-glass {
+  position: relative; width: 60px; height: 84px; margin: 6px auto 0; padding: 0 !important; display: block;
+  background: rgba(255, 255, 255, 0.06) !important; border: 2px dashed rgba(255, 255, 255, 0.4) !important; box-shadow: none !important;
+  border-radius: 4px 4px 14px 14px !important; clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%);
+  animation: be-sway 3s ease-in-out infinite;
+}
+button.be-glass i { position: absolute; left: 30%; right: 30%; bottom: 8px; height: 4px; border-radius: 2px; background: rgba(255, 207, 63, 0.5); }
+button.be-glass.wobble { animation: be-wobble 0.7s ease; }
+@keyframes be-sway { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+@keyframes be-wobble { 20% { transform: rotate(-14deg); } 40% { transform: rotate(10deg); } 60% { transform: rotate(-6deg); } 80% { transform: rotate(3deg); } }
+.be-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.be-actions a { padding: 10px 6px; border-radius: 12px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(249, 226, 156, 0.4); color: #ffe8b0 !important; font-weight: 800; font-size: 0.85rem; text-decoration: none !important; }
+
+/* Forsiden: fire dører + lykkehjulet som et bredt banner i midten (symmetrisk) */
+.go-grid .go-casino { border-radius: 13px 4px 4px 4px; }
+.go-grid .go-bar { border-radius: 4px 13px 4px 4px; }
+.go-grid .go-pvp { border-radius: 4px 4px 4px 13px; }
+.go-grid .go-tasks { border-radius: 4px 4px 13px 4px; }
+.go-wheel-banner {
+  grid-column: 1 / -1; position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border-radius: 4px; text-decoration: none !important; color: #fff !important;
+  background: radial-gradient(120% 140% at 15% 50%, #4f93ff, #1a47a3 55%, #0e2a66);
+}
+.go-wheel-banner::before {
+  content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.3), transparent); transform: skewX(-20deg);
+  animation: cg-shine 4s ease-in-out infinite;
+}
+.go-wheel-banner .tw-icon { width: 46px; height: 46px; }
+.gwb-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+.gwb-text b { font-size: 1.15rem; font-weight: 900; letter-spacing: 0.3px; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.35); }
+.gwb-text small { font-size: 0.76rem; font-weight: 700; color: #ffe08a; }
+.gwb-go { flex: none; padding: 6px 12px; border-radius: 999px; background: #ffd34d; color: #2a1500; font-weight: 900; font-size: 0.8rem; box-shadow: 0 2px 0 #b07800; animation: gwb-pulse 1.4s ease-in-out infinite; }
+@keyframes gwb-pulse { 50% { transform: scale(1.07); } }
+.go-wheel-banner:active { filter: brightness(1.1); }
+
+/* Forsiden: tynn velkomsttekst i stedet for stor overskrift */
+.home-welcome { margin: 4px 0 2px; font-size: clamp(0.8rem, 3.9vw, 1.05rem); font-weight: 300; letter-spacing: 1.6px; white-space: nowrap; text-transform: uppercase; color: #5a4526; }
+
+/* Profilen i hjørnet øverst til venstre; tallene som små brikker under velkomsten */
+body.home .home-hero { padding-top: 56px !important; }
+body.minimal.home .me-bar { background: none !important; border: 0 !important; box-shadow: none !important; justify-content: center; gap: 6px; padding: 0; margin: 0 0 10px; }
+body.minimal.home .me-bar-who {
+  position: absolute; top: calc(10px + env(safe-area-inset-top)); left: 10px; flex: none; z-index: 5;
+  padding: 3px 12px 3px 3px; border-radius: 999px; background: #fff; border: 1px solid #d9cdb8; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+body.minimal.home .mb-chip { background: #fff !important; border: 1px solid #d9cdb8; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); }
+/* Lyd-knappen flytter til høyre ved ❓ på forsiden */
+body.home .sfx-toggle { left: auto; right: 54px; }
+body.home .presence { right: 98px; }
+body.minimal.home .home-hero { padding-top: 58px !important; }
+.gwb-text b { white-space: nowrap; font-size: 1.05rem; }
+.gwb-text small { white-space: nowrap; }

@@ -123,6 +123,10 @@
     send: () => tone(660, { dur: 0.09, type: 'triangle', vol: 0.04, to: 1100 }),
     // Ny melding fra andre: liten «pop»
     pop: () => tone(520, { dur: 0.07, type: 'sine', vol: 0.05, to: 780 }),
+    // Pils som tappes: bitte små bobler
+    pour: () => noise(0.06, { freq: 900 + Math.random() * 900, q: 6, vol: 0.02 }),
+    // Kjipt: en liten, trist nedtur
+    sad: () => [392, 370, 349, 294].forEach((f, i) => tone(f, { t: i * 0.16, dur: i === 3 ? 0.45 : 0.15, type: 'triangle', vol: 0.04 })),
     // Lik: et lite, lyst pling
     like: () => {
       tone(1175, { dur: 0.08, type: 'triangle', vol: 0.03 });

@@ -433,6 +433,7 @@ function renderGoTiles() {
     $(id).classList.toggle('hot', !!hot);
     $(id).classList.toggle('hidden', !text);
   };
+  if ($('gwb-spins')) $('gwb-spins').textContent = data.me.spinsLeft ? `${data.me.spinsLeft} spinn ›` : 'Kjøp spinn ›';
   set('go-casino-live', inCasino ? `🟢 ${inCasino} spiller nå` : `${data.me.spinsLeft} spinn · ${data.me.flus} cash`);
   set('go-bar-live', data.me.beersOwed ? `🍺 ${data.me.beersOwed} til gode` : inBar ? `🟢 ${inBar} i baren` : '', data.me.beersOwed);
   set('go-pvp-live', challenges ? `🔔 ${challenges} utfordring${challenges > 1 ? 'er' : ''}` : '', challenges);

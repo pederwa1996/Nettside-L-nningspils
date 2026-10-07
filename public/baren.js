@@ -26,10 +26,32 @@
     cancelled: ['❌ Kansellert', 'cancelled'],
   };
 
-  function renderQty() {
-    $('qty').textContent = qty;
+  // ---------- Glassene: ett per pils du kan bestille ----------
+  function renderGlasses() {
     const me = data.me;
-    $('order-credit').disabled = me.beersOwed < qty;
+    const n = Math.min(me.beersOwed, data.maxPerOrder);
+    const empty = me.beersOwed <= 0;
+    $('bar-order').classList.toggle('hidden', empty);
+    $('bar-empty').classList.toggle('hidden', !empty);
+    if (empty) return;
+    qty = Math.max(1, Math.min(qty, n));
+    const wrap = $('tap-glasses');
+    wrap.innerHTML = '';
+    for (let i = 1; i <= n; i++) {
+      const g = document.createElement('button');
+      g.type = 'button';
+      g.className = `glass${i <= qty ? ' on' : ''}`;
+      g.setAttribute('aria-label', `${i} pils`);
+      g.innerHTML = '<span class="g-beer"></span><span class="g-foam"></span>';
+      g.addEventListener('click', () => {
+        if (filling) return;
+        qty = i;
+        if (window.sfx) sfx.play('tap');
+        renderGlasses();
+      });
+      wrap.appendChild(g);
+    }
+    $('th-text').textContent = `🍺 Hold inne for å tappe ${qty} pils`;
   }
 
   function render() {
@@ -44,7 +66,7 @@
     $('won-info').textContent = total
       ? `Du har vunnet ${total} pils totalt: ${w.wheel} fra lykkehjulet, ${w.tickets} fra loddtrekningen, ${w.slot} fra automaten og ${w.task || 0} fra oppgaver.`
       : 'Du har ikke vunnet noen pils ennå. Prøv lykkehjulet eller automaten!';
-    renderQty();
+    renderGlasses();
 
     const ul = $('orders');
     ul.innerHTML = '';
@@ -100,25 +122,84 @@
     await refresh();
   }
 
-  function order(pay) {
+  function order() {
     act(async () => {
-      await api('/api/bar/order', { qty, pay, note: $('note').value });
-      showMsg(`🍻 Bestilt ${qty} pils! Spillmesteren kommer med den til bordet.`, 'win');
+      const n = qty;
+      await api('/api/bar/order', { qty: n, pay: 'credit', note: $('note').value });
+      showMsg(`🍻 Skål! ${n} pils er bestilt. Spillmesteren kommer med ${n > 1 ? 'dem' : 'den'} til bordet.`, 'win');
       slideBeer();
       if (window.sfx) sfx.play('cheers');
       qty = 1;
     });
   }
 
-  $('qty-minus').addEventListener('click', () => {
-    qty = Math.max(1, qty - 1);
-    renderQty();
+  // ---------- Hold inne kranen: glassene fylles opp, og når de er fulle bestilles pilsen ----------
+  const FILL_MS = 1300;
+  let filling = null;
+  function startFill(e) {
+    if (e) e.preventDefault();
+    if (filling || busy || !data || !data.me || data.me.beersOwed < 1) return;
+    const glasses = [...document.querySelectorAll('#tap-glasses .glass.on')];
+    const start = performance.now();
+    const total = FILL_MS + (glasses.length - 1) * 350;
+    $('tap-handle').classList.add('pouring');
+    $('th-text').textContent = '🍺 Tapper …';
+    let lastSound = 0;
+    filling = { raf: 0 };
+    (function frame(now) {
+      const p = Math.min(1, (now - start) / total);
+      $('th-fill').style.width = `${p * 100}%`;
+      glasses.forEach((g, i) => {
+        const share = 1 / glasses.length;
+        const gp = Math.max(0, Math.min(1, (p - i * share) / share));
+        g.style.setProperty('--fill', gp);
+      });
+      // Litt sildring mens det tappes
+      if (window.sfx && now - lastSound > 140) {
+        lastSound = now;
+        sfx.play('pour');
+      }
+      if (p >= 1) {
+        stopFill(true);
+        return;
+      }
+      filling.raf = requestAnimationFrame(frame);
+    })(start);
+  }
+  function stopFill(done) {
+    if (!filling) return;
+    cancelAnimationFrame(filling.raf);
+    filling = null;
+    $('tap-handle').classList.remove('pouring');
+    if (done === true) {
+      order();
+      return;
+    }
+    // Slapp for tidlig: glassene renner tilbake
+    $('th-fill').style.width = '0%';
+    document.querySelectorAll('#tap-glasses .glass').forEach((g) => g.style.setProperty('--fill', 0));
+    $('th-text').textContent = `🍺 Hold inne for å tappe ${qty} pils`;
+    showMsg('Hold inne kranen helt til glassene er fulle 🍺');
+  }
+  $('tap-handle').addEventListener('pointerdown', startFill);
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) => $('tap-handle').addEventListener(ev, () => stopFill(false)));
+  $('tap-handle').addEventListener('contextmenu', (e) => e.preventDefault());
+  // Tastatur: Enter/mellomrom bestiller med en gang
+  $('tap-handle').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      order();
+    }
   });
-  $('qty-plus').addEventListener('click', () => {
-    qty = Math.min(data.maxPerOrder, qty + 1);
-    renderQty();
+
+  // Det tomme glasset vingler litt trist når man trykker på det
+  $('be-glass').addEventListener('click', () => {
+    const g = $('be-glass');
+    g.classList.remove('wobble');
+    void g.offsetWidth;
+    g.classList.add('wobble');
+    if (window.sfx) sfx.play('sad');
   });
-  $('order-credit').addEventListener('click', () => order('credit'));
 
   // ---------- Baren som scene: bartender og krakker ----------
   let admins = [];

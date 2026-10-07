@@ -248,20 +248,32 @@
         <p id="bar-crowd" class="note center bar-crowd"></p>
 
         <div id="bar">
-          <h2>🍻 Bestill pils</h2>
-          <p class="note">Spillmesteren kommer med pilsen til bordet ditt.</p>
+          <!-- Tapp pilsen: velg glass og hold inne kranen -->
+          <div id="bar-order" class="tap-order">
+            <h2>🍻 Tapp pilsen din</h2>
+            <p class="note tap-help">1. Trykk på glassene for å velge hvor mange · 2. Hold inne kranen til de er fulle</p>
+            <div class="tap-glasses" id="tap-glasses"></div>
+            <input id="note" type="text" maxlength="100" placeholder="Hvor sitter du? (valgfritt)" class="search bar-note">
+            <button type="button" id="tap-handle" class="tap-handle">
+              <span class="th-fill" id="th-fill"></span>
+              <span class="th-text" id="th-text">🍺 Hold inne for å tappe</span>
+            </button>
+            <p class="note center">Spillmesteren får beskjed og kommer med pilsen til bordet ditt.</p>
+          </div>
+          <!-- Ingen pils til gode: kjipt! -->
+          <div id="bar-empty" class="bar-empty hidden">
+            <button type="button" class="be-glass" id="be-glass" aria-label="Tomt glass"><i></i></button>
+            <h2>Kjipt … 😢</h2>
+            <p>Du har ingen pils til gode. Glasset er tomt, og spillmesteren ser skuffet på deg.</p>
+            <p class="note">Men det er lett å fikse:</p>
+            <div class="be-actions">
+              <a href="/kasino.html#hjul">🎡 Spinn lykkehjulet</a>
+              <a href="/kasino.html#automat">🎰 Prøv automaten</a>
+              <a href="/oppgaver.html">🎯 Løs en oppgave</a>
+              <a href="/arena.html">⚔️ Vinn en i arenaen</a>
+            </div>
+          </div>
           <p id="won-info" class="note"></p>
-          <div class="stepper center-stepper">
-            <span class="muted">Antall</span>
-            <button type="button" class="secondary" id="qty-minus">−</button>
-            <span id="qty">1</span>
-            <button type="button" class="secondary" id="qty-plus">+</button>
-          </div>
-          <input id="note" type="text" maxlength="100" placeholder="Hvor sitter du? (valgfritt)" class="search bar-note">
-          <div class="bar-buttons">
-            <button id="order-credit" class="big">🍺 Bruk pils til gode</button>
-          </div>
-          <p class="note">Pils vinner du på lykkehjulet, automaten og i loddtrekningen. De kan ikke kjøpes for cash.</p>
           <p id="msg" class="result"></p>
           <h3>Dine bestillinger</h3>
           <ul id="orders" class="order-list"></ul>
