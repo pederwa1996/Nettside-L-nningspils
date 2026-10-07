@@ -231,6 +231,7 @@
         delete drafts[t.id];
         openForm = null;
         showMsg(`Levert! «${t.title}» venter nå på godkjenning 🎯`, 'win');
+        if (window.sfx) sfx.play('send');
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (err) {
         alert(err.message);

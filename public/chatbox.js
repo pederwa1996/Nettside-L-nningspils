@@ -194,6 +194,7 @@
       if (!res.ok) throw new Error(json.error);
       messages.push(json.message);
       addMessage(json.message);
+      if (window.sfx) sfx.play('send');
       scrollDown();
       markRead();
     } catch (err) {
@@ -214,7 +215,10 @@
       markRead();
     } else {
       renderBadge();
-      if (m.name !== me) showPeek(m);
+      if (m.name !== me) {
+        showPeek(m);
+        if (window.sfx) sfx.play('pop');
+      }
     }
   });
   onLive('chat-reload', () => bubble && load());

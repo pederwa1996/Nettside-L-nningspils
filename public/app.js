@@ -378,6 +378,7 @@ function feedItem(a, fresh = false) {
   like.addEventListener('click', async () => {
     try {
       const r = await api('/api/react/like', { id: a.id });
+      if (window.sfx && r && !a.liked) sfx.play('like');
       Object.assign(a, r.activity);
       const next = feedItem(a);
       if (a.liked) next.querySelector('.wi-like').classList.add('pop');
@@ -589,6 +590,7 @@ $('wallpost-form').addEventListener('submit', async (e) => {
   if (!input.value.trim()) return;
   try {
     await api('/api/wallposts', { text: input.value });
+    if (window.sfx) sfx.play('send');
     input.value = '';
     loadWallPosts();
   } catch (err) {
@@ -607,6 +609,7 @@ $('suggest-form').addEventListener('submit', async (e) => {
     const kind = (document.querySelector('input[name="suggest-kind"]:checked') || {}).value;
     const r = await api('/api/suggestions', { kind, text: $('suggest-text').value });
     $('suggest-text').value = '';
+    if (window.sfx) sfx.play('send');
     msg.textContent = r.rewarded ? `Takk! 💡 Forslaget er sendt, og du fikk ${r.spins} spinn og ${r.cash} cash 🎉` : 'Takk! 💡 Forslaget er sendt til spillmesteren.';
     msg.className = 'result win';
     if (r.me) {

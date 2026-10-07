@@ -105,6 +105,7 @@
       await api('/api/bar/order', { qty, pay, note: $('note').value });
       showMsg(`🍻 Bestilt ${qty} pils! Spillmesteren kommer med den til bordet.`, 'win');
       slideBeer();
+      if (window.sfx) sfx.play('cheers');
       qty = 1;
     });
   }

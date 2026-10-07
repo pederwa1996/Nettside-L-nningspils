@@ -2018,7 +2018,7 @@ body.minimal a { color: var(--gold); }
 body.minimal input, body.minimal textarea, body.minimal select {
   background: #111114 !important; color: var(--text) !important; border: 1px solid var(--line) !important; border-radius: 10px !important; box-shadow: none !important;
 }
-body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.ag):not(.sg) {
+body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.sfx-toggle):not(.ag):not(.sg) {
   background: var(--gold) !important; color: #141414 !important; border: 0 !important; box-shadow: none !important; text-shadow: none !important; border-radius: 10px !important; font-family: inherit !important;
 }
 body.minimal button.secondary { background: #24242a !important; color: var(--text) !important; border: 1px solid var(--line) !important; box-shadow: none !important; }
@@ -2133,7 +2133,7 @@ body.minimal {
 }
 body.minimal .card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important; }
 body.minimal input, body.minimal textarea, body.minimal select { background: #fff !important; }
-body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.ag):not(.sg) {
+body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.sfx-toggle):not(.ag):not(.sg) {
   background: #f5b301 !important; color: #1d1c1a !important;
 }
 body.minimal button.secondary { background: var(--soft) !important; color: var(--text) !important; border-color: var(--line) !important; }
@@ -2877,3 +2877,7 @@ body.kasino .casino-games .tab.cg { min-height: 0; padding: 16px 3px 7px !import
   background: rgba(10, 10, 20, 0.7) !important; border: 2px solid rgba(249, 226, 156, 0.6) !important; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
 }
 body.kasino:has(.sfx-toggle) .hero { padding-top: 52px; }
+/* 🔊-knappen på de lyse sidene */
+body.minimal .sfx-toggle { background: #fff !important; border: 1px solid var(--line) !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12) !important; font-size: 0.95rem !important; }
+body.minimal:not(.home):has(.sfx-toggle) .hero { padding-top: 54px; }
+body:has(.sfx-toggle):not(:has(.hero)) main { padding-top: 50px; }

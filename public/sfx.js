@@ -1,6 +1,6 @@
 'use strict';
 
-// Små, rolige lydeffekter i kasinoet, laget med Web Audio (ingen lydfiler).
+// Små, rolige lydeffekter på hele siden, laget med Web Audio (ingen lydfiler).
 //   sfx.play('chip' | 'card' | 'tick' | 'lever' | 'reelTick' | 'reelStop' | 'coin' | 'ballDrop' | 'skull' | 'tap')
 //   sfx.follow(element, stepDeg, ms, sound)  – lyd hver gang et roterende element passerer et felt
 //   sfx.ballRoll(ms)                          – kula som ruller i rouletten
@@ -95,6 +95,39 @@
     skull: () => tone(220, { dur: 0.3, type: 'sine', vol: 0.06, to: 140 }),
     // Vanlig knappetrykk
     tap: () => tone(700, { dur: 0.03, type: 'triangle', vol: 0.025 }),
+
+    // ---- Resten av siden ----
+    // Gjennom en dør til en ny side: et mykt «whoosh» oppover
+    door: () => {
+      noise(0.18, { freq: 500, to: 2400, q: 0.9, vol: 0.05 });
+      tone(520, { t: 0.04, dur: 0.12, type: 'sine', vol: 0.03, to: 880 });
+    },
+    // Hjem / tilbake: samme whoosh, men nedover
+    back: () => {
+      noise(0.18, { freq: 2400, to: 500, q: 0.9, vol: 0.05 });
+      tone(880, { t: 0.03, dur: 0.12, type: 'sine', vol: 0.03, to: 520 });
+    },
+    // Nytt varsel: en liten to-tone bjelle
+    notify: () => {
+      tone(988, { dur: 0.18, type: 'sine', vol: 0.05 });
+      tone(1319, { t: 0.11, dur: 0.3, type: 'sine', vol: 0.045 });
+    },
+    // Pils bestilt: to glass som klirrer + litt skum
+    cheers: () => {
+      tone(2093, { dur: 0.25, type: 'sine', vol: 0.035 });
+      tone(2637, { t: 0.005, dur: 0.22, type: 'sine', vol: 0.025 });
+      tone(2217, { t: 0.09, dur: 0.3, type: 'sine', vol: 0.03 });
+      noise(0.5, { t: 0.15, freq: 6000, q: 0.6, vol: 0.012 });
+    },
+    // Sendt (chat, innlegg, forslag, levert oppgave): kort blipp oppover
+    send: () => tone(660, { dur: 0.09, type: 'triangle', vol: 0.04, to: 1100 }),
+    // Ny melding fra andre: liten «pop»
+    pop: () => tone(520, { dur: 0.07, type: 'sine', vol: 0.05, to: 780 }),
+    // Lik: et lite, lyst pling
+    like: () => {
+      tone(1175, { dur: 0.08, type: 'triangle', vol: 0.03 });
+      tone(1568, { t: 0.05, dur: 0.12, type: 'triangle', vol: 0.03 });
+    },
   };
 
   let lastTick = 0;
@@ -180,6 +213,26 @@
 
   // Nettlesere tillater bare lyd etter at man har trykket på siden
   document.addEventListener('pointerdown', ctx, { once: true });
+
+  // Lenker til en annen side: spill «dør»-lyden og vent et øyeblikk så den rekker å høres
+  document.addEventListener('click', (e) => {
+    if (muted || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest && e.target.closest('a[href]');
+    if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+    const url = new URL(a.href, location.href);
+    if (url.origin !== location.origin || url.pathname.startsWith('/media/')) return;
+    const samePage = url.pathname === location.pathname && url.search === location.search;
+    if (samePage) return; // bare et anker på samme side
+    const home = url.pathname === '/' || url.pathname === '/index.html';
+    play(home ? 'back' : 'door');
+    e.preventDefault();
+    setTimeout(() => (location.href = a.href), 130);
+  });
+
+  // Faner og små knapper rundt omkring: et svakt klikk
+  document.addEventListener('click', (e) => {
+    if (e.target.closest && e.target.closest('.hs-tab, .task-cat, .ptab, .ff, .partner-chip, .suggest-kinds label, .auth-tab')) play('tap');
+  });
 
   // Spill en lyd når et antall øker (nye kort på bordet, flere sjetonger i potten)
   const counts = {};

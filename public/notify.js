@@ -93,6 +93,7 @@
     toasts.appendChild(t);
     setTimeout(() => t.remove(), 6000);
     if (navigator.vibrate) navigator.vibrate(120);
+    if (window.sfx) sfx.play('notify');
     bubble.classList.remove('pulse');
     void bubble.offsetWidth;
     bubble.classList.add('pulse');
