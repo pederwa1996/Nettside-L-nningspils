@@ -32,6 +32,9 @@ const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_STORIES_PER_PERSON = 20;
 const CHAT_HISTORY = 300;
 // Kasinoet bruker flus (penger). Alle starter med START_FLUS.
+// Spillmesterens budsjett i kroner, og hva én pils koster. Kan endres i admin.
+const BUDGET_KR = Number(process.env.BUDGET_KR) || 1800;
+const BEER_PRICE_KR = Number(process.env.BEER_PRICE_KR) || 59;
 const START_FLUS = process.env.START_FLUS !== undefined ? Number(process.env.START_FLUS) : 500; // «cash» i appen
 const CASINO_MIN_BET = 10;
 const CASINO_MAX_BET = Number(process.env.CASINO_MAX_BET) || 200;
@@ -46,7 +49,7 @@ const MAX_PENDING_ORDERS = 3;
 
 // ---- Lagring ----
 function freshState() {
-  return { startFlusGiven: START_FLUS, participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, poker: freshPoker() };
+  return { startFlusGiven: START_FLUS, budget: { total: BUDGET_KR, price: BEER_PRICE_KR }, participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, poker: freshPoker() };
 }
 
 function freshPoker() {
@@ -101,6 +104,8 @@ function normalizeState(s) {
   const given = (s && s.startFlusGiven) ?? 100; // lagret før dette fantes = 100
   if (START_FLUS > given) out.participants.forEach((p) => (p.flus = (p.flus || 0) + START_FLUS - given));
   out.startFlusGiven = Math.max(given, START_FLUS);
+  // Budsjett i ekte kroner (kortet spillmesteren betaler pilsen med)
+  out.budget = { total: BUDGET_KR, price: BEER_PRICE_KR, ...(s && s.budget) };
   out.casinoLog = out.casinoLog.filter((e) => e.won !== undefined); // gamle oppføringer hadde annet format
   if (!s.activity) out.activity = backfillActivity(out);
   // Blackjack-hender fra før kasinoet gikk over til flus ble spilt med spinn: gi innsatsen tilbake
@@ -498,6 +503,30 @@ function beersOwed(p) {
     .filter((o) => o.name === p.name && o.pay === 'credit' && o.status !== 'cancelled')
     .reduce((sum, o) => sum + o.qty, 0);
   return Math.max(0, w.wheel + w.tickets + w.slot - used);
+}
+
+// Budsjett: brukt = leverte pils (kroner lagres på bestillingen når den leveres).
+// «I omløp» = pils til gode + bestillinger som venter, altså mulige utgifter.
+function budgetView() {
+  const b = state.budget;
+  const delivered = state.orders.filter((o) => o.status === 'delivered' && o.kr !== undefined);
+  const spent = delivered.reduce((sum, o) => sum + o.kr, 0);
+  const owed = state.participants.reduce((sum, p) => sum + beersOwed(p), 0);
+  const pending = state.orders.filter((o) => o.status === 'pending').reduce((sum, o) => sum + o.qty, 0);
+  const remaining = b.total - spent;
+  const potential = (owed + pending) * b.price;
+  return {
+    total: b.total,
+    price: b.price,
+    spent,
+    remaining,
+    beersBought: delivered.reduce((sum, o) => sum + o.qty, 0),
+    owed,
+    pending,
+    potential,
+    afterAll: remaining - potential,
+    affordable: Math.max(0, Math.floor(remaining / b.price)),
+  };
 }
 
 function orderView(o) {
@@ -1882,7 +1911,23 @@ const routes = {
     sendJson(res, 200, {
       pending: state.orders.filter((o) => o.status === 'pending').map(withAvatar),
       recent: state.orders.filter((o) => o.status !== 'pending').slice(-10).reverse().map(withAvatar),
+      budget: budgetView(),
     });
+  },
+
+  'POST /api/admin/budget': (req, res, body) => {
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
+    if (body.total !== undefined || body.price !== undefined) {
+      const total = Math.round(Number(body.total ?? state.budget.total));
+      const price = Math.round(Number(body.price ?? state.budget.price));
+      if (!Number.isFinite(total) || total < 0 || total > 1_000_000) return sendJson(res, 400, { error: 'Ugyldig budsjett.' });
+      if (!Number.isFinite(price) || price < 1 || price > 1000) return sendJson(res, 400, { error: 'Ugyldig pris per pils.' });
+      state.budget.total = total;
+      state.budget.price = price;
+      saveState();
+      broadcast('orders', {});
+    }
+    sendJson(res, 200, { budget: budgetView() });
   },
 
   'POST /api/admin/order-status': (req, res, body) => {
@@ -1891,6 +1936,7 @@ const routes = {
     if (!o) return sendJson(res, 400, { error: 'Fant ikke bestillingen.' });
     if (body.status === 'delivered') {
       o.status = 'delivered';
+      o.kr = o.qty * state.budget.price; // trekkes fra budsjettet
       notify(o.name, '🍺', `Spillmesteren har levert ${o.qty > 1 ? `${o.qty} pils` : 'pilsen'} din. Skål! 🍻`, { url: '/kasino.html#baren' });
     } else if (body.status === 'cancelled') {
       o.status = 'cancelled';
@@ -2060,7 +2106,9 @@ const routes = {
 
   'POST /api/admin/reset-all': (req, res, body) => {
     if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
-    state = freshState();
+    // Budsjettet er ekte penger og beholdes, men leveringene nullstilles med bestillingene
+    const budget = { ...state.budget, total: budgetView().remaining };
+    state = { ...freshState(), budget };
     saveState();
     fs.rmSync(MEDIA_DIR, { recursive: true, force: true });
     if (supabase.enabled) supabase.deleteAllImages();

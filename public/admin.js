@@ -28,7 +28,42 @@ function avatarImg(url) {
   return img;
 }
 
+// ---- Budsjett i kroner ----
+const kr = (n) => `${Math.round(n).toLocaleString('no-NO')} kr`;
+
+function renderBudget(b) {
+  const pct = b.total > 0 ? Math.max(0, Math.min(100, (b.remaining / b.total) * 100)) : 0;
+  const potPct = b.total > 0 ? Math.max(0, Math.min(pct, (b.potential / b.total) * 100)) : 0;
+  $('budget').innerHTML = `
+    <div class="budget-main${b.remaining < b.price ? ' empty' : ''}">
+      <span class="budget-left">${kr(b.remaining)}</span>
+      <span class="muted">igjen av ${kr(b.total)} · nok til ${b.affordable} pils til</span>
+    </div>
+    <div class="budget-bar" title="Grønt: igjen. Stripete: pils i omløp som kan bli bestilt."><i style="width:${pct}%"></i><b style="width:${potPct}%;left:${pct - potPct}%"></b></div>
+    <div class="budget-rows">
+      <div><span>🍺 Levert</span><b>${b.beersBought} pils · −${kr(b.spent)}</b></div>
+      <div><span>⏳ Bestilt, venter</span><b>${b.pending} pils · ${kr(b.pending * b.price)}</b></div>
+      <div><span>🎟️ Til gode i omløp</span><b>${b.owed} pils · ${kr(b.owed * b.price)}</b></div>
+      <div class="${b.afterAll < 0 ? 'neg' : ''}"><span>📉 Hvis alt løses inn</span><b>${kr(b.afterAll)} igjen</b></div>
+    </div>
+    <p class="note">Pris per pils: ${kr(b.price)}. «I omløp» er mulige utgifter, ikke penger som er brukt.</p>`;
+  $('budget-total').value = b.total;
+  $('budget-price').value = b.price;
+}
+
+$('budget-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    const r = await post('/api/admin/budget', { total: Number($('budget-total').value), price: Number($('budget-price').value) });
+    renderBudget(r.budget);
+    showMsg('Budsjettet er lagret 💳', true);
+  } catch (err) {
+    showMsg(err.message);
+  }
+});
+
 async function load() {
+  post('/api/admin/budget').then((r) => renderBudget(r.budget)).catch(() => {});
   const data = await post('/api/admin/login');
   $('panel').classList.remove('hidden');
   $('count').textContent = data.participants.length;

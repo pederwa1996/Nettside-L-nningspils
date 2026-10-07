@@ -15,6 +15,7 @@
   function start() {
   if (document.querySelector('.admin-bubble')) return;
   let lastCount = null;
+  let budget = null; // kroner igjen på kortet (fra serveren)
   let open = false;
   let audio = null;
 
@@ -27,6 +28,7 @@
   panel.className = 'admin-orders hidden';
   panel.innerHTML = `
     <div class="ao-head"><strong>🍺 Bestillinger</strong><button type="button" class="ao-close" title="Lukk">✕</button></div>
+    <a class="ao-budget" href="/admin.html" title="Budsjett"></a>
     <div class="ao-list"></div>
     <p class="ao-sub">Nylig</p>
     <div class="ao-recent"></div>`;
@@ -108,7 +110,7 @@
       const ok = document.createElement('button');
       ok.type = 'button';
       ok.className = 'small-btn';
-      ok.textContent = '✅ Levert';
+      ok.textContent = budget ? `✅ Levert (−${o.qty * budget.price} kr)` : '✅ Levert';
       ok.addEventListener('click', () => setStatus(o, 'delivered'));
       const no = document.createElement('button');
       no.type = 'button';
@@ -137,6 +139,11 @@
     } catch {
       return;
     }
+    budget = data.budget;
+    const b = data.budget;
+    panel.querySelector('.ao-budget').innerHTML = b
+      ? `💳 <b>${b.remaining.toLocaleString('no-NO')} kr</b> igjen · nok til ${b.affordable} pils<br><small>🎟️ ${b.owed} til gode + ⏳ ${b.pending} bestilt ≈ ${b.potential.toLocaleString('no-NO')} kr</small>`
+      : '';
     const count = data.pending.reduce((sum, o) => sum + o.qty, 0);
     badge.textContent = count;
     badge.classList.toggle('hidden', count === 0);

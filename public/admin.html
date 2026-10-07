@@ -26,6 +26,18 @@
     <section id="panel" class="card hidden">
       <a class="button admin-link" href="/admin-spinn.html">🎰 Gi eller ta spinn</a>
 
+      <h2>💳 Budsjett</h2>
+      <div id="budget" class="budget-box"></div>
+      <details class="tips">
+        <summary>✏️ Endre budsjett eller pris</summary>
+        <form id="budget-form" class="budget-form">
+          <label>Totalbudsjett (kr)<input id="budget-total" type="number" min="0" step="1" inputmode="numeric"></label>
+          <label>Pris per pils (kr)<input id="budget-price" type="number" min="1" step="1" inputmode="numeric"></label>
+          <button type="submit">Lagre</button>
+        </form>
+        <p class="note">Fyller du på kortet, øker du totalbudsjettet med det du fylte på. Hver pils du markerer som levert trekkes fra med prisen som gjelder da.</p>
+      </details>
+
       <h2>Loddtrekning</h2>
       <button id="draw-btn" class="big">🎲 Kjør loddtrekning</button>
       <div id="draw-result"></div>

@@ -1974,3 +1974,19 @@ body.inv-open #profile > section:not(.profile-card):not(#inventory) { display: n
 .guide-pop.hidden { display: none; }
 .guide-pop-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; color: #ffd977; }
 .guide-x { width: 30px; height: 30px; padding: 0 !important; border-radius: 50% !important; background: rgba(255, 255, 255, 0.1) !important; color: #fff !important; border: 0 !important; box-shadow: none !important; }
+
+/* 💳 Budsjett (admin) */
+.budget-box { margin-bottom: 8px; }
+.budget-main { display: flex; flex-direction: column; align-items: center; margin-bottom: 8px; }
+.budget-left { font-size: 2.4rem; font-weight: 900; color: #39ff6a; font-variant-numeric: tabular-nums; }
+.budget-main.empty .budget-left { color: #ff4d6d; }
+.budget-bar { position: relative; height: 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; margin-bottom: 10px; }
+.budget-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #1fbf5a, #39ff6a); border-radius: 999px; }
+.budget-bar b { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(45deg, rgba(255, 180, 60, 0.9) 0 6px, rgba(255, 120, 40, 0.9) 6px 12px); }
+.budget-rows { display: flex; flex-direction: column; gap: 4px; }
+.budget-rows div { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 0.9rem; }
+.budget-rows .neg b { color: #ff4d6d; }
+.budget-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.budget-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; flex: 1; min-width: 120px; }
+.ao-budget { display: block; margin-bottom: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(57, 255, 106, 0.1); border: 1px solid rgba(57, 255, 106, 0.35); color: inherit !important; text-decoration: none; font-size: 0.9rem; line-height: 1.35; }
+.ao-budget b { color: #39ff6a; }
