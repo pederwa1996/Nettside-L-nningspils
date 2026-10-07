@@ -2704,19 +2704,13 @@ body.minimal.home .home-hero h1 { margin: 2px 0 0; font-size: 1.6rem !important;
 .me-hi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-who-text small { font-size: 0.68rem; font-weight: 700; color: #b07800; }
 
-/* ♠️ Pokerbordet: bare en liten stripe */
-.poker-strip {
-  display: flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 6px 10px; border-radius: 999px;
-  background: linear-gradient(90deg, #0f5a35, #146b40); color: #e8ffe9 !important; text-decoration: none !important;
-  font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-}
-.ps-icon { flex: none; font-size: 1rem; }
-.ps-body { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; }
-.ps-text { overflow: hidden; text-overflow: ellipsis; }
-.ps-stack { display: inline-flex; flex: none; }
-.ps-stack .avatar { border: 1.5px solid #146b40; }
-.ps-stack .avatar + .avatar { margin-left: -7px; }
-.ps-go { flex: none; padding: 2px 9px; border-radius: 999px; background: #ffd34d; color: #2a1500; font-size: 0.72rem; font-weight: 900; }
+/* ♠️ Pokerbordet som en liten detalj i kasino-døren */
+.go-poker { position: relative; z-index: 1; display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 0.64rem; font-weight: 800; color: #fff; opacity: 0.95; white-space: nowrap; overflow: hidden; }
+.go-poker.hidden { display: none; }
+.gp-stack { display: inline-flex; flex: none; }
+.gp-stack .avatar { border: 1px solid #a8152f; }
+.gp-stack .avatar + .avatar { margin-left: -5px; }
+.gp-text { overflow: hidden; text-overflow: ellipsis; }
 
 /* 📡 Hva skjer: faner */
 .hs-tabs { display: flex; gap: 4px; margin: 2px 0 12px; }

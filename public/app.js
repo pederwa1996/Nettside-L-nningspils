@@ -455,28 +455,25 @@ async function loadPoker() {
   } catch { /* ignorer */ }
 }
 
-// Pokerbordet som en liten stripe: små avatarer ved bordet + én linje status
+// Pokerbordet som en liten detalj i kasino-døren: hvem som spiller og potten
 function renderPoker() {
   const t = pokerTable;
-  if (!t) return;
-  const box = $('poker-live-body');
+  const box = $('go-poker');
+  if (!t || !box) return;
   box.innerHTML = '';
-  const seated = t.seats.map((s, i) => (s ? { ...s, seat: i } : null)).filter(Boolean);
-  const watching = (pokerRooms['kasino-poker'] || []).filter((x) => !seated.some((s) => s.name === x.name));
-  if (seated.length) {
-    const stack = el('span', 'ps-stack');
-    seated.slice(0, 5).forEach((s) => stack.appendChild(avatarEl(s.avatar, s.name, 22)));
-    box.appendChild(stack);
+  const seated = t.seats.filter(Boolean);
+  if (!seated.length) {
+    box.classList.add('hidden');
+    return;
   }
-  let status;
-  if (!seated.length) status = watching.length ? `Poker · ${watching.length} ser på` : 'Poker · ledig bord';
-  else if (t.phase === 'result' && t.result) status = `🏆 ${t.result.winners.map((w) => w.name.split(' ')[0]).join(' & ')} vant ${t.result.winners[0].amount}`;
-  else status = `${seated.length} spiller${t.phase !== 'waiting' ? ` · pott ${t.pot}` : ''}${watching.length ? ` · 👀 ${watching.length}` : ''}`;
-  box.appendChild(el('span', 'ps-text', status));
-  const mine = myName() && t.seats.some((s) => s && s.name === myName());
-  $('poker-live-link').textContent = mine ? 'Til bordet ›' : seated.length < 9 ? 'Sett deg ›' : 'Se på ›';
+  box.classList.remove('hidden');
+  const stack = el('span', 'gp-stack');
+  seated.slice(0, 4).forEach((s) => stack.appendChild(avatarEl(s.avatar, s.name, 16)));
+  const text = t.phase === 'result' && t.result
+    ? `🏆 ${t.result.winners[0].name.split(' ')[0]} vant`
+    : `${seated.length} i poker`;
+  box.append(el('span', 'gp-suit', '♠️'), stack, el('span', 'gp-text', text));
 }
-
 // ---------- Hva skjer: faner ----------
 let hsTab = 'now';
 document.querySelectorAll('.hs-tab').forEach((b) => b.addEventListener('click', () => {
