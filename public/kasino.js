@@ -29,16 +29,15 @@
     $('tw-spins').textContent = `${me.spinsLeft} spinn`;
     if (!wheelSpinning) {
       $('spin-btn').disabled = me.spinsLeft <= 0;
-      $('spin-btn').textContent = me.spinsLeft > 0 ? `Spinn! 🎡 (${me.spinsLeft} igjen)` : 'Tom for spinn · kjøp flere under 👇';
+      $('spin-btn').textContent = me.spinsLeft > 0 ? `Spinn! 🎡 (${me.spinsLeft} igjen)` : 'Tom for spinn · vinn flere på automaten 🎰';
     }
-    renderPacks();
     $('spin-total').textContent = me.spinWins ? `Du har vunnet ${me.spinWins} øl på hjulet totalt 🍺` : '';
   }
   // Bordene (blackjack, roulette, poker) oppdaterer lommeboken øverst
   window.casinoSetWallet = (me) => data && me && setWallet(me);
 
   // ---------- Automat ----------
-  const SYMBOLS = ['🍒', '🍋', '🍊', '🔔', '⭐', '7️⃣', '💎', '🍺'];
+  const SYMBOLS = ['🍒', '🍋', '🍊', '🔔', '⭐', '7️⃣', '💎', '🍺', '🎡'];
   const SYMBOL_H = 58;
   const ROWS = 3;
   const strips = [...document.querySelectorAll('.reel .strip')];
@@ -119,14 +118,18 @@
       await spinReels(r.reels);
       setWallet(r.me);
       markLines(r.lines);
-      const lineText = r.lines.map((l) => `Linje ${l.row + 1}: ${l.combo} ${l.beer ? '= 1 pils' : `+${l.flus}`}`).join(' · ');
+      const lineText = r.lines.map((l) => `Linje ${l.row + 1}: ${l.combo} ${l.beer ? '= 1 pils' : l.spins ? `+${l.spins} spinn` : `+${l.flus}`}`).join(' · ');
       if (r.beer) {
         $('slot-result').textContent = `🍺🍺🍺 TRE PILS PÅ RAD! Du har vunnet en pils! ${lineText}`;
         $('slot-result').classList.add('win');
         document.querySelector('.slot-machine').classList.add('jackpot');
         beerWin(`🍺🍺🍺 Tre pils på rad på automaten!${r.flus ? ` Pluss ${r.flus} cash.` : ''}`, 'v_jackpot');
+      } else if (r.spins && !r.flus) {
+        $('slot-result').textContent = `🎡 Du vant ${r.spins} spinn til lykkehjulet! ${lineText}`;
+        $('slot-result').classList.add('win');
+        celebrate({ tier: r.spins >= 3 ? 'big' : 'win', icon: '🎡', title: `+${r.spins} SPINN!`, sub: 'Bruk dem på lykkehjulet' });
       } else if (r.flus) {
-        $('slot-result').textContent = `🎉 Du vant ${flusWord(r.flus)}! ${lineText}`;
+        $('slot-result').textContent = `🎉 Du vant ${flusWord(r.flus)}${r.spins ? ` og ${r.spins} spinn` : ''}! ${lineText}`;
         $('slot-result').classList.add('win');
         const best = r.lines.reduce((a, b) => (b.flus > a.flus ? b : a));
         celebrate({ tier: r.flus >= 200 ? 'big' : 'win', amount: r.flus, icon: best.combo.slice(0, 2), title: r.lines.length > 1 ? `${r.lines.length} LINJER!` : 'DU VANT!', sub: r.lines.map((l) => `${l.combo} ${l.label} +${l.flus}`).join(' · ') });
@@ -191,12 +194,12 @@
       tr.innerHTML = '<td><span class="pt-combo"></span><small class="pt-label"></small></td><td class="pt-prize"></td><td class="pt-odds"><b></b><small></small></td>';
       tr.querySelector('.pt-combo').textContent = o.combo;
       tr.querySelector('.pt-label').textContent = o.label;
-      tr.querySelector('.pt-prize').textContent = o.beer ? '1 pils 🍺' : `${o.flus} cash`;
+      tr.querySelector('.pt-prize').textContent = o.beer ? '1 pils 🍺' : o.spins ? `${o.spins} spinn 🎡` : `${o.flus} cash`;
       tr.querySelector('.pt-odds b').textContent = pct(o.pPull);
       tr.querySelector('.pt-odds small').textContent = oneIn(o.pPull);
       tb.appendChild(tr);
     });
-    if (odds) $('slot-odds').textContent = `Gevinst på minst én linje: ${pct(odds.anyWin)} av trekkene. Snittgevinst: ca. ${Math.round(odds.avgCash)} cash per trekk (prisen er ${data.spinPrice}).`;
+    if (odds) $('slot-odds').textContent = `Gevinst på minst én linje: ${pct(odds.anyWin)} av trekkene. Snittgevinst: ca. ${Math.round(odds.avgCash)} cash${odds.avgSpins ? ` og ${String(Math.round(odds.avgSpins * 100) / 100).replace('.', ',')} spinn` : ''} per trekk (prisen er ${data.spinPrice} cash).`;
   }
 
   // Pils vunnet: størst feiring, med snarvei til baren
@@ -338,46 +341,6 @@
     $('wheel').style.transform = `rotate(${wheelRotation}deg)`;
     if (window.sfx) sfx.follow($('wheel'), segDeg, 5300); // pila tikker mot hver pinne
     return sleep(5200);
-  }
-
-  // ---------- Kjøp spinn ----------
-  let buying = false;
-  function renderPacks() {
-    const wrap = $('spin-packs');
-    const packs = data.spinPacks || [];
-    if (!packs.length) return;
-    const base = packs[0].price / packs[0].n;
-    wrap.innerHTML = '';
-    packs.forEach((pk) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'spin-pack';
-      const save = Math.round((1 - pk.price / (base * pk.n)) * 100);
-      b.innerHTML = `<b>${pk.n} spinn</b><span>${pk.price} cash</span>${save > 0 ? `<em>−${save} %</em>` : `<small>${pk.price} per spinn</small>`}`;
-      b.disabled = buying || !data.me || data.me.flus < pk.price;
-      b.addEventListener('click', () => buyPack(pk));
-      wrap.appendChild(b);
-    });
-    // Tom for spinn: vis butikken med en gang
-    if (data.me && data.me.spinsLeft <= 0) $('spin-shop').open = true;
-  }
-
-  async function buyPack(pk) {
-    if (buying) return;
-    buying = true;
-    try {
-      const r = await api('/api/spins/buy', { n: pk.n });
-      $('shop-msg').textContent = `✅ Du kjøpte ${r.bought} spinn for ${pk.price} cash. Lykke til! 🍀`;
-      $('shop-msg').className = 'result win';
-      if (window.sfx) sfx.play('coin');
-      buying = false;
-      setWallet(r.me);
-    } catch (err) {
-      $('shop-msg').textContent = err.message;
-      $('shop-msg').className = 'result lose';
-      buying = false;
-      setWallet(data.me);
-    }
   }
 
   async function onWheelSpin() {

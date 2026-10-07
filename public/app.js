@@ -410,7 +410,7 @@ function renderNextStep(me, settings) {
   if (me.beersOwed > 0) s = ['🍻', `Du har ${me.beersOwed} pils til gode!`, 'Trykk her for å løse inn i baren – spillmesteren kommer med den', '/baren.html', 'beer'];
   else if (challenges) s = ['⚔️', `Du er utfordret (${challenges})`, 'Svar på utfordringen og vinn spinn, cash eller pils', data.incomingArena ? '/pvp.html#terninger' : data.incomingDuels ? '/pvp.html#duell' : '/pvp.html#mogg', 'pvp'];
   else if (me.spinsLeft > 0) s = ['🎡', `Spinn lykkehjulet (${me.spinsLeft} spinn igjen)`, `${Math.round(settings.spinWinChance * 100)} % sjanse for en ekte pils hver gang`, '/kasino.html#hjul', 'spin'];
-  else if (me.flus >= 100) s = ['🛒', 'Tom for spinn? Kjøp flere', 'Spinn til lykkehjulet fra 100 cash – billigere i pakker', '/kasino.html#hjul', 'spin'];
+  else if (me.flus >= 50) s = ['🎰', 'Tom for spinn? Prøv automaten', 'To eller tre 🎡 på en linje gir spinn til lykkehjulet', '/kasino.html#automat', 'spin'];
   else if (data.openTasks) s = ['🎯', 'Tom for spinn? Løs en oppgave', `${data.openTasks} ledige oppgaver gir spinn, cash eller pils`, '/oppgaver.html', 'tasks'];
   else s = ['⚔️', 'Utfordre noen i arenaen', 'Spill om cash, spinn eller pils', '/pvp.html#terninger', 'pvp'];
   const [icon, title, sub, href, kind] = s;
@@ -433,7 +433,7 @@ function renderGoTiles() {
     $(id).classList.toggle('hot', !!hot);
     $(id).classList.toggle('hidden', !text);
   };
-  if ($('gwb-spins')) $('gwb-spins').textContent = data.me.spinsLeft ? `${data.me.spinsLeft} spinn ›` : 'Kjøp spinn ›';
+  if ($('gwb-spins')) $('gwb-spins').textContent = data.me.spinsLeft ? `${data.me.spinsLeft} spinn ›` : 'Ingen spinn';
   set('go-casino-live', inCasino ? `🟢 ${inCasino} spiller nå` : `${data.me.spinsLeft} spinn · ${data.me.flus} cash`);
   set('go-bar-live', data.me.beersOwed ? `🍺 ${data.me.beersOwed} til gode` : inBar ? `🟢 ${inBar} i baren` : '', data.me.beersOwed);
   set('go-pvp-live', challenges ? `🔔 ${challenges} utfordring${challenges > 1 ? 'er' : ''}` : '', challenges);

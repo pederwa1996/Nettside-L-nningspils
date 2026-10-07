@@ -5,8 +5,7 @@
 // - På hver side: en liten «Slik funker det»-boks. Første gang er den åpen, etterpå
 //   ligger den sammenfoldet øverst og kan åpnes igjen.
 (function () {
-  const S = { spins: 10, cash: 500, chance: 15, price: 50, flappy: 50, taskCash: 30, packs: [{ n: 1, price: 100 }] };
-  const packText = () => S.packs.map((p) => `${p.n} for ${p.price}`).join(', ');
+  const S = { spins: 10, cash: 500, chance: 15, price: 50, flappy: 50, taskCash: 30 };
 
   const PAGES = {
     home: {
@@ -22,10 +21,10 @@
       title: 'Slik funker kasinoet',
       lines: () => [
         `🎡 <b>Lykkehjul:</b> 1 spinn per runde, ${S.chance} % sjanse for en pils, 10 % for 🎡 et gratis spinn, og ellers alltid cash (25–500, 🎰 500 er jackpot). Et lite 💀-felt tar et ekstra spinn.`,
-        `🎰 <b>Automat:</b> ${S.price} cash per trekk, 3 linjer som betaler hver for seg. Tre 🍺 på en linje gir en pils. Se sannsynlighetene under automaten.`,
+        `🎰 <b>Automat:</b> ${S.price} cash per trekk, 3 linjer som betaler hver for seg. Tre 🍺 på en linje gir en pils, og 🎡 gir spinn. Se sannsynlighetene under automaten.`,
         '🃏 <b>Blackjack</b> og ♠️ <b>Poker</b> er felles bord: sett deg på en ledig plass for å spille, ellers ser du på.',
         '🔴 <b>Roulette</b> er ett hjul for alle: første innsats starter nedtellingen, og hjulet spinner for alle samtidig.',
-        `🛒 Spinn kan bare brukes på lykkehjulet. Tom for spinn? Kjøp flere under hjulet: ${packText()}.`,
+        '🎡 Spinn kan bare brukes på lykkehjulet. Tom for spinn? Vinn flere på automaten (🎡🎡 på en linje = 1 spinn, 🎡🎡🎡 = 3), med oppgaver eller i PvP.',
         '🍻 <b>Baren:</b> har du pils til gode, trykk «Bruk pils til gode», så kommer spillmesteren med den til bordet.',
       ],
     },
@@ -176,7 +175,7 @@
     if (document.querySelector('.guide-welcome')) return;
     const steps = [
       ['🍺', 'Vinn ekte pils!', 'Hovedpoenget er å vinne <b>pils til gode</b>, og hver av dem er <b>en ekte pils</b> du får servert her i kveld. Du løser dem inn i <b>Baren</b>, og spillmesteren kommer med pilsen til bordet ditt.'],
-      ['🎡', `${S.spins} spinn og ${S.cash} cash`, `Det er det du starter med. Spinnene bruker du på <b>lykkehjulet</b> (${S.chance} % sjanse for pils). Med cash spiller du automat, roulette, blackjack og poker, og du kan kjøpe flere spinn under hjulet (${S.packs[0].price} cash for ett, billigere i pakker).`],
+      ['🎡', `${S.spins} spinn og ${S.cash} cash`, `Det er det du starter med. Spinnene bruker du på <b>lykkehjulet</b> (${S.chance} % sjanse for pils). Med cash spiller du automat, roulette, blackjack og poker, og du kan vinne flere spinn på automaten.`],
       ['🎯', 'Tjen mer', 'Løs <b>oppgaver</b> for spinn og cash, og utfordre kollegaene i <b>PvP</b> for å vinne spinnene deres.'],
       ['🍻', 'Slik løser du inn', 'Trykk på <b>🍻 Baren</b> på forsiden, trykk «Bruk pils til gode» og skriv gjerne hvor du sitter. <b>Spillmesteren</b> kommer med pilsen til bordet ditt. Skål!'],
     ];
@@ -211,7 +210,6 @@
     S.cash = s.startCash ?? S.cash;
     S.chance = Math.round((s.spinWinChance ?? 0.15) * 100);
     S.price = s.spinPrice ?? S.price;
-    if (s.spinPacks && s.spinPacks.length) S.packs = s.spinPacks;
     S.flappy = s.gameFirstMilestone ?? S.flappy;
     S.taskCash = s.taskCashPerSpin ?? S.taskCash;
     if (!d.me) {
