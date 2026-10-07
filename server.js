@@ -269,7 +269,10 @@ function renameEverywhere(oldName, newName) {
     r.likes = r.likes.map((n) => (n === oldName ? newName : n));
     r.comments.forEach((c) => swap(c, 'name'));
   });
-  state.participants.forEach((p) => (p.notes || []).forEach((n) => swap(n, 'from')));
+  state.participants.forEach((p) => {
+    (p.notes || []).forEach((n) => swap(n, 'from'));
+    (p.guestbook || []).forEach((c) => swap(c, 'from'));
+  });
   state.poker.seats.forEach((x) => swap(x, 'name'));
   if (state.poker.hand) Object.values(state.poker.hand.players).forEach((x) => swap(x, 'name'));
   for (const map of [state.moggBest, state.blackjack]) {
@@ -777,6 +780,13 @@ function postUrl(a) {
   return `/profil.html?navn=${encodeURIComponent(a.name)}&innlegg=${a.id}`;
 }
 
+const MAX_BIO = 160;
+const MAX_GUESTBOOK = 100;
+function guestbookView(p) {
+  const av = avatars();
+  return (p.guestbook || []).slice().reverse().map((c) => ({ ...c, avatar: av[c.from] || null }));
+}
+
 function reactionsFor(id) {
   return state.reactions[id] || { likes: [], comments: [] };
 }
@@ -1047,9 +1057,6 @@ const routes = {
       incomingDuels: me ? state.duels.filter((d) => d.status === 'pending' && d.opponent === me.name).length : 0,
       openTasks: state.tasks.filter((t) => t.status === 'open').length,
       incomingMoggs: me ? state.moggs.filter((m) => m.status === 'pending' && m.opponent === me.name).length : 0,
-      // Til veggen på forsiden
-      chatPreview: me ? state.chat.slice(-3).map(chatView) : [],
-      taskPreview: me ? state.tasks.filter((t) => t.status === 'open').sort((a, b) => b.reward - a.reward).slice(0, 3).map((t) => ({ id: t.id, title: t.title, reward: t.reward, cash: taskCash(t) })) : [],
     });
   },
 
@@ -1959,10 +1966,65 @@ const routes = {
     const acts = state.activity.filter((a) => a.name === p.name).slice().reverse();
     sendJson(res, 200, {
       viewer: viewer ? viewer.name : null,
-      profile: { name: p.name, avatar: p.avatar || null, joinedAt: p.joinedAt, lastSeen: p.lastSeen || null, isAdmin: !!p.isAdmin, stats: profileStats(p) },
+      profile: {
+        name: p.name,
+        avatar: p.avatar || null,
+        joinedAt: p.joinedAt,
+        lastSeen: p.lastSeen || null,
+        isAdmin: !!p.isAdmin,
+        bio: p.bio || '',
+        stats: profileStats(p),
+        guestbook: guestbookView(p),
+      },
       activity: acts.slice(0, 150).map((a) => activityView(a, viewer)),
       people: state.participants.map((x) => ({ name: x.name, avatar: x.avatar || null, isAdmin: !!x.isAdmin })),
     });
+  },
+
+  // Kort bio på egen profil
+  'POST /api/profile/bio': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må være logget inn.' });
+    p.bio = String(body.bio || '').replace(/\s+/g, ' ').trim().slice(0, MAX_BIO);
+    saveState();
+    sendJson(res, 200, { bio: p.bio });
+  },
+
+  // Hilsener (gjestebok) på en profil: andre kan skrive en kort kommentar
+  'POST /api/profile/comment': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må være logget inn.' });
+    const owner = findParticipant(String(body.navn || ''));
+    if (!owner) return sendJson(res, 404, { error: 'Fant ikke den personen.' });
+    const text = String(body.text || '').trim().slice(0, 300);
+    if (!text) return sendJson(res, 400, { error: 'Hilsenen er tom.' });
+    const now = Date.now();
+    if (p.lastCommentAt && now - p.lastCommentAt < 1500) return sendJson(res, 429, { error: 'Rolig nå 😄' });
+    p.lastCommentAt = now;
+    owner.guestbook = owner.guestbook || [];
+    owner.guestbook.push({ id: crypto.randomBytes(5).toString('hex'), from: p.name, text, at: now });
+    if (owner.guestbook.length > MAX_GUESTBOOK) owner.guestbook = owner.guestbook.slice(-MAX_GUESTBOOK);
+    if (owner.name !== p.name) {
+      const short = text.length > 60 ? `${text.slice(0, 57)}…` : text;
+      notify(owner.name, '💌', `${p.name} skrev en hilsen på profilen din: «${short}»`, { url: '/profil.html#hilsener', from: p.name });
+    }
+    saveState();
+    broadcast('reactions', { name: owner.name });
+    sendJson(res, 200, { guestbook: guestbookView(owner) });
+  },
+
+  // Slette en hilsen: den som skrev den, eieren av profilen, eller admin
+  'POST /api/profile/comment-delete': (req, res, body) => {
+    const p = currentParticipant(req);
+    const owner = findParticipant(String(body.navn || ''));
+    const c = owner && (owner.guestbook || []).find((x) => x.id === body.id);
+    if (!c) return sendJson(res, 404, { error: 'Fant ikke hilsenen.' });
+    const allowed = checkAdmin(body, req) || (p && (p.name === c.from || p.name === owner.name));
+    if (!allowed) return sendJson(res, 403, { error: 'Du kan ikke slette denne.' });
+    owner.guestbook = owner.guestbook.filter((x) => x !== c);
+    saveState();
+    broadcast('reactions', { name: owner.name });
+    sendJson(res, 200, { guestbook: guestbookView(owner) });
   },
 
   'POST /api/react/like': (req, res, body) => {

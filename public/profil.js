@@ -11,6 +11,7 @@
   let name = params.get('navn') || '';
   // Fra et varsel: ?innlegg=<id> åpner det innlegget
   let jumpTo = params.get('innlegg');
+  let scrolledToGuestbook = false;
 
   let adminPassword = '';
   try {
@@ -61,6 +62,92 @@
   }
 
   // ---------- Statistikk ----------
+  // ---------- Bio ----------
+  function renderBio(p) {
+    const mine = p.name === data.viewer;
+    $('p-bio').textContent = p.bio || '';
+    $('p-bio').classList.toggle('hidden', !p.bio);
+    $('bio-edit').classList.toggle('hidden', !mine || !$('bio-form').classList.contains('hidden'));
+    $('bio-edit').textContent = p.bio ? '✏️ Endre bio' : '✏️ Skriv en bio';
+  }
+
+  $('bio-edit').addEventListener('click', () => {
+    $('bio-input').value = data.profile.bio || '';
+    $('bio-form').classList.remove('hidden');
+    $('bio-edit').classList.add('hidden');
+    $('bio-input').focus();
+  });
+  $('bio-cancel').addEventListener('click', () => {
+    $('bio-form').classList.add('hidden');
+    renderBio(data.profile);
+  });
+  $('bio-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api('/api/profile/bio', { bio: $('bio-input').value });
+      data.profile.bio = r.bio;
+      $('bio-form').classList.add('hidden');
+      renderBio(data.profile);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  // ---------- Hilsener (gjestebok) ----------
+  function renderGuestbook(p) {
+    const box = $('guestbook');
+    // Ikke tegn på nytt mens noen skriver
+    if (document.activeElement === $('gb-input') && $('gb-input').value) return;
+    box.innerHTML = '';
+    $('gb-input').placeholder = p.name === data.viewer ? 'Skriv noe på din egen vegg ...' : `Skriv en hilsen til ${p.name.split(' ')[0]} ...`;
+    if (!p.guestbook.length) {
+      box.appendChild(el('p', 'muted', p.name === data.viewer ? 'Ingen hilsener ennå.' : 'Ingen hilsener ennå. Bli den første! 👋'));
+      return;
+    }
+    p.guestbook.forEach((c) => {
+      const row = el('div', 'gb-item');
+      const av = el('a');
+      av.href = profileLink(c.from);
+      av.appendChild(avatarEl(c.avatar, c.from, 34));
+      const body = el('div', 'gb-body');
+      const who = el('a', 'gb-name', c.from);
+      who.href = profileLink(c.from);
+      body.append(who, el('span', 'gb-text', c.text), el('small', 'muted', when(c.at)));
+      row.append(av, body);
+      if (c.from === data.viewer || p.name === data.viewer || adminPassword) {
+        const del = el('button', 'gb-del', '✕');
+        del.type = 'button';
+        del.title = 'Slett';
+        del.addEventListener('click', async () => {
+          if (!confirm('Slette hilsenen?')) return;
+          try {
+            const r = await api('/api/profile/comment-delete', { navn: p.name, id: c.id, password: adminPassword });
+            data.profile.guestbook = r.guestbook;
+            renderGuestbook(data.profile);
+          } catch (err) {
+            alert(err.message);
+          }
+        });
+        row.appendChild(del);
+      }
+      box.appendChild(row);
+    });
+  }
+
+  $('gb-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = $('gb-input').value.trim();
+    if (!text) return;
+    try {
+      const r = await api('/api/profile/comment', { navn: data.profile.name, text });
+      $('gb-input').value = '';
+      data.profile.guestbook = r.guestbook;
+      renderGuestbook(data.profile);
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
   function renderStats(s) {
     const wl = (r) => `${r.won}–${r.lost}`;
     const tiles = [
@@ -261,6 +348,8 @@
     $('p-name').textContent = p.name === data.viewer ? `${p.name} (deg)` : p.name;
     $('p-badge').classList.toggle('hidden', !p.isAdmin);
     $('p-joined').textContent = lastSeenText(p);
+    renderBio(p);
+    renderGuestbook(p);
     renderPeople();
     renderStats(p.stats);
     renderGallery();
@@ -291,6 +380,10 @@
       if (jumpTo) openComments.add(jumpTo); // vis alle kommentarene på innlegget
       render();
       if (jumpTo) showPost(jumpTo);
+      if (location.hash === '#hilsener' && !scrolledToGuestbook) {
+        scrolledToGuestbook = true;
+        $('hilsener').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } catch (err) {
       $('error').innerHTML = '';
       $('error').append(document.createTextNode(err.message + ' '));

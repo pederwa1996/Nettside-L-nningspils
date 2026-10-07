@@ -11,14 +11,20 @@
 </head>
 <body class="cantina">
   <div class="string-lights" aria-hidden="true"></div>
-  <header class="hero cantina-hero">
+  <header class="hero cantina-hero hero-compact">
     <div class="bulb-sign"><h1>Lønningspils</h1></div>
     <p class="neon-script">Tacos · Cerveza · Buenos amigos</p>
-    <p class="sub">Spill, chat, løs oppgaver og vinn øl! 🌮🍺</p>
   </header>
 
   <main>
     <!-- Story -->
+    <!-- Liten «meg»-linje: trykk på bildet for profilen -->
+    <div id="me-bar" class="me-bar hidden">
+      <a href="/profil.html" class="me-bar-who" title="Din profil"><span id="me-avatar"></span><span>Hei, <b id="me-name"></b></span></a>
+      <a class="mb-chip" href="/kasino.html#hjul" title="Spinn"><span id="home-spins">0</span> 🎡</a>
+      <a class="mb-chip" href="/kasino.html" title="Cash"><span id="home-flus">0</span> 💰</a>
+      <a class="mb-chip beer-link" href="/kasino.html#baren" title="Pils til gode – løs inn i baren"><span id="home-beers">0</span> 🍺</a>
+    </div>
     <div id="stories-bar" class="stories-bar"></div>
 
     <!-- Registrering / innlogging -->
@@ -68,38 +74,12 @@
 
     <!-- ===================== VEGGEN ===================== -->
     <div id="wall" class="wall hidden">
-      <section id="me-section" class="card me-strip">
-        <a href="/profil.html" class="me-strip-head" title="Profilen din">
-          <span id="me-avatar"></span>
-          <span class="me-hello">Hei, <b id="me-name"></b>! 👋</span>
-          <span class="me-inv">🎒 Inventar ›</span>
-        </a>
-        <div class="home-wallet">
-          <a class="wallet-link" href="/kasino.html#hjul" title="Spinn på lykkehjulet"><span id="home-spins">0</span><small>🎡 spinn ›</small></a>
-          <a class="wallet-link" href="/kasino.html" title="Til kasinoet"><span id="home-flus">0</span><small>💰 cash ›</small></a>
-          <a class="wallet-link beer-link" href="/kasino.html#baren" title="Løs inn i baren"><span id="home-beers">0</span><small>🍺 til gode ›</small></a>
-        </div>
+      <div class="home-notes">
         <p id="my-result" class="result"></p>
         <a id="set-password-nudge" class="duel-alert hidden" href="/profil.html#inventar">🔑 Velg et passord, så kan du logge inn fra alle enheter ›</a>
         <a id="avatar-missing" class="duel-alert hidden" href="/profil.html#inventar">📸 Legg inn et profilbilde ›</a>
         <p id="home-alerts" class="duel-alert hidden"></p>
-        <div class="quick-links">
-          <a href="/kasino.html#hjul">🎡 Lykkehjulet</a>
-          <a href="/kasino.html#baren">🍻 Baren</a>
-          <a href="/oppgaver.html">🎯 Oppgaver</a>
-          <a href="#stilling">🏆 Stilling</a>
-        </div>
-      </section>
-
-      <!-- Oppgaver -->
-      <section class="card wall-card">
-        <div class="wall-head">
-          <h2>🎯 Oppgaver</h2>
-          <span id="open-tasks" class="wall-count"></span>
-          <a href="/oppgaver.html" class="wall-more">Alle ›</a>
-        </div>
-        <ul id="task-preview" class="task-preview"></ul>
-      </section>
+      </div>
 
       <!-- Hva skjer -->
       <section class="card wall-card feed-card">

@@ -627,7 +627,7 @@ body.kasino .wallet-item {
 body.kasino .wallet-label { color: var(--gold-1); opacity: 0.8; }
 
 /* Gullknapper */
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.cb-close):not(.wall-more):not(.wallet-link),
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link),
 body.kasino .button {
   background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 50%, #b88a1e 51%, var(--gold-2) 100%);
   color: #3a0006;
@@ -635,7 +635,7 @@ body.kasino .button {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
   box-shadow: 0 3px 0 var(--gold-3), 0 6px 14px rgba(0, 0, 0, 0.5);
 }
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.cb-close):not(.wall-more):not(.wallet-link):hover:not(:disabled) {
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):hover:not(:disabled) {
   filter: brightness(1.08);
 }
 body.kasino button.secondary {
@@ -828,13 +828,13 @@ body.cantina h3 {
 }
 
 /* Knapper i ølfarge med varm glød */
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab),
 body.cantina .button {
   background: linear-gradient(180deg, #ffcf5a, #f2a516);
   color: #2a1608;
   box-shadow: 0 3px 0 #a86a0b, 0 0 16px rgba(255, 180, 60, 0.3);
 }
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab):hover:not(:disabled),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab):hover:not(:disabled),
 body.cantina .button:hover {
   background: linear-gradient(180deg, #ffd977, #f7b02a);
 }
@@ -1203,7 +1203,7 @@ body.kasino[data-tab="slot"] .wallet-num {
 }
 body.kasino[data-tab="slot"] .tab { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
 body.kasino[data-tab="slot"] .tab.active { background: #ff2ec4; color: #fff; box-shadow: 0 0 16px #ff2ec4; }
-body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.cb-close):not(.wall-more):not(.wallet-link) {
+body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link) {
   background: linear-gradient(180deg, #00f0ff, #00a8c6);
   color: #08010f;
   border-color: #00e5ff;
@@ -1990,3 +1990,45 @@ body.inv-open #profile > section:not(.profile-card):not(#inventory) { display: n
 .budget-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; flex: 1; min-width: 120px; }
 .ao-budget { display: block; margin-bottom: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(57, 255, 106, 0.1); border: 1px solid rgba(57, 255, 106, 0.35); color: inherit !important; text-decoration: none; font-size: 0.9rem; line-height: 1.35; }
 .ao-budget b { color: #39ff6a; }
+
+/* =========================================================
+   Forsiden: liten «meg»-linje over storyene, mindre header
+   ========================================================= */
+.hero-compact { padding-top: 34px !important; padding-bottom: 4px !important; }
+.hero-compact .bulb-sign h1 { font-size: clamp(1.6rem, 8vw, 2.4rem) !important; }
+.hero-compact .neon-script { margin: 4px 0 0; font-size: 1rem; }
+.me-bar { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; padding: 6px 8px; border-radius: 999px; background: rgba(20, 12, 7, 0.75); border: 1px solid rgba(255, 200, 130, 0.25); backdrop-filter: blur(6px); }
+.me-bar-who { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; text-decoration: none; color: #ffe2b8 !important; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.me-bar-who .avatar { border: 2px solid var(--gold); flex: none; }
+.mb-chip { flex: none; padding: 4px 9px; border-radius: 999px; font-size: 0.8rem; font-weight: 800; text-decoration: none; color: #ffe2b8 !important; background: rgba(255, 255, 255, 0.08); }
+.mb-chip.has-beer { background: linear-gradient(180deg, #ffd977, #f5a301); color: #2a1500 !important; animation: beer-glow 1.6s ease-in-out infinite alternate; }
+.home-notes:empty { display: none; }
+.home-notes .duel-alert, .home-notes .result { margin: 0 0 8px; }
+
+/* =========================================================
+   Profil: bio, stats som egen kategori, hilsener
+   ========================================================= */
+.bio-wrap { text-align: center; margin: 6px 0 4px; }
+.profile-bio { margin: 6px auto 4px; max-width: 320px; font-size: 1rem; line-height: 1.4; font-style: italic; overflow-wrap: anywhere; }
+.profile-bio::before { content: '“'; opacity: 0.5; }
+.profile-bio::after { content: '”'; opacity: 0.5; }
+.bio-edit { margin: 4px auto 0; padding: 4px 12px !important; font-size: 0.8rem !important; border-radius: 999px !important; background: rgba(255, 255, 255, 0.1) !important; color: inherit !important; border: 1px dashed rgba(255, 255, 255, 0.3) !important; box-shadow: none !important; }
+.bio-form { display: flex; flex-direction: column; gap: 6px; max-width: 360px; margin: 6px auto 0; }
+.bio-form textarea { width: 100%; resize: none; font: inherit; }
+.bio-actions { display: flex; gap: 6px; justify-content: center; }
+.stats-box { margin-top: 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); }
+.stats-box summary { cursor: pointer; padding: 10px 14px; font-weight: 800; list-style: none; text-align: center; }
+.stats-box summary::-webkit-details-marker { display: none; }
+.stats-box summary::after { content: ' ▾'; opacity: 0.6; }
+.stats-box[open] summary::after { content: ' ▴'; }
+.stats-box .stat-grid { margin: 0; padding: 0 10px 10px; }
+.gb-form { display: flex; gap: 6px; margin: 0 0 10px; }
+.gb-form input { flex: 1; min-width: 0; margin: 0; }
+.gb-form button { margin: 0; }
+.guestbook { display: flex; flex-direction: column; gap: 8px; }
+.gb-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); }
+.gb-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.gb-name { font-weight: 800; font-size: 0.85rem; text-decoration: none; }
+.gb-text { overflow-wrap: anywhere; line-height: 1.35; }
+.gb-body small { font-size: 0.7rem; }
+.gb-del { flex: none; width: 28px; height: 28px; padding: 0 !important; border-radius: 50% !important; background: rgba(255, 255, 255, 0.08) !important; color: inherit !important; border: 0 !important; box-shadow: none !important; font-size: 0.8rem; }

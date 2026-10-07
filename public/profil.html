@@ -23,7 +23,27 @@
         <h1 id="p-name" class="profile-name"></h1>
         <p id="p-badge" class="admin-badge-tag hidden">👑 Spillmester</p>
         <p id="p-joined" class="muted center"></p>
-        <div id="stats" class="stat-grid"></div>
+        <div class="bio-wrap">
+          <p id="p-bio" class="profile-bio"></p>
+          <button type="button" id="bio-edit" class="bio-edit hidden">✏️ Skriv en bio</button>
+          <form id="bio-form" class="bio-form hidden">
+            <textarea id="bio-input" maxlength="160" rows="2" placeholder="Fortell litt om deg selv (maks 160 tegn)"></textarea>
+            <div class="bio-actions"><button type="submit" class="small-btn">Lagre</button><button type="button" id="bio-cancel" class="secondary small-btn">Avbryt</button></div>
+          </form>
+        </div>
+        <details class="stats-box">
+          <summary>📊 Stats</summary>
+          <div id="stats" class="stat-grid"></div>
+        </details>
+      </section>
+
+      <section id="hilsener" class="card">
+        <h2>💌 Hilsener</h2>
+        <form id="gb-form" class="gb-form">
+          <input id="gb-input" type="text" maxlength="300" placeholder="Skriv en hilsen ..." autocomplete="off">
+          <button type="submit">Send</button>
+        </form>
+        <div id="guestbook" class="guestbook"></div>
       </section>
 
       <section id="gallery-section" class="card hidden">

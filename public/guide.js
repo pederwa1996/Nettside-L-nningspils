@@ -68,8 +68,9 @@
     profile: {
       title: 'Slik funker profilen',
       lines: () => [
-        'Her ser du statistikk, bilder og alt en person har gjort.',
-        'Trykk 🤍 for å like og 💬 for å kommentere. Eieren får et varsel.',
+        'Her ser du bio, bilder og alt en person har gjort. Trykk <b>📊 Stats</b> for tallene.',
+        'Skriv en <b>💌 hilsen</b> på profilen til andre, eller lik 🤍 og kommenter 💬 innleggene deres. De får et varsel.',
+        'På din egen profil kan du skrive en bio, og under <b>🎒 Inventar</b> ligger pils til gode, lodd og innstillinger.',
       ],
     },
   };

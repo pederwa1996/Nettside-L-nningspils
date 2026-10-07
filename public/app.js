@@ -30,8 +30,8 @@ function render() {
   // Før man er logget inn er resten av siden (meny, story, veggen) skjult
   document.body.classList.toggle('logged-out', !me);
   $('wall').classList.toggle('hidden', !me);
+  $('me-bar').classList.toggle('hidden', !me);
   $('set-password-nudge').classList.toggle('hidden', !me || me.hasPassword);
-  $('open-tasks').textContent = data.openTasks ? `${data.openTasks} ledige` : 'Alle er tatt!';
 
   const alerts = [];
   if (data.incomingDuels) alerts.push(`<a href="/duell.html">⚔️ ${data.incomingDuels} duell${data.incomingDuels > 1 ? 'er' : ''} venter på svar</a>`);
@@ -45,14 +45,14 @@ function render() {
     $('home-flus').textContent = me.flus;
     $('home-beers').textContent = me.beersOwed;
     $('me-name').textContent = me.isAdmin ? `${me.name} 👑` : me.name;
-    $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 44));
+    $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 30));
     $('avatar-missing').classList.toggle('hidden', !!me.avatar);
     $('home-beers').closest('a').classList.toggle('has-beer', me.beersOwed > 0);
+    $('home-beers').closest('a').title = me.beersOwed ? `${me.beersOwed} pils til gode – trykk for å løse inn i baren` : 'Ingen pils til gode ennå';
     // Bare si ifra om vinnerlodd; resten av loddene ligger i inventaret på profilen
     const won = draw ? me.winningTickets.length : 0;
     $('my-result').textContent = won ? `🎉 Du har ${won} vinnerlodd! Det er ${won} pils til deg! 🍺` : '';
     $('my-result').className = won ? 'result win' : 'result hidden';
-    renderTaskPreview(data.taskPreview);
     if (!feedLoaded) loadFeed();
   }
 
@@ -247,7 +247,7 @@ if (codeFromLink) {
   loginWithCode(codeFromLink);
 }
 
-// ---------- Veggen: oppgaver og hva som skjer ----------
+// ---------- Veggen: hva som skjer ----------
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -256,23 +256,6 @@ function el(tag, cls, text) {
 }
 
 const profileUrl = (n) => `/profil.html?navn=${encodeURIComponent(n)}`;
-
-function renderTaskPreview(list) {
-  const ul = $('task-preview');
-  ul.innerHTML = '';
-  if (!list.length) {
-    ul.appendChild(el('li', 'muted', 'Alle oppgavene er tatt. Følg med, det kan komme nye!'));
-    return;
-  }
-  list.forEach((t) => {
-    const li = el('li');
-    const a = el('a', 'tp-task');
-    a.href = '/oppgaver.html';
-    a.append(el('span', 'tp-title', t.title), el('span', 'tp-reward', `🎰 ${t.reward} spinn + 💰 ${t.cash}`));
-    li.appendChild(a);
-    ul.appendChild(li);
-  });
-}
 
 // «Hva skjer»: alt alle gjør, med likes og kommentarer
 let feedItems = [];
@@ -401,7 +384,6 @@ const reloadFeedSoon = () => {
 };
 onLive('activity', reloadFeedSoon);
 onLive('reactions', reloadFeedSoon);
-onLive('tasks', () => data && data.me && refresh());
 
 refresh();
 setInterval(refresh, 8000);
