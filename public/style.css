@@ -402,17 +402,15 @@ body.no-scroll { overflow: hidden; }
 .tab.active { background: var(--gold); color: #1b1e2e; }
 .tab:hover:not(:disabled):not(.active) { background: #474c6a; }
 .roulette-wrap canvas { box-shadow: 0 0 0 8px #5a3d1a, 0 0 0 11px #c9a227, 0 8px 30px rgba(0, 0, 0, 0.5); }
-.bet-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.bet-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; }
 .bet-opt { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; background: #2c2f42; color: var(--text); border: 2px solid transparent; }
 .bet-opt small { font-size: 0.75rem; opacity: 0.7; font-weight: 600; }
 .bet-opt.red { background: #8e2a20; }
 .bet-opt.black { background: #0e0f16; }
-.bet-opt.wide { grid-column: span 2; }
 .bet-opt.selected { border-color: var(--gold); box-shadow: 0 0 12px rgba(245, 179, 1, 0.5); }
 .bet-opt:hover:not(:disabled) { background: #474c6a; }
 .bet-opt.red:hover:not(:disabled) { background: #a83226; }
 .bet-opt.black:hover:not(:disabled) { background: #22253a; }
-.bet-number { text-align: center; font-size: 1.2rem; font-weight: 800; min-width: 0; }
 
 .bj-table { background: radial-gradient(ellipse at center, #1f6b3f 0%, #144a2b 100%); border-radius: 14px; padding: 14px; border: 6px solid #5a3d1a; }
 .bj-label { margin: 0 0 6px; font-weight: 700; color: #e8f5ec; }

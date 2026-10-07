@@ -366,17 +366,13 @@ function moggView(m, viewer) {
 // Rød/svart på et europeisk roulettehjul
 const RED_NUMBERS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
 
-// Hva hver innsatstype vinner på, og utbetaling (gevinst i tillegg til innsatsen)
+// Som i et vanlig kasino: europeisk hjul (0–36), alle innsatser betaler 1:1.
+// 18 av 37 tall vinner (48,6 %). Bare 0 er husets fordel, akkurat som på ekte.
 const ROULETTE_BETS = {
-  red: { label: 'Rød', pays: 1, wins: (n) => RED_NUMBERS.has(n) },
-  black: { label: 'Svart', pays: 1, wins: (n) => n !== 0 && !RED_NUMBERS.has(n) },
-  even: { label: 'Partall', pays: 1, wins: (n) => n !== 0 && n % 2 === 0 },
-  odd: { label: 'Oddetall', pays: 1, wins: (n) => n % 2 === 1 },
-  low: { label: '1–18', pays: 1, wins: (n) => n >= 1 && n <= 18 },
-  high: { label: '19–36', pays: 1, wins: (n) => n >= 19 },
-  dozen1: { label: '1–12', pays: 2, wins: (n) => n >= 1 && n <= 12 },
-  dozen2: { label: '13–24', pays: 2, wins: (n) => n >= 13 && n <= 24 },
-  dozen3: { label: '25–36', pays: 2, wins: (n) => n >= 25 },
+  red: { label: 'Rød', wins: (n) => RED_NUMBERS.has(n) },
+  black: { label: 'Svart', wins: (n) => n !== 0 && !RED_NUMBERS.has(n) },
+  even: { label: 'Partall', wins: (n) => n !== 0 && n % 2 === 0 },
+  odd: { label: 'Oddetall', wins: (n) => n % 2 === 1 },
 };
 
 function addFlus(p, n) {
@@ -547,7 +543,8 @@ function settleBlackjack(p, h, { dealerPlays = true } = {}) {
   h.net = payout - h.bet;
   h.status = 'done';
   delete h.deck;
-  logCasino(p, 'blackjack', { won: h.net, net: h.net, detail: h.result });
+  // Gevinsten som vises er hele utbetalingen (innsats + gevinst), som i et ekte kasino
+  logCasino(p, 'blackjack', { won: h.net > 0 ? payout : 0, net: h.net, detail: h.result });
 }
 
 function activeHand(p) {
@@ -1497,22 +1494,17 @@ const routes = {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
     const bet = parseBet(p, body.amount);
-    let kind;
-    if (body.type === 'number') {
-      const n = Number(body.number);
-      if (!Number.isInteger(n) || n < 0 || n > 36) return sendJson(res, 400, { error: 'Velg et tall fra 0 til 36.' });
-      kind = { label: `Tallet ${n}`, pays: 35, wins: (x) => x === n };
-    } else {
-      kind = ROULETTE_BETS[body.type];
-      if (!kind) return sendJson(res, 400, { error: 'Ukjent innsats.' });
-    }
+    const kind = ROULETTE_BETS[body.type];
+    if (!kind) return sendJson(res, 400, { error: 'Velg rød, svart, partall eller oddetall.' });
     const number = randomInt(37);
     const won = kind.wins(number);
-    const net = won ? bet * kind.pays : -bet;
+    const net = won ? bet : -bet;
+    // Utbetaling = innsatsen tilbake + like mye i gevinst (satser 25, får 50)
+    const payout = won ? bet * 2 : 0;
     addFlus(p, net);
-    logCasino(p, 'roulette', { won: net, net, detail: `${kind.label} → ${number}` });
+    logCasino(p, 'roulette', { won: payout, net, detail: `${kind.label} → ${number}` });
     saveState();
-    sendJson(res, 200, { number, color: number === 0 ? 'green' : RED_NUMBERS.has(number) ? 'red' : 'black', won, net, me: meView(p) });
+    sendJson(res, 200, { number, color: number === 0 ? 'green' : RED_NUMBERS.has(number) ? 'red' : 'black', won, net, bet, payout, me: meView(p) });
   },
 
   'POST /api/casino/slot': (req, res, body) => {

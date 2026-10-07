@@ -200,7 +200,6 @@
     if (!b) return;
     betType = b.dataset.type;
     document.querySelectorAll('.bet-opt').forEach((x) => x.classList.toggle('selected', x === b));
-    $('bet-number').classList.toggle('hidden', betType !== 'number');
   });
 
   $('roulette-spin').addEventListener('click', async () => {
@@ -210,12 +209,12 @@
     $('roulette-result').textContent = '';
     $('roulette-result').className = 'result';
     try {
-      const r = await api('/api/casino/roulette', { type: betType, number: Number($('bet-number').value), amount: bet });
+      const r = await api('/api/casino/roulette', { type: betType, amount: bet });
       await spinTo(r.number);
       setWallet(r.me);
       const colorName = r.color === 'green' ? 'grønn' : r.color === 'red' ? 'rød' : 'svart';
       $('roulette-result').textContent = r.won
-        ? `🎉 ${r.number} ${colorName}! Du vant ${flusWord(r.net)}!`
+        ? `🎉 ${r.number} ${colorName}! Du vant ${flusWord(r.payout)}! (${r.bet} i innsats + ${r.net} i gevinst)`
         : `${r.number} ${colorName}. Du tapte ${flusWord(r.net)} 😢`;
       $('roulette-result').classList.add(r.won ? 'win' : 'lose');
     } catch (err) {
@@ -283,7 +282,8 @@
     $('dealer-value').textContent = h.dealerValue;
     $('player-value').textContent = h.playerValue;
     if (h.status === 'done') {
-      const [text, cls] = RESULT_TEXT[h.result](h.net);
+      // Ved gevinst vises hele utbetalingen (innsats + gevinst)
+      const [text, cls] = RESULT_TEXT[h.result](h.net > 0 ? h.bet + h.net : h.net);
       $('bj-result').textContent = text;
       $('bj-result').className = `result ${cls}`;
     } else {
