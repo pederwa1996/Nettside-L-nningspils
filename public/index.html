@@ -21,12 +21,7 @@
       <a class="mb-chip" href="/kasino.html" title="Cash"><span id="home-flus">0</span> 💰</a>
       <a class="mb-chip beer-link" href="/baren.html" title="Pils til gode – løs inn i baren"><span id="home-beers">0</span> 🍺</a>
     </div>
-    <!-- Baren som et eget ikon først i story-raden: rett til baren -->
     <div class="story-row">
-      <a id="bar-btn" class="bar-icon hidden" href="/baren.html" title="Gå til baren">
-        <span class="bar-icon-sign"><span class="bar-icon-emoji">🍻</span><b id="bar-btn-count" class="bar-icon-badge hidden">0</b></span>
-        <small>Baren</small>
-      </a>
       <div id="stories-bar" class="stories-bar"></div>
     </div>
 
@@ -77,6 +72,17 @@
 
     <!-- ===================== VEGGEN ===================== -->
     <div id="wall" class="wall hidden">
+      <!-- Neste steg rett under storyene: det som gir mest mening å gjøre nå -->
+      <a id="next-step" class="next-step" href="/kasino.html#hjul">
+        <span class="ns-icon" id="ns-icon">🎡</span>
+        <span class="ns-text">
+          <small>Neste steg</small>
+          <b id="ns-title">Spinn lykkehjulet</b>
+          <span id="ns-sub">15 % sjanse for en ekte pils</span>
+        </span>
+        <span class="ns-go">›</span>
+      </a>
+
       <div class="home-notes">
         <p id="my-result" class="result"></p>
         <a id="set-password-nudge" class="duel-alert hidden" href="/profil.html#inventar">🔑 Velg et passord, så kan du logge inn fra alle enheter ›</a>
@@ -85,11 +91,8 @@
       </div>
 
       <!-- Hva vil du gjøre? Hovedfokuset på forsiden: fire dører inn i kvelden, samlet i ett «skilt» -->
+      <h2 class="home-h go-hub-title">Hva vil du gjøre i kveld? <small>Trykk på en dør 👇</small></h2>
       <section class="go-hub" id="go-hub">
-        <div class="go-hub-sign">
-          <span class="gh-neon">Hva vil du gjøre i kveld?</span>
-          <small>Trykk på en dør 👇</small>
-        </div>
         <div class="go-grid">
           <a class="go-tile go-casino" href="/kasino.html">
             <span class="go-icon">🎰</span>
@@ -117,17 +120,6 @@
           </a>
         </div>
       </section>
-
-      <!-- Neste steg: det som gir mest mening å gjøre nå -->
-      <a id="next-step" class="next-step" href="/kasino.html#hjul">
-        <span class="ns-icon" id="ns-icon">🎡</span>
-        <span class="ns-text">
-          <small>Neste steg</small>
-          <b id="ns-title">Spinn lykkehjulet</b>
-          <span id="ns-sub">15 % sjanse for en ekte pils</span>
-        </span>
-        <span class="ns-go">›</span>
-      </a>
 
       <!-- Pokerbordet live -->
       <section id="poker-live" class="card poker-live">

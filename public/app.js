@@ -31,7 +31,6 @@ function render() {
   document.body.classList.toggle('logged-out', !me);
   $('wall').classList.toggle('hidden', !me);
   $('me-bar').classList.toggle('hidden', !me);
-  $('bar-btn').classList.toggle('hidden', !me);
   $('set-password-nudge').classList.toggle('hidden', !me || me.hasPassword);
 
   const alerts = [];
@@ -50,10 +49,6 @@ function render() {
     $('avatar-missing').classList.toggle('hidden', !!me.avatar);
     $('home-beers').closest('a').classList.toggle('has-beer', me.beersOwed > 0);
     // Bar-ikonet: gløder og viser antall når man har pils til gode
-    $('bar-btn').classList.toggle('has-beer', me.beersOwed > 0);
-    $('bar-btn-count').textContent = me.beersOwed;
-    $('bar-btn-count').classList.toggle('hidden', !me.beersOwed);
-    $('bar-btn').title = me.beersOwed ? `${me.beersOwed} pils til gode – trykk for å løse inn` : 'Gå til baren';
     if (!pokerLoaded) loadPoker();
     renderNextStep(me, settings);
     renderGoTiles();

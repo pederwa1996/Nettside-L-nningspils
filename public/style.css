@@ -2447,21 +2447,17 @@ body.minimal.home .home-hero .sub { color: #7a5a2a; }
 
 /* Hva vil du gjøre? Ett samlet «nattklubbskilt» med fire dører, hovedfokuset på forsiden */
 .go-hub {
-  position: relative; margin: 0 0 16px; padding: 16px 12px 12px; border-radius: 24px;
+  position: relative; margin: 0 0 18px; padding: 11px; border-radius: 22px;
   background: radial-gradient(120% 80% at 50% 0%, #3a1f5c 0%, #1c1233 55%, #120b22 100%);
   box-shadow: 0 0 0 3px #f2cf6b, 0 0 0 6px #6b4a12, 0 14px 30px rgba(40, 20, 60, 0.45);
 }
 .go-hub::before {
-  content: ''; position: absolute; inset: 5px; border-radius: 19px; pointer-events: none;
-  border: 4px dotted #ffe27a; filter: drop-shadow(0 0 3px #ffcc33); animation: bulbs 0.9s steps(1) infinite;
+  content: ''; position: absolute; inset: 3px; border-radius: 19px; pointer-events: none;
+  border: 3px dotted #ffe27a; filter: drop-shadow(0 0 3px #ffcc33); animation: bulbs 0.9s steps(1) infinite;
 }
-.go-hub-sign { position: relative; text-align: center; margin: 4px 0 12px; }
-.gh-neon {
-  display: block; font-family: 'Cinzel Decorative', Georgia, serif; font-weight: 900; font-size: 1.35rem; line-height: 1.15;
-  color: #fff6d8; text-shadow: 0 0 6px #ffcc33, 0 0 14px #ff8a00, 0 0 26px rgba(255, 90, 140, 0.7);
-  animation: gh-flicker 5s linear infinite;
-}
-.go-hub-sign small { display: block; margin-top: 3px; font-size: 0.75rem; font-weight: 700; color: #d8c8ff; opacity: 0.85; }
+/* Overskriften står for seg selv over skiltet */
+.go-hub-title { margin: 0 0 12px; font-size: 1.1rem; font-weight: 900; color: #3a2a12; }
+.go-hub-title small { display: block; margin-top: 1px; font-size: 0.75rem; font-weight: 600; color: #7a5a2a; }
 @keyframes gh-flicker { 0%, 92%, 96%, 100% { opacity: 1; } 94% { opacity: 0.55; } }
 /* Flisene limt sammen til én blokk med tynne gullfuger */
 .go-hub .go-grid {
@@ -2503,8 +2499,18 @@ body.minimal.home .home-hero .sub { color: #7a5a2a; }
 .go-bar .go-live.hot { color: #8a4b00 !important; }
 
 /* «Neste steg» under skiltet er litt mindre nå */
-body.minimal.home .next-step { padding: 12px 14px; }
-body.minimal.home .next-step .ns-icon { width: 44px; height: 44px; font-size: 1.5rem; }
+body.minimal.home .next-step { padding: 9px 12px; gap: 10px; margin-bottom: 14px; border-radius: 14px; }
+body.minimal.home .next-step .ns-icon { width: 36px; height: 36px; font-size: 1.2rem; }
+body.minimal.home .next-step .ns-text small { font-size: 0.6rem; }
+body.minimal.home .next-step .ns-text b { font-size: 0.95rem; }
+body.minimal.home .next-step .ns-text span { font-size: 0.76rem; }
+body.minimal.home .next-step .ns-go { font-size: 1.5rem; }
+/* Litt mindre dører */
+.go-hub .go-tile { min-height: 112px; padding: 10px 10px 9px; gap: 2px; }
+.go-hub .go-tile b { font-size: 1.02rem; }
+.go-hub .go-tile small { font-size: 0.68rem; }
+.go-hub .go-icon { width: 36px; height: 36px; font-size: 1.2rem; margin-bottom: 2px; }
+.go-hub .go-live { font-size: 0.66rem; padding: 2px 8px; }
 
 /* Kortene på forsiden: litt mer liv */
 body.minimal.home .card { border-radius: 18px !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important; }
