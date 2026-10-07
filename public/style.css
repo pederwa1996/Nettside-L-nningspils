@@ -3205,3 +3205,64 @@ body.kasino[data-tab="slot"] .wallet-item { border-color: rgba(212, 175, 55, 0.3
 
 /* 🔴 Roulette: mørkere boks rundt hjulet for mer kontrast */
 body.kasino #tab-roulette.card { background: linear-gradient(180deg, rgba(2, 24, 15, 0.97), rgba(1, 12, 8, 0.98)) !important; }
+
+/* =========================================================
+   Kasino: rød fløyel i hele kasinoet (alle spill), bare selve spillet har egne farger
+   ========================================================= */
+body.kasino[data-tab] {
+  background-color: #2a0307;
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(255, 90, 90, 0.35), transparent 60%),
+    radial-gradient(ellipse at 50% 120%, rgba(0, 0, 0, 0.7), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 2px),
+    linear-gradient(180deg, #8b1420 0%, #5c0a12 35%, #2a0307 100%) !important;
+  background-attachment: fixed;
+}
+/* Skiltet og lommeboken øverst er like på alle spill */
+body.kasino[data-tab] .marquee {
+  background: linear-gradient(180deg, #5c0a12, #2a0307) !important; border-color: #d4a530 !important;
+  box-shadow: 0 0 0 3px #8a6514, 0 0 26px rgba(255, 200, 80, 0.35), 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+}
+body.kasino[data-tab] .marquee::before { border-color: #ffe27a !important; }
+body.kasino[data-tab] .marquee h1 {
+  background: linear-gradient(180deg, #f9e29c 0%, #d4a530 55%, #8a6514 100%) !important; -webkit-background-clip: text !important; background-clip: text !important;
+  -webkit-text-fill-color: transparent !important; color: transparent !important; text-shadow: none !important;
+}
+body.kasino[data-tab] .casino-tagline, body.kasino[data-tab] .casino-menu-label { color: #f9e29c !important; }
+body.kasino[data-tab] .wallet.card {
+  background: linear-gradient(180deg, rgba(70, 6, 14, 0.92), rgba(35, 3, 8, 0.95)) !important; border: 2px solid #d4a530 !important;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.35), 0 0 0 5px #8a6514, 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+}
+body.kasino[data-tab] .wallet-item { border-color: rgba(249, 226, 156, 0.4) !important; }
+body.kasino[data-tab] .tab-bar-link { background: rgba(0, 0, 0, 0.25) !important; border: 1px dashed rgba(249, 226, 156, 0.5) !important; color: #f9e29c !important; }
+
+/* ♠️ Poker: tydelig ikon i samme stil som de andre (stor gull-spar på mørk lilla) */
+body.kasino[data-tab] .casino-games .tab.cg-poker { background: radial-gradient(circle at 50% 25%, #5a3aa8, #1c0c4f 85%) !important; border-color: #c9b6ff !important; }
+body.kasino .casino-games .cg-poker b { color: #efe6ff !important; }
+.casino-games .cg-poker .tc-icon { font-size: 0 !important; }
+.casino-games .cg-poker .tc-icon::before {
+  content: '♠'; display: block; font-size: 1.75rem; line-height: 1; font-family: Georgia, 'Times New Roman', serif;
+  background: linear-gradient(180deg, #fff6d0, #f3c94b 55%, #b8862b); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.55));
+}
+.casino-games .cg-poker .tc-icon::after { content: none; }
+
+/* 🎰 Automaten: knappen i blankt, fysisk gull som skinner */
+body.kasino[data-tab] .casino-games .tab.cg-slot {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 32%),
+    linear-gradient(180deg, #fff3b0 0%, #f6d365 18%, #d4a017 42%, #a8760b 58%, #e6be4a 76%, #fff0a8 100%) !important;
+  border: 2px solid #fff3c4 !important;
+  box-shadow: 0 0 0 1px #7a5410, inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -3px 6px rgba(120, 80, 10, 0.55), 0 0 14px rgba(255, 210, 90, 0.75), 0 6px 14px rgba(0, 0, 0, 0.45) !important;
+  animation: cg-gold-glow 2.2s ease-in-out infinite;
+}
+body.kasino .casino-games .cg-slot b { color: #4a3100 !important; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) !important; }
+body.kasino .casino-games .cg-slot .cg-badge { background: #b3001b !important; color: #fff3c4 !important; }
+.casino-games .cg-slot::before { background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.85), transparent) !important; width: 35% !important; animation-duration: 2.6s !important; animation-delay: 0s !important; }
+.casino-games .cg-slot .tc-icon { filter: drop-shadow(0 2px 2px rgba(90, 60, 0, 0.5)); }
+@keyframes cg-gold-glow { 50% { box-shadow: 0 0 0 1px #7a5410, inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -3px 6px rgba(120, 80, 10, 0.55), 0 0 24px rgba(255, 215, 100, 1), 0 6px 14px rgba(0, 0, 0, 0.45); } }
+body.kasino .casino-games .tab.cg-slot.active { box-shadow: 0 0 0 2px #fff6c9, 0 0 26px rgba(255, 215, 100, 1), inset 0 -3px 6px rgba(120, 80, 10, 0.55), 0 6px 14px rgba(0, 0, 0, 0.45) !important; }
+/* Gullknappen dempes aldri, og sparen er like stor som de andre ikonene */
+body.kasino .casino-games .tab.cg-slot { opacity: 1 !important; filter: saturate(1.15) brightness(1.08); }
+.casino-games .cg-poker .tc-icon::before { font-size: 2.4rem !important; margin: -4px 0 -2px; }
