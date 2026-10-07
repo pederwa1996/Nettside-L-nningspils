@@ -3148,3 +3148,60 @@ body.kasino .wallet-label { white-space: nowrap; font-size: 0.85rem !important; 
 .story-bubble.online .story-ring { position: relative; }
 .story-bubble.online .story-ring::after { content: ''; position: absolute; right: 2px; bottom: 2px; width: 13px; height: 13px; border-radius: 50%; background: #2ecc71; border: 2px solid #fff; }
 .story-status { display: block; max-width: 74px; margin-top: -3px; padding: 1px 5px; border-radius: 999px; background: #fff3cf; color: #7a4f00; font-size: 0.6rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* =========================================================
+   Kasino: hvert spill har sin egen farge på knappen, og bakgrunnen følger spillet
+   🎡 blått · 🎰 eksklusivt gull · 🔴 grønt · 🃏 rødt · ♠️ tre
+   ========================================================= */
+body.kasino[data-tab] .casino-games .tab.cg-wheel { background: radial-gradient(circle at 50% 25%, #3d84f0, #0e2a66 85%) !important; border-color: #8fb8ff !important; }
+body.kasino[data-tab] .casino-games .tab.cg-slot { background: radial-gradient(circle at 50% 25%, #2a2418, #0b0907 85%) !important; border-color: #d4af37 !important; }
+body.kasino[data-tab] .casino-games .tab.cg-roulette { background: radial-gradient(circle at 50% 25%, #0f5a3d, #02160e 85%) !important; border-color: #d4a530 !important; }
+body.kasino[data-tab] .casino-games .tab.cg-blackjack { background: radial-gradient(circle at 50% 25%, #a8152f, #3a0509 85%) !important; border-color: #d4a530 !important; }
+body.kasino[data-tab] .casino-games .tab.cg-poker { background: radial-gradient(circle at 50% 25%, #4a2c14, #1a0d06 85%) !important; border-color: #8a5a2b !important; }
+body.kasino .casino-games .cg-wheel b { color: #fff !important; }
+body.kasino .casino-games .cg-slot b { color: #e9cf7a !important; }
+body.kasino .casino-games .cg-roulette b, body.kasino .casino-games .cg-blackjack b { color: #f9e29c !important; }
+body.kasino .casino-games .cg-poker b { color: #e0a96d !important; }
+body.kasino .casino-games .cg-wheel .cg-badge { background: #ffd34d; color: #0e2a66; }
+body.kasino .casino-games .cg-slot .cg-badge { background: linear-gradient(90deg, #b8912f, #f3dc8a, #b8912f); color: #0b0907; }
+body.kasino .casino-games .cg-roulette .cg-badge { background: #d4a530; color: #02160e; }
+body.kasino .casino-games .cg-blackjack .cg-badge { background: #d4a530; color: #3a0509; }
+body.kasino .casino-games .tab.cg.active { box-shadow: 0 0 0 2px #fff6c9, 0 0 16px rgba(255, 224, 138, 0.85), 0 6px 14px rgba(0, 0, 0, 0.45) !important; }
+body.kasino .casino-games .tab.cg.active::after { background: #fff6c9; }
+
+/* 🎡 Lykkehjulet: blå bakgrunn, rød ramme rundt hjulet */
+body.kasino[data-tab="wheel"] {
+  background-color: #08183d;
+  background-image:
+    radial-gradient(ellipse at 50% -10%, rgba(120, 180, 255, 0.35), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #1a47a3 0%, #0e2a66 45%, #061436 100%);
+}
+body.kasino[data-tab="wheel"] .card { background: linear-gradient(180deg, rgba(14, 42, 102, 0.92), rgba(6, 20, 54, 0.95)); }
+body.kasino[data-tab="wheel"] .marquee { background: linear-gradient(180deg, #123a8a, #061436); }
+body.kasino #tab-wheel.card {
+  border: 3px solid #c0392b !important;
+  box-shadow: 0 0 0 3px #6b0f0f, 0 0 24px rgba(220, 40, 40, 0.45), 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* 🎰 Automaten: eksklusivt sort og gull, rolig og minimalistisk */
+body.kasino[data-tab="slot"] {
+  background-color: #0b0907;
+  background-image:
+    radial-gradient(ellipse at 50% -5%, rgba(243, 220, 138, 0.22), transparent 55%),
+    repeating-linear-gradient(135deg, rgba(212, 175, 55, 0.045) 0 1px, transparent 1px 14px),
+    linear-gradient(180deg, #1a1610 0%, #0b0907 60%, #050403 100%);
+}
+body.kasino[data-tab="slot"] .card {
+  background: linear-gradient(180deg, rgba(26, 22, 16, 0.95), rgba(8, 7, 5, 0.97));
+  border: 1px solid #d4af37;
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.25), 0 12px 30px rgba(0, 0, 0, 0.7);
+}
+body.kasino[data-tab="slot"] .marquee { background: #0b0907; border-color: #d4af37; box-shadow: 0 0 0 1px #6b5410, 0 0 30px rgba(212, 175, 55, 0.25); }
+body.kasino[data-tab="slot"] .marquee::before { border-color: #f3dc8a; }
+body.kasino[data-tab="slot"] .marquee h1 { background: linear-gradient(180deg, #fff3c4, #d4af37 55%, #8a6b1c); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+body.kasino[data-tab="slot"] .casino-tagline, body.kasino[data-tab="slot"] .casino-menu-label { color: #e9cf7a !important; }
+body.kasino[data-tab="slot"] .wallet-item { border-color: rgba(212, 175, 55, 0.35); }
+
+/* 🔴 Roulette: mørkere boks rundt hjulet for mer kontrast */
+body.kasino #tab-roulette.card { background: linear-gradient(180deg, rgba(2, 24, 15, 0.97), rgba(1, 12, 8, 0.98)) !important; }
