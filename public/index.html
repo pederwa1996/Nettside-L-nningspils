@@ -6,9 +6,10 @@
   <title>Lønningspils 🍺</title>
   <link rel="stylesheet" href="/style.css">
 </head>
-<body class="minimal">
-  <header class="hero">
+<body class="minimal home">
+  <header class="hero home-hero">
     <h1>Lønningspils 🍺</h1>
+    <p class="sub">Vinn ekte pils i kveld – spill, løs oppgaver og utfordre kollegaene</p>
   </header>
 
   <main>
@@ -83,10 +84,52 @@
         <p id="home-alerts" class="duel-alert hidden"></p>
       </div>
 
+      <!-- Neste steg: det som gir mest mening å gjøre nå -->
+      <a id="next-step" class="next-step" href="/kasino.html#hjul">
+        <span class="ns-icon" id="ns-icon">🎡</span>
+        <span class="ns-text">
+          <small>Neste steg</small>
+          <b id="ns-title">Spinn lykkehjulet</b>
+          <span id="ns-sub">15 % sjanse for en ekte pils</span>
+        </span>
+        <span class="ns-go">›</span>
+      </a>
+
+      <!-- Hva vil du gjøre? -->
+      <section class="home-section">
+        <h2 class="home-h">Hva vil du gjøre?</h2>
+        <div class="go-grid">
+          <a class="go-tile go-casino" href="/kasino.html">
+            <span class="go-icon">🎰</span>
+            <b>Kasino</b>
+            <small>Lykkehjul, automat, roulette, blackjack og poker</small>
+            <span class="go-live" id="go-casino-live"></span>
+          </a>
+          <a class="go-tile go-bar" href="/baren.html">
+            <span class="go-icon">🍻</span>
+            <b>Baren</b>
+            <small>Løs inn pils til gode – den kommer til bordet</small>
+            <span class="go-live" id="go-bar-live"></span>
+          </a>
+          <a class="go-tile go-pvp" href="/pvp.html">
+            <span class="go-icon">⚔️</span>
+            <b>PvP</b>
+            <small>Duell, mogg-off, arena og Flappy Sjef</small>
+            <span class="go-live" id="go-pvp-live"></span>
+          </a>
+          <a class="go-tile go-tasks" href="/oppgaver.html">
+            <span class="go-icon">🎯</span>
+            <b>Oppgaver</b>
+            <small>Gjør noe gøy i baren og få spinn, cash eller pils</small>
+            <span class="go-live" id="go-tasks-live"></span>
+          </a>
+        </div>
+      </section>
+
       <!-- Pokerbordet live -->
       <section id="poker-live" class="card poker-live">
         <div class="wall-head">
-          <h2>♠️ Pokerbordet</h2>
+          <h2>♠️ Pokerbordet <small class="h-sub">Hvem spiller nå</small></h2>
           <span class="live-dot">LIVE</span>
           <a href="/kasino.html#poker" class="wall-more" id="poker-live-link">Se på ›</a>
         </div>
@@ -95,7 +138,7 @@
 
       <!-- Hva skjer -->
       <section class="card wall-card feed-card">
-        <div class="wall-head"><h2>📰 Hva skjer</h2><span class="live-dot">LIVE</span></div>
+        <div class="wall-head"><h2>📰 Hva skjer <small class="h-sub">Alt som skjer på lønningspilsen</small></h2><span class="live-dot">LIVE</span></div>
         <div id="feed-filters" class="feed-filters">
           <button type="button" class="ff active" data-cat="all">Alt</button>
           <button type="button" class="ff" data-cat="beer">🍺 Pils</button>

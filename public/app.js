@@ -55,6 +55,8 @@ function render() {
     $('bar-btn-count').classList.toggle('hidden', !me.beersOwed);
     $('bar-btn').title = me.beersOwed ? `${me.beersOwed} pils til gode – trykk for å løse inn` : 'Gå til baren';
     if (!pokerLoaded) loadPoker();
+    renderNextStep(me, settings);
+    renderGoTiles();
     $('home-beers').closest('a').title = me.beersOwed ? `${me.beersOwed} pils til gode – trykk for å løse inn i baren` : 'Ingen pils til gode ennå';
     // Bare si ifra om vinnerlodd; resten av loddene ligger i inventaret på profilen
     const won = draw ? me.winningTickets.length : 0;
@@ -404,6 +406,45 @@ function feedItem(a, fresh = false) {
   item.append(badge, body);
   return item;
 }
+
+// ---------- Neste steg og snarveiene ----------
+function renderNextStep(me, settings) {
+  const challenges = (data.incomingDuels || 0) + (data.incomingMoggs || 0) + (data.incomingArena || 0);
+  let s;
+  if (me.beersOwed > 0) s = ['🍻', `Du har ${me.beersOwed} pils til gode!`, 'Trykk her for å løse inn i baren – spillmesteren kommer med den', '/baren.html', 'beer'];
+  else if (challenges) s = ['⚔️', `Du er utfordret (${challenges})`, 'Svar på utfordringen og vinn spinn, cash eller pils', data.incomingArena ? '/arena.html' : data.incomingDuels ? '/duell.html' : '/mogg.html', 'pvp'];
+  else if (me.spinsLeft > 0) s = ['🎡', `Spinn lykkehjulet (${me.spinsLeft} spinn igjen)`, `${Math.round(settings.spinWinChance * 100)} % sjanse for en ekte pils hver gang`, '/kasino.html#hjul', 'spin'];
+  else if (data.openTasks) s = ['🎯', 'Tom for spinn? Løs en oppgave', `${data.openTasks} ledige oppgaver gir spinn, cash eller pils`, '/oppgaver.html', 'tasks'];
+  else s = ['⚔️', 'Utfordre noen i arenaen', 'Spill om cash, spinn eller pils', '/arena.html', 'pvp'];
+  const [icon, title, sub, href, kind] = s;
+  $('ns-icon').textContent = icon;
+  $('ns-title').textContent = title;
+  $('ns-sub').textContent = sub;
+  $('next-step').href = href;
+  $('next-step').className = `next-step ns-${kind}`;
+}
+
+let homeRooms = {};
+function renderGoTiles() {
+  if (!data || !data.me) return;
+  const count = (rooms) => rooms.reduce((n, r) => n + (homeRooms[r] || []).length, 0);
+  const inCasino = count(['kasino-wheel', 'kasino-slot', 'kasino-roulette', 'kasino-blackjack', 'kasino-poker']);
+  const inBar = count(['kasino-bar', 'baren']);
+  const challenges = (data.incomingDuels || 0) + (data.incomingMoggs || 0) + (data.incomingArena || 0);
+  const set = (id, text, hot) => {
+    $(id).textContent = text;
+    $(id).classList.toggle('hot', !!hot);
+    $(id).classList.toggle('hidden', !text);
+  };
+  set('go-casino-live', inCasino ? `🟢 ${inCasino} spiller nå` : `${data.me.spinsLeft} spinn · ${data.me.flus} cash`);
+  set('go-bar-live', data.me.beersOwed ? `🍺 ${data.me.beersOwed} til gode` : inBar ? `🟢 ${inBar} i baren` : '', data.me.beersOwed);
+  set('go-pvp-live', challenges ? `🔔 ${challenges} utfordring${challenges > 1 ? 'er' : ''}` : '', challenges);
+  set('go-tasks-live', data.openTasks ? `${data.openTasks} ledige` : 'Alle er tatt');
+}
+document.addEventListener('presence', (e) => {
+  homeRooms = e.detail.rooms || {};
+  renderGoTiles();
+});
 
 // ---------- Pokerbordet live: hvem spiller og hvem ser på ----------
 let pokerLoaded = false;
