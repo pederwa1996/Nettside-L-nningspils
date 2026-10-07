@@ -504,8 +504,17 @@ function logCasino(p, game, { won = 0, beer = 0, net = 0, detail = '' }) {
   state.casinoLog.push(entry);
   if (state.casinoLog.length > 30) state.casinoLog = state.casinoLog.slice(-30);
   broadcast('casino-win', { ...entry, avatar: p.avatar || null });
-  if (beer) addActivity(p.name, '🎰', `fikk 🍺🍺🍺 på automaten og vant en pils!`);
+  if (beer) {
+    addActivity(p.name, '🎰', `fikk 🍺🍺🍺 på automaten og vant en pils!`);
+    announceBeer(p.name, `🍺 ${p.name} vant en pils på automaten!`, 3500);
+  }
   else if (won >= 100) addActivity(p.name, '🎰', `vant ${won} flus på ${GAME_NAMES[game]}`);
+}
+
+// Grønn tekst øverst til høyre for alle når noen vinner en pils. Venter til
+// hjulet/automaten har stoppet, så vinneren ikke får vite det før animasjonen er ferdig.
+function announceBeer(name, text, delayMs = 0) {
+  setTimeout(() => broadcast('beer-win', { name, text, at: Date.now() }), delayMs);
 }
 
 // Blackjack
@@ -1162,7 +1171,10 @@ const routes = {
       p.paidWheelSpins = (p.paidWheelSpins || 0) + 1;
       if (win) p.paidWheelWins = (p.paidWheelWins || 0) + 1;
     } else p.spins.push(win);
-    if (win) addActivity(p.name, '🎡', 'vant en pils på lykkehjulet! 🍺');
+    if (win) {
+      addActivity(p.name, '🎡', 'vant en pils på lykkehjulet! 🍺');
+      announceBeer(p.name, `🍺 ${p.name} vant en pils på lykkehjulet!`, 5500);
+    }
     saveState();
     sendJson(res, 200, { win, me: meView(p) });
   },
@@ -2004,7 +2016,10 @@ const routes = {
     };
     state.participants.forEach((p) => {
       const won = p.tickets.filter((t) => state.draw.winningTickets.includes(t));
-      if (won.length) addActivity(p.name, '🎟️', `vant ${won.length} pils i loddtrekningen (lodd ${won.map((t) => `#${t}`).join(', ')})`);
+      if (won.length) {
+        addActivity(p.name, '🎟️', `vant ${won.length} pils i loddtrekningen (lodd ${won.map((t) => `#${t}`).join(', ')})`);
+        announceBeer(p.name, `🍺 ${p.name} vant ${won.length > 1 ? `${won.length} pils` : 'en pils'} i loddtrekningen!`);
+      }
     });
     saveState();
     sendJson(res, 200, { draw: publicDraw() });
