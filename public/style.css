@@ -2180,3 +2180,92 @@ body.minimal .notify-bubble.has-unread, body.minimal .chat-bubble.has-unread { b
 .arena-result { font-size: 1.15rem; font-weight: 800; }
 .arena-result.win { color: #39ff6a; }
 .arena-result.lose { color: #ff6b7d; }
+
+/* =========================================================
+   LYS MINIMALISTISK STIL (overstyrer den mørke over)
+   ========================================================= */
+body.minimal {
+  --bg: #f6f5f2;
+  --card: #ffffff;
+  --line: #e7e4de;
+  --text: #1d1c1a;
+  --muted: #76726a;
+  --gold: #c98a00;
+  --soft: #f1efea;
+  color-scheme: light;
+}
+body.minimal .card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important; }
+body.minimal input, body.minimal textarea, body.minimal select { background: #fff !important; }
+body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.ag):not(.sg) {
+  background: #f5b301 !important; color: #1d1c1a !important;
+}
+body.minimal button.secondary { background: var(--soft) !important; color: var(--text) !important; border-color: var(--line) !important; }
+body.minimal .duel-alert { color: #8a5d00; background: #fff6dc; border-color: #f3dc9c; }
+body.minimal .result.win { color: #13843f; }
+body.minimal .result.lose { color: #c4334a; }
+
+/* Meny og bobler */
+body.minimal .bottom-nav { background: #ffffff !important; border-top-color: var(--line) !important; }
+body.minimal .bottom-nav a { color: var(--muted) !important; }
+body.minimal .bottom-nav a.active { background: #fff3cf !important; color: #8a5d00 !important; }
+body.minimal .nav-badge { border-color: #fff; }
+body.minimal .notify-bubble, body.minimal .chat-bubble, body.minimal .guide-icon { background: #fff !important; color: var(--text) !important; border-color: var(--line) !important; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12) !important; }
+body.minimal .notify-bubble.has-unread, body.minimal .chat-bubble.has-unread { border: 2px solid #f5b301 !important; }
+body.minimal .guide-icon.active { background: #f5b301 !important; }
+body.minimal .guide-pop { background: #fff; color: var(--text); border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); }
+body.minimal .guide-pop-head { color: var(--text); }
+body.minimal .guide-x { background: var(--soft) !important; color: var(--text) !important; }
+body.minimal .presence-stack { background: #fff !important; border: 1px solid var(--line); color: var(--text); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+body.minimal .beer-win { color: #0f8a3c; text-shadow: 0 0 6px #fff, 0 0 2px #fff; }
+body.minimal .notify-panel { background: #fff; border: 1px solid var(--line); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15); }
+
+/* Forsiden */
+body.minimal .me-bar { background: #fff; }
+body.minimal .mb-chip { background: var(--soft); color: var(--text) !important; }
+body.minimal .mb-chip.has-beer { background: #f5b301; color: #1d1c1a !important; }
+body.minimal .ff { color: var(--muted) !important; }
+body.minimal .ff.active { background: var(--text) !important; color: #fff !important; }
+body.minimal .wall-item { --cat-c: var(--muted); }
+body.minimal .wall-item.cat-beer { --cat: #c98a00; background: #fff8e3 !important; }
+body.minimal .wall-item.cat-casino { --cat: #13843f; }
+body.minimal .wall-item.cat-pvp { --cat: #d0344d; }
+body.minimal .wall-item.cat-tasks { --cat: #7b4fd6; }
+body.minimal .wall-item.cat-social { --cat: #1f8a96; }
+body.minimal .wi-name { color: var(--text) !important; }
+body.minimal .wi-emoji { background: #fff; }
+body.minimal .wi-tag.tag-beer { background: #f5b301; color: #1d1c1a; }
+body.minimal .live-dot { color: #d0344d; }
+body.minimal .live-dot::before { background: #d0344d; }
+body.minimal .tile-here { color: #13843f; }
+
+/* Fliser, oppgaver, arena */
+body.minimal .tile small { color: var(--muted); }
+body.minimal .task-reward { background: var(--soft) !important; color: var(--text) !important; }
+body.minimal .task.task-beer { border-color: #f0c65a !important; background: #fffaf0 !important; }
+body.minimal .task-reward.beer { background: #f5b301 !important; color: #1d1c1a !important; }
+body.minimal .task-hard { color: #c4581a; }
+body.minimal .ag { background: var(--soft) !important; color: var(--text) !important; border-color: var(--line) !important; }
+body.minimal .ag.active { background: #fff3cf !important; border-color: #f5b301 !important; }
+body.minimal .seg { background: var(--soft); border-color: var(--line); }
+body.minimal .sg.active { background: #fff !important; color: var(--text) !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important; }
+body.minimal .arena-box { background: #fff; color: var(--text); border-color: var(--line); }
+body.minimal .arena-result.win { color: #13843f; }
+body.minimal .arena-result.lose { color: #c4334a; }
+
+/* Profil og innlogging */
+body.minimal .stat, body.minimal .stats-box, body.minimal .gb-item { background: var(--soft) !important; }
+body.minimal .stat-label { color: var(--muted); }
+body.minimal .profile-tabs, body.minimal .auth-tabs { background: var(--soft); border: 1px solid var(--line); }
+body.minimal .ptab, body.minimal .auth-tab { color: var(--muted) !important; }
+body.minimal .ptab.active, body.minimal .auth-tab.active { background: #fff !important; color: var(--text) !important; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important; }
+body.minimal .bio-edit, body.minimal .gb-del { background: var(--soft) !important; border-color: var(--line) !important; }
+body.minimal .inv-btn { background: var(--soft) !important; border-color: var(--line) !important; }
+body.minimal .inv-btn.danger { color: #c4334a !important; }
+body.minimal .inv-beer, body.minimal .inv-grid a { background: var(--soft); }
+body.minimal .inv-beer.has { background: #fff3cf; border-color: #f5b301; }
+body.minimal .ticket { color: #1d1c1a; }
+body.minimal .leaderboard li.me, body.minimal .standings tr.me td { background: #fff3cf; }
+body.minimal .avatar-picker { border-color: #f5b301; color: #8a5d00; }
+body.minimal .nt-item { color: var(--text) !important; }
+body.minimal .nt-item.unread { background: #fff6dc; }
+body.minimal .presence-stack { background: #fff !important; }
