@@ -3,8 +3,6 @@
 const $ = (id) => document.getElementById(id);
 
 let data = null;
-let spinning = false;
-let rotation = 0;
 
 async function api(path, body) {
   const res = await fetch(path, body
@@ -15,140 +13,36 @@ async function api(path, body) {
   return json;
 }
 
-// ---------- Lykkehjul ----------
-const SEGMENTS = 20;
-const BEER_SEGMENTS = [0, 7, 14]; // 3 av 20 = 15 %
-const MISS_LABELS = ['Bom', 'Neste gang', 'Vann', 'Nope', 'Snart', 'Prøv igjen'];
-const segments = Array.from({ length: SEGMENTS }, (_, i) =>
-  BEER_SEGMENTS.includes(i) ? { beer: true, label: '🍺 ØL!' } : { beer: false, label: MISS_LABELS[i % MISS_LABELS.length] });
-
-function drawWheel() {
-  const canvas = $('wheel');
-  const ctx = canvas.getContext('2d');
-  const r = canvas.width / 2;
-  const seg = (Math.PI * 2) / SEGMENTS;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  segments.forEach((s, i) => {
-    const start = -Math.PI / 2 + i * seg;
-    ctx.beginPath();
-    ctx.moveTo(r, r);
-    ctx.arc(r, r, r - 6, start, start + seg);
-    ctx.closePath();
-    ctx.fillStyle = s.beer ? '#f5b301' : i % 2 ? '#2b2f45' : '#3a3f5c';
-    ctx.fill();
-    ctx.strokeStyle = '#1b1e2e';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    ctx.save();
-    ctx.translate(r, r);
-    ctx.rotate(start + seg / 2);
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = s.beer ? '#1b1e2e' : '#e8e8f0';
-    ctx.font = s.beer ? 'bold 30px system-ui, sans-serif' : '22px system-ui, sans-serif';
-    ctx.fillText(s.label, r - 24, 0);
-    ctx.restore();
-  });
-  ctx.beginPath();
-  ctx.arc(r, r, 40, 0, Math.PI * 2);
-  ctx.fillStyle = '#f5b301';
-  ctx.fill();
-  ctx.font = '40px system-ui';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🍺', r, r + 2);
-}
-
-function spinTo(win) {
-  const candidates = segments.map((s, i) => (s.beer === win ? i : -1)).filter((i) => i >= 0);
-  const target = candidates[Math.floor(Math.random() * candidates.length)];
-  const segDeg = 360 / SEGMENTS;
-  const jitter = (Math.random() - 0.5) * segDeg * 0.7;
-  // Segment i ligger (i + 0.5) * segDeg med klokka fra toppen; roter så det havner under pila.
-  const wanted = (360 - (target + 0.5) * segDeg + jitter + 360) % 360;
-  const current = ((rotation % 360) + 360) % 360;
-  rotation += 360 * 6 + ((wanted - current + 360) % 360);
-  $('wheel').style.transform = `rotate(${rotation}deg)`;
-  return new Promise((resolve) => setTimeout(resolve, 5200));
-}
-
-async function onSpin(pay) {
-  if (spinning) return;
-  spinning = true;
-  $('spin-btn').disabled = true;
-  $('spin-flus-btn').disabled = true;
-  $('spin-result').textContent = '';
-  $('spin-result').className = 'result';
-  try {
-    const result = await api('/api/spin', { pay });
-    await spinTo(result.win);
-    data.me = result.me;
-    $('spin-result').textContent = result.win ? '🎉 Gratulerer! Du vant en øl! 🍺' : '😢 Ingen øl denne gangen.';
-    $('spin-result').classList.add(result.win ? 'win' : 'lose');
-  } catch (err) {
-    $('spin-result').textContent = err.message;
-    $('spin-result').classList.add('lose');
-  }
-  spinning = false;
-  render();
-}
-
 // ---------- Visning ----------
 function render() {
   const { settings, me, draw } = data;
   $('tpp').textContent = settings.ticketsPerPerson;
   $('spp').textContent = settings.spinsPerPerson;
-  $('chance').textContent = `${Math.round(settings.spinWinChance * 100)} %`;
   $('win-count').textContent = settings.winningTickets;
   $('total-count').textContent = settings.totalTickets;
   $('participant-count').textContent = data.participantCount;
   $('tickets-left').textContent = data.ticketsLeft;
 
   // Man kan alltid registrere seg. Etter trekningen eller når loddene er tomme får man bare ingen lodd.
-  // Ikke logget inn: alltid Hjem, så registreringen synes (også hvis lenken var til #spill eller #stilling)
-  if (!me && $('view-home').classList.contains('hidden')) showView('home', { scroll: false });
   $('join-section').classList.toggle('hidden', !!me);
   $('join-lead').classList.toggle('hidden', !!draw || data.ticketsLeft < settings.ticketsPerPerson);
   $('join-lead-late').classList.toggle('hidden', !(draw || data.ticketsLeft < settings.ticketsPerPerson));
-  // Før man er logget inn er resten av siden (meny, story, stilling) skjult
+  // Før man er logget inn er resten av siden (meny, story, veggen) skjult
   document.body.classList.toggle('logged-out', !me);
-  $('me-section').classList.toggle('hidden', !me);
-  $('wheel-section').classList.toggle('hidden', !me);
-  $('game-card').classList.toggle('hidden', !me);
-  $('duel-card').classList.toggle('hidden', !me);
-  $('chat-card').classList.toggle('hidden', !me);
-  $('tasks-card').classList.toggle('hidden', !me);
-  $('casino-card').classList.toggle('hidden', !me);
-  $('bar-card').classList.toggle('hidden', !me);
-  $('games-locked').classList.toggle('hidden', !!me);
-  if (me) {
-    $('bar-info').textContent = me.beersOwed ? `🍺 ${me.beersOwed} pils til gode!` : 'Kjøp pils for flus';
-    $('home-spins').textContent = me.spinsLeft;
-    $('home-flus').textContent = me.flus;
-    $('home-beers').textContent = me.beersOwed;
-  }
-  $('open-tasks').textContent = data.openTasks ? `${data.openTasks} ledige.` : 'Alle er tatt!';
-  $('mogg-card').classList.toggle('hidden', !me);
-  $('mogg-alert').classList.toggle('hidden', !data.incomingMoggs);
-  $('mogg-alert').textContent = data.incomingMoggs;
-  $('duel-alert').classList.toggle('hidden', !data.incomingDuels);
-  $('duel-alert').textContent = data.incomingDuels;
-  // Varsel på Hjem og prikk på «Spill» i menyen når noen har utfordret deg
-  const challenges = (data.incomingDuels || 0) + (data.incomingMoggs || 0);
-  $('nav-badge').classList.toggle('hidden', !challenges);
-  $('nav-badge').textContent = challenges;
+  $('wall').classList.toggle('hidden', !me);
+  $('open-tasks').textContent = data.openTasks ? `${data.openTasks} ledige` : 'Alle er tatt!';
+
   const alerts = [];
   if (data.incomingDuels) alerts.push(`<a href="/duell.html">⚔️ ${data.incomingDuels} duell${data.incomingDuels > 1 ? 'er' : ''} venter på svar</a>`);
   if (data.incomingMoggs) alerts.push(`<a href="/mogg.html">🗿 ${data.incomingMoggs} mogg-off${data.incomingMoggs > 1 ? 's' : ''} venter på deg</a>`);
   $('home-alerts').innerHTML = alerts.join('<br>');
   $('home-alerts').classList.toggle('hidden', !alerts.length || !me);
-  const first = settings.gameFirstMilestone;
-  $('game-rule').textContent = `${first} poeng = 1 spinn, ${first * 2} = 2 …`;
-  renderLeaderboard(data.leaderboard, me);
   renderStandings(data.standings, me);
 
   if (me) {
+    $('home-spins').textContent = me.spinsLeft;
+    $('home-flus').textContent = me.flus;
+    $('home-beers').textContent = me.beersOwed;
     $('me-name').textContent = me.isAdmin ? `${me.name} 👑` : me.name;
     $('admin-btn').classList.toggle('hidden', !me.isAdmin);
     $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 64));
@@ -170,17 +64,9 @@ function render() {
     } else {
       $('my-result').textContent = '';
     }
-    $('spins-left').textContent = me.spinsLeft;
-    $('wheel-flus').textContent = me.flus;
-    $('spin-price').textContent = settings.spinPrice;
-    if (!spinning) {
-      $('spin-btn').disabled = me.spinsLeft <= 0;
-      $('spin-flus-btn').disabled = me.flus < settings.spinPrice;
-    }
-    $('spin-btn').textContent = me.spinsLeft > 0 ? 'Spinn! 🎰' : 'Ingen spinn igjen';
-    $('spin-total').textContent = me.spinWins
-      ? `Du har vunnet ${me.spinWins} øl på hjulet totalt 🍺`
-      : '';
+    renderChatPreview(data.chatPreview);
+    renderTaskPreview(data.taskPreview);
+    if (!feedLoaded) loadFeed();
   }
 
   $('draw-pending').classList.toggle('hidden', !!draw);
@@ -253,27 +139,11 @@ function renderStandings(list, me) {
   });
 }
 
-function renderLeaderboard(list, me) {
-  $('leaderboard').innerHTML = '';
-  if (!list.length) {
-    $('leaderboard').innerHTML = '<li class="muted">Ingen har spilt ennå.</li>';
-    return;
-  }
-  list.slice(0, 10).forEach((e, i) => {
-    const li = document.createElement('li');
-    if (me && e.name === me.name) li.classList.add('me');
-    li.innerHTML = `<span class="rank">${['🥇', '🥈', '🥉'][i] || `${i + 1}.`}</span><span class="lb-name"></span><span class="lb-score">${e.score}</span>`;
-    li.querySelector('.lb-name').textContent = e.name;
-    li.querySelector('.rank').after(avatarEl(data.avatars[e.name], e.name, 28));
-    $('leaderboard').appendChild(li);
-  });
-}
-
 async function refresh() {
   try {
-    const fresh = await api('/api/state');
-    if (spinning) fresh.me = data.me; // ikke avslør resultatet før hjulet stopper
-    data = fresh;
+    const wasIn = !!(data && data.me);
+    data = await api('/api/state');
+    if (!wasIn && data.me && window.refreshNav) window.refreshNav();
     render();
   } catch (err) {
     console.error(err);
@@ -341,28 +211,8 @@ document.addEventListener('presence', (e) => {
   });
 });
 
-// ---------- Meny nederst ----------
-const VIEW_HASH = { home: '', games: '#spill', standings: '#stilling' };
-
-function showView(name, { scroll = true } = {}) {
-  if (data && !data.me) name = 'home'; // ikke logget inn: bare registreringen
-  document.querySelectorAll('.view').forEach((v) => v.classList.toggle('hidden', v.id !== `view-${name}`));
-  document.querySelectorAll('.bottom-nav [data-view]').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
-  // Storyen og registreringen hører til Hjem
-  $('stories-bar').classList.toggle('hidden', name !== 'home');
-  if (name !== 'home') $('join-section').classList.add('hidden');
-  else if (data) $('join-section').classList.toggle('hidden', !!data.me);
-  history.replaceState(null, '', VIEW_HASH[name] || location.pathname + location.search);
-  if (scroll) window.scrollTo(0, 0);
-}
-
-document.querySelectorAll('.bottom-nav [data-view]').forEach((b) => b.addEventListener('click', () => showView(b.dataset.view)));
-const startView = Object.keys(VIEW_HASH).find((k) => VIEW_HASH[k] && VIEW_HASH[k] === location.hash);
-if (startView) showView(startView, { scroll: false });
-window.addEventListener('hashchange', () => {
-  const v = Object.keys(VIEW_HASH).find((k) => VIEW_HASH[k] === location.hash) || 'home';
-  showView(v, { scroll: false });
-});
+// Gamle lenker: #spill går til PvP-siden
+if (location.hash === '#spill') location.replace('/pvp.html');
 
 // ---------- Endre navn ----------
 $('rename-btn').addEventListener('click', async () => {
@@ -416,9 +266,160 @@ if (codeFromLink) {
   loginWithCode(codeFromLink);
 }
 
-$('spin-btn').addEventListener('click', () => onSpin('spin'));
-$('spin-flus-btn').addEventListener('click', () => onSpin('flus'));
+// ---------- Veggen: chat, oppgaver og hva som skjer ----------
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
 
-drawWheel();
+const profileUrl = (n) => `/profil.html?navn=${encodeURIComponent(n)}`;
+
+function renderChatPreview(list) {
+  const box = $('chat-preview');
+  box.innerHTML = '';
+  if (!list.length) {
+    box.appendChild(el('p', 'muted', 'Ingen har sagt noe ennå. Bli den første!'));
+    return;
+  }
+  list.forEach((m) => {
+    const row = el('a', 'cp-msg');
+    row.href = '/chat.html';
+    const body = el('div', 'cp-body');
+    body.append(el('strong', '', m.name), el('span', 'cp-text', m.text));
+    row.append(avatarEl(m.avatar, m.name, 30), body, el('small', 'muted', timeAgo(m.at)));
+    box.appendChild(row);
+  });
+}
+
+$('quick-chat').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = $('quick-chat-input').value.trim();
+  if (!text) return;
+  try {
+    await api('/api/chat', { text });
+    $('quick-chat-input').value = '';
+    refresh();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+function renderTaskPreview(list) {
+  const ul = $('task-preview');
+  ul.innerHTML = '';
+  if (!list.length) {
+    ul.appendChild(el('li', 'muted', 'Alle oppgavene er tatt. Følg med, det kan komme nye!'));
+    return;
+  }
+  list.forEach((t) => {
+    const li = el('li');
+    const a = el('a', 'tp-task');
+    a.href = '/oppgaver.html';
+    a.append(el('span', 'tp-title', t.title), el('span', 'tp-reward', `🎰 ${t.reward} spinn`));
+    li.appendChild(a);
+    ul.appendChild(li);
+  });
+}
+
+// «Hva skjer»: alt alle gjør, med likes og kommentarer
+let feedItems = [];
+let feedLoaded = false;
+let feedMore = false;
+
+async function loadFeed() {
+  feedLoaded = true;
+  try {
+    const r = await api('/api/feed');
+    // Behold eldre innlegg man har hentet med «Vis eldre»
+    const older = feedItems.filter((a) => r.items.length && a.at < r.items[r.items.length - 1].at);
+    feedItems = r.items.concat(older);
+    if (!older.length) feedMore = r.more;
+    renderFeed();
+  } catch { /* ignorer */ }
+}
+
+$('feed-more').addEventListener('click', async () => {
+  const last = feedItems[feedItems.length - 1];
+  if (!last) return;
+  try {
+    const r = await api(`/api/feed?before=${last.at}`);
+    feedItems = feedItems.concat(r.items);
+    feedMore = r.more;
+    renderFeed();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+function renderFeed() {
+  const box = $('feed');
+  box.innerHTML = '';
+  if (!feedItems.length) box.appendChild(el('p', 'muted', 'Ingenting har skjedd ennå.'));
+  feedItems.forEach((a) => box.appendChild(feedItem(a)));
+  $('feed-more').classList.toggle('hidden', !feedMore);
+}
+
+function feedItem(a) {
+  const postUrl = `${profileUrl(a.name)}&innlegg=${a.id}`;
+  const item = el('article', 'wall-item');
+  const av = el('a', 'wi-avatar');
+  av.href = profileUrl(a.name);
+  av.appendChild(avatarEl(a.avatar, a.name, 40));
+  const body = el('div', 'wi-body');
+  const p = el('p', 'wi-text');
+  const who = el('a', 'wi-name', a.admin ? `${a.name} 👑` : a.name);
+  who.href = profileUrl(a.name);
+  p.append(el('span', 'wi-icon', a.icon), who, document.createTextNode(` ${a.text}`));
+  body.append(p, el('small', 'muted', timeAgo(a.at)));
+  if (a.url) {
+    const link = el('a', 'wi-img');
+    link.href = postUrl;
+    const img = el('img');
+    img.src = a.url;
+    img.loading = 'lazy';
+    img.alt = '';
+    link.appendChild(img);
+    body.appendChild(link);
+  }
+  const actions = el('div', 'wi-actions');
+  const like = el('button', 'wi-like' + (a.liked ? ' liked' : ''), `${a.liked ? '❤️' : '🤍'} ${a.likes || 'Lik'}`);
+  like.type = 'button';
+  like.addEventListener('click', async () => {
+    try {
+      const r = await api('/api/react/like', { id: a.id });
+      Object.assign(a, r.activity);
+      item.replaceWith(feedItem(a));
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+  const comments = el('a', 'wi-comments', `💬 ${a.comments.length || 'Kommenter'}`);
+  comments.href = postUrl;
+  actions.append(like, comments);
+  body.appendChild(actions);
+  if (a.comments.length) {
+    const c = a.comments[a.comments.length - 1];
+    const last = el('a', 'wi-last-comment');
+    last.href = postUrl;
+    last.append(el('strong', '', c.name), document.createTextNode(` ${c.text}`));
+    body.appendChild(last);
+  }
+  item.append(av, body);
+  return item;
+}
+
+// Live: nye hendelser, likes, chat og oppgaver
+let feedTimer = null;
+const reloadFeedSoon = () => {
+  clearTimeout(feedTimer);
+  feedTimer = setTimeout(() => data && data.me && loadFeed(), 600);
+};
+onLive('activity', reloadFeedSoon);
+onLive('reactions', reloadFeedSoon);
+onLive('chat', () => data && data.me && refresh());
+onLive('tasks', () => data && data.me && refresh());
+
 refresh();
 setInterval(refresh, 8000);

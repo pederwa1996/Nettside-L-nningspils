@@ -7,6 +7,8 @@
   let betType = 'red';
   let busy = false;
   let rotation = 0;
+  let wheelRotation = 0;
+  let wheelSpinning = false;
 
   async function api(path, body) {
     const res = await fetch(path, body
@@ -28,6 +30,12 @@
     document.querySelectorAll('.spin-price').forEach((el) => (el.textContent = data.spinPrice));
     $('slot-pull').disabled = busy || me.spinsLeft < 1;
     $('slot-pull-flus').disabled = busy || me.flus < data.spinPrice;
+    if (!wheelSpinning) {
+      $('spin-btn').disabled = me.spinsLeft <= 0;
+      $('spin-flus-btn').disabled = me.flus < data.spinPrice;
+      $('spin-btn').textContent = me.spinsLeft > 0 ? `Spinn! 🎡 (${me.spinsLeft} igjen)` : 'Ingen spinn igjen';
+    }
+    $('spin-total').textContent = me.spinWins ? `Du har vunnet ${me.spinWins} øl på hjulet totalt 🍺` : '';
     renderChips();
   }
 
@@ -315,15 +323,96 @@
   $('bj-stand').addEventListener('click', () => bjAction('/api/casino/bj/stand'));
   $('bj-double').addEventListener('click', () => bjAction('/api/casino/bj/double'));
 
+  // ---------- Lykkehjulet ----------
+  const SEGMENTS = 20;
+  const BEER_SEGMENTS = [0, 7, 14]; // 3 av 20 = 15 %
+  const MISS_LABELS = ['Bom', 'Neste gang', 'Vann', 'Nope', 'Snart', 'Prøv igjen'];
+  const segments = Array.from({ length: SEGMENTS }, (_, i) =>
+    BEER_SEGMENTS.includes(i) ? { beer: true, label: '🍺 ØL!' } : { beer: false, label: MISS_LABELS[i % MISS_LABELS.length] });
+
+  function drawWheel() {
+    const canvas = $('wheel');
+    const ctx = canvas.getContext('2d');
+    const r = canvas.width / 2;
+    const seg = (Math.PI * 2) / SEGMENTS;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    segments.forEach((s, i) => {
+      const start = -Math.PI / 2 + i * seg;
+      ctx.beginPath();
+      ctx.moveTo(r, r);
+      ctx.arc(r, r, r - 6, start, start + seg);
+      ctx.closePath();
+      ctx.fillStyle = s.beer ? '#f5b301' : i % 2 ? '#5a0a14' : '#7a0d1c';
+      ctx.fill();
+      ctx.strokeStyle = '#d4a530';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(r, r);
+      ctx.rotate(start + seg / 2);
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = s.beer ? '#2a1500' : '#fff3c4';
+      ctx.font = s.beer ? 'bold 30px system-ui, sans-serif' : '22px system-ui, sans-serif';
+      ctx.fillText(s.label, r - 24, 0);
+      ctx.restore();
+    });
+    ctx.beginPath();
+    ctx.arc(r, r, 40, 0, Math.PI * 2);
+    ctx.fillStyle = '#f5b301';
+    ctx.fill();
+    ctx.font = '40px system-ui';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🍺', r, r + 2);
+  }
+
+  function wheelSpinTo(win) {
+    const candidates = segments.map((s, i) => (s.beer === win ? i : -1)).filter((i) => i >= 0);
+    const target = candidates[Math.floor(Math.random() * candidates.length)];
+    const segDeg = 360 / SEGMENTS;
+    const jitter = (Math.random() - 0.5) * segDeg * 0.7;
+    // Segment i ligger (i + 0.5) * segDeg med klokka fra toppen; roter så det havner under pila.
+    const wanted = (360 - (target + 0.5) * segDeg + jitter + 360) % 360;
+    const current = ((wheelRotation % 360) + 360) % 360;
+    wheelRotation += 360 * 6 + ((wanted - current + 360) % 360);
+    $('wheel').style.transform = `rotate(${wheelRotation}deg)`;
+    return sleep(5200);
+  }
+
+  async function onWheelSpin(pay) {
+    if (wheelSpinning) return;
+    wheelSpinning = true;
+    $('spin-btn').disabled = true;
+    $('spin-flus-btn').disabled = true;
+    $('spin-result').textContent = '';
+    $('spin-result').className = 'result';
+    try {
+      const result = await api('/api/spin', { pay });
+      await wheelSpinTo(result.win);
+      $('spin-result').textContent = result.win ? '🎉 Gratulerer! Du vant en øl! 🍺 Hent den i baren.' : '😢 Ingen øl denne gangen.';
+      $('spin-result').classList.add(result.win ? 'win' : 'lose');
+      wheelSpinning = false;
+      setWallet(result.me);
+    } catch (err) {
+      $('spin-result').textContent = err.message;
+      $('spin-result').classList.add('lose');
+      wheelSpinning = false;
+      setWallet(data.me);
+    }
+  }
+  $('spin-btn').addEventListener('click', () => onWheelSpin('spin'));
+  $('spin-flus-btn').addEventListener('click', () => onWheelSpin('flus'));
+
   // ---------- Felles ----------
-  const TAB_HASH = { slot: 'automat', roulette: 'roulette', blackjack: 'blackjack', poker: 'poker', bar: 'baren' };
+  const TAB_HASH = { wheel: 'hjul', slot: 'automat', roulette: 'roulette', blackjack: 'blackjack', poker: 'poker', bar: 'baren' };
 
   function showTab(name) {
     document.body.dataset.tab = name; // hver fane har sitt eget tema
     if (window.updatePresenceRoom) window.updatePresenceRoom();
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
     Object.keys(TAB_HASH).forEach((t) => $(`tab-${t}`).classList.toggle('hidden', t !== name));
-    $('bet-card').classList.toggle('hidden', name === 'slot' || name === 'bar' || name === 'poker');
+    $('bet-card').classList.toggle('hidden', !['roulette', 'blackjack'].includes(name));
     if (name === 'poker' && window.refreshPoker) window.refreshPoker();
     history.replaceState(null, '', `#${TAB_HASH[name]}`);
     // Baren har sin egen oversikt over flus og bestillinger: hent den på nytt
@@ -413,6 +502,8 @@
     renderPaytable(data.slotTable);
     initReels();
     drawRoulette();
+    drawWheel();
+    $('chance').textContent = `${Math.round(data.wheelChance * 100)} %`;
     document.querySelector('.bet-opt[data-type="red"]').classList.add('selected');
     const fromHash = Object.keys(TAB_HASH).find((t) => `#${TAB_HASH[t]}` === location.hash);
     if (data.blackjack) {

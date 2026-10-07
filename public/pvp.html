@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PvP – Lønningspils</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="theme-duel pvp-page">
+  <header class="hero">
+    <h1>⚔️ PvP</h1>
+    <p class="sub">Utfordre de andre og vinn spinn</p>
+  </header>
+
+  <main>
+    <section class="card center">
+      <p class="big-number">Du har <strong id="my-spins">0</strong> spinn</p>
+      <p id="pvp-alerts" class="duel-alert hidden"></p>
+    </section>
+
+    <div class="tile-grid">
+      <a class="tile" href="/duell.html">
+        <span class="tile-icon">✊</span><strong>Duell</strong>
+        <small>Stein, saks, papir. Sats spinn mot en kollega.</small>
+        <span class="tile-here hidden" data-rooms="duell"></span>
+        <span id="duel-badge" class="tile-badge hidden"></span>
+      </a>
+      <a class="tile" href="/mogg.html">
+        <span class="tile-icon">🗿</span><strong>Mogg-off</strong>
+        <small>Hardeste chad-ansikt vinner et spinn.</small>
+        <span class="tile-here hidden" data-rooms="mogg"></span>
+        <span id="mogg-badge" class="tile-badge hidden"></span>
+      </a>
+      <a class="tile wide" href="/spill.html">
+        <span class="tile-icon">🕊️</span><strong>Flappy Sjef</strong>
+        <small id="game-rule">Slå highscoren og tjen spinn.</small>
+        <span class="tile-here hidden" data-rooms="flappy"></span>
+      </a>
+    </div>
+
+    <section class="card">
+      <h2>🕊️ Flappy Sjef-toppliste</h2>
+      <ol id="leaderboard" class="leaderboard"></ol>
+    </section>
+  </main>
+
+  <script src="/media.js"></script>
+  <script src="/pvp.js"></script>
+  <script src="/presence.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/notify.js"></script>
+  <script src="/admin-bubble.js"></script>
+</body>
+</html>

@@ -5,12 +5,14 @@
 (function () {
   const ROOM_NAMES = {
     hjem: 'forsiden',
+    'kasino-wheel': 'lykkehjulet',
     'kasino-slot': 'automaten',
     'kasino-roulette': 'rouletten',
     'kasino-blackjack': 'blackjack-bordet',
     'kasino-poker': 'pokerbordet',
     'kasino-bar': 'baren',
     chat: 'chatten',
+    pvp: 'PvP',
     duell: 'duell',
     mogg: 'mogg-off',
     oppgaver: 'oppgavene',
@@ -21,7 +23,7 @@
   function currentRoom() {
     const path = location.pathname.replace(/\/$/, '') || '/';
     if (path === '/' || path === '/index.html') return 'hjem';
-    if (path === '/kasino.html') return `kasino-${document.body.dataset.tab || 'slot'}`;
+    if (path === '/kasino.html') return `kasino-${document.body.dataset.tab || 'wheel'}`;
     if (path === '/spill.html') return 'flappy';
     const page = path.replace(/^\//, '').replace(/\.html$/, '');
     return ROOM_NAMES[page] ? page : null;

@@ -828,13 +828,13 @@ body.cantina h3 {
 }
 
 /* Knapper i ølfarge med varm glød */
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn):not(.wi-like),
 body.cantina .button {
   background: linear-gradient(180deg, #ffcf5a, #f2a516);
   color: #2a1608;
   box-shadow: 0 3px 0 #a86a0b, 0 0 16px rgba(255, 180, 60, 0.3);
 }
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn):hover:not(:disabled),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn):not(.wi-like):hover:not(:disabled),
 body.cantina .button:hover {
   background: linear-gradient(180deg, #ffd977, #f7b02a);
 }
@@ -1015,43 +1015,77 @@ a.profile-link:hover span { text-decoration: underline; }
 /* =========================================================
    Forsiden: meny nederst og fliser
    ========================================================= */
-body:has(.bottom-nav) { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+/* Menyen nederst (nav.js) – tydelig, med store ikoner og en gull «pille» på siden man er på */
+:root { --nav-h: 70px; }
+body:has(.bottom-nav) { padding-bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom)); }
 .bottom-nav {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 80;
+  z-index: 85;
   display: flex;
   justify-content: space-around;
-  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
-  background: rgba(20, 12, 7, 0.96);
-  border-top: 1px solid rgba(255, 200, 130, 0.2);
-  backdrop-filter: blur(8px);
+  gap: 2px;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #2a1a10, #120a05);
+  border-top: 2px solid #f5b301;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.6), 0 -1px 12px rgba(245, 179, 1, 0.35);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
-.bottom-nav button, .bottom-nav a {
+.bottom-nav a {
   position: relative;
   flex: 1;
+  max-width: 110px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1px;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
   padding: 4px 0;
-  background: none !important;
-  box-shadow: none !important;
-  color: #b89a7a !important;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-decoration: none;
-  border: none;
+  border-radius: 14px;
+  color: #f3e3cf !important;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  text-decoration: none !important;
+  text-shadow: none;
+  transition: background 0.2s, transform 0.15s;
 }
-.bottom-nav span { font-size: 1.35rem; line-height: 1.2; filter: grayscale(0.4); }
-.bottom-nav .active { color: #ffd38a !important; }
-.bottom-nav .active span { filter: none; transform: scale(1.1); }
-.nav-badge { position: absolute; top: 0; left: 56%; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #ff3b5c; color: #fff; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; }
+.bottom-nav a:active { transform: scale(0.93); }
+.bottom-nav .nav-icon { font-size: 1.65rem; line-height: 1.1; }
+.bottom-nav a.active { background: linear-gradient(180deg, #ffd977, #f5a301); color: #2a1500 !important; box-shadow: 0 0 14px rgba(245, 179, 1, 0.55); }
+.bottom-nav.nav-glow { animation: nav-glow 1.2s ease-in-out infinite alternate; }
+@keyframes nav-glow { to { box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.6), 0 -4px 30px rgba(245, 179, 1, 0.9); } }
+.nav-badge { position: absolute; top: 2px; left: 58%; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #ff3b5c; color: #fff; font-size: 0.72rem; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid #120a05; }
+.nav-hint {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--nav-h) + 18px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 86;
+  width: min(340px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fff6dc;
+  color: #2a1500;
+  font-family: system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.55);
+  animation: toast-in 0.4s ease, hint-bob 1s ease-in-out 0.4s infinite alternate;
+  cursor: pointer;
+}
+@keyframes hint-bob { to { transform: translateX(-50%) translateY(-6px); } }
+/* Chatten: skrivefeltet ligger rett over menyen */
+body:has(.bottom-nav) .chat-form { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)); padding-bottom: 10px; }
+body:has(.bottom-nav) .messages { padding-bottom: 90px; }
 /* Bestillingsboblen må ligge over menyen */
-body:has(.bottom-nav) .admin-bubble { bottom: 84px; }
-body:has(.bottom-nav) .admin-orders { bottom: 228px; }
+body:has(.bottom-nav) .admin-bubble { bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom)); }
+body.chat-page:has(.bottom-nav) .admin-bubble, body.chat-page:has(.bottom-nav) .notify-bubble { bottom: calc(var(--nav-h) + 80px + env(safe-area-inset-bottom)); }
+body:has(.bottom-nav) .admin-orders { bottom: calc(var(--nav-h) + 160px); }
 
 .home-wallet { display: flex; gap: 8px; margin: 10px 0; }
 .home-wallet div, .home-wallet a { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
@@ -1576,8 +1610,8 @@ button.wallet-item:hover:not(:disabled) { background: none; filter: brightness(1
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   text-align: left;
 }
-body:has(.bottom-nav) .notify-bubble, .chat-page .notify-bubble { bottom: 84px; }
-body:has(.bottom-nav) .notify-panel, .chat-page .notify-panel { bottom: 150px; }
+body:has(.bottom-nav) .notify-bubble { bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom)); }
+body:has(.bottom-nav) .notify-panel { bottom: calc(var(--nav-h) + 80px); }
 .nt-item { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); color: inherit; text-decoration: none; border-radius: 8px; }
 .nt-item.unread { background: rgba(245, 179, 1, 0.12); }
 .nt-item.unread .nt-text span { font-weight: 700; }
@@ -1601,3 +1635,56 @@ a.nt-item:active { background: rgba(255, 255, 255, 0.08); }
 /* Innlegg man kommer til fra et varsel */
 .feed-item.highlight { animation: nt-highlight 2.5s ease; }
 @keyframes nt-highlight { 0%, 60% { box-shadow: 0 0 0 3px var(--gold); } }
+
+/* =========================================================
+   Forsiden som vegg: chat, oppgaver og «Hva skjer»
+   ========================================================= */
+.quick-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 6px; }
+.quick-links a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  padding: 8px 2px; border-radius: 12px; text-align: center; text-decoration: none;
+  font-size: 0.72rem; font-weight: 800; line-height: 1.2; color: #ffe2b8 !important;
+  background: rgba(255, 220, 170, 0.08); border: 1px solid rgba(255, 200, 130, 0.3);
+}
+.quick-links a:active { transform: scale(0.95); }
+.wall-card { padding-top: 14px; }
+.wall-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.wall-head h2 { margin: 0; flex: 1; font-size: 1.25rem; }
+.wall-head .tile-here { margin: 0; padding: 0; }
+.wall-more { font-weight: 800; text-decoration: none; padding: 4px 10px; border-radius: 999px; background: rgba(255, 220, 170, 0.12); color: #ffd38a !important; font-size: 0.85rem; }
+.wall-count { font-size: 0.8rem; font-weight: 800; color: #9ff0b5; }
+.chat-preview { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.cp-msg { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); color: inherit !important; text-decoration: none; }
+.cp-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cp-body strong { font-size: 0.8rem; color: var(--gold); }
+.cp-text { font-size: 0.92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cp-msg small { flex: none; font-size: 0.7rem; }
+.quick-chat { display: flex; gap: 6px; margin: 0; }
+.quick-chat input { flex: 1; min-width: 0; }
+.quick-chat button { padding: 10px 16px; }
+.task-preview { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.tp-task { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); color: inherit !important; text-decoration: none; font-weight: 700; }
+.tp-reward { flex: none; font-size: 0.8rem; color: #9ff0b5; font-weight: 800; }
+.wall-feed { display: flex; flex-direction: column; }
+.wall-item { display: flex; gap: 10px; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+.wall-item:last-child { border-bottom: 0; }
+.wi-avatar { flex: none; }
+.wi-body { flex: 1; min-width: 0; }
+.wi-text { margin: 0 0 2px; line-height: 1.35; overflow-wrap: anywhere; }
+.wi-icon { margin-right: 4px; }
+.wi-name { font-weight: 800; color: var(--gold) !important; text-decoration: none; }
+.wi-img { display: block; margin-top: 8px; }
+.wi-img img { display: block; width: 100%; max-height: 360px; object-fit: cover; border-radius: 12px; }
+.wi-actions { display: flex; gap: 8px; margin-top: 8px; }
+.wi-like, .wi-comments {
+  display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px !important; border-radius: 999px;
+  font-size: 0.85rem !important; font-weight: 700; text-decoration: none; line-height: 1.2;
+  background: rgba(255, 255, 255, 0.08) !important; color: inherit !important; border: 0 !important; box-shadow: none !important;
+}
+.wi-like.liked { background: rgba(255, 59, 92, 0.2) !important; }
+.wi-last-comment { display: block; margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); font-size: 0.85rem; color: inherit !important; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#feed-more { display: block; margin: 10px auto 0; }
+
+/* Kasinoet: seks faner i to rader */
+.casino-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.casino-tabs .tab { margin: 0; }

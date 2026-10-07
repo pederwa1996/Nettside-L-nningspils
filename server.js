@@ -948,7 +948,26 @@ const routes = {
       incomingDuels: me ? state.duels.filter((d) => d.status === 'pending' && d.opponent === me.name).length : 0,
       openTasks: state.tasks.filter((t) => t.status === 'open').length,
       incomingMoggs: me ? state.moggs.filter((m) => m.status === 'pending' && m.opponent === me.name).length : 0,
+      // Til veggen på forsiden
+      chatPreview: me ? state.chat.slice(-3).map(chatView) : [],
+      taskPreview: me ? state.tasks.filter((t) => t.status === 'open').sort((a, b) => b.reward - a.reward).slice(0, 3).map((t) => ({ id: t.id, title: t.title, reward: t.reward })) : [],
     });
+  },
+
+  // Veggen: hva alle har gjort, nyeste først. ?before=<tid> henter eldre.
+  'GET /api/feed': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const before = Number(new URL(req.url, 'http://x').searchParams.get('before')) || Infinity;
+    const av = avatars();
+    const admins = adminNames();
+    const items = [];
+    for (let i = state.activity.length - 1; i >= 0 && items.length < 25; i--) {
+      const a = state.activity[i];
+      if (a.at >= before) continue;
+      items.push({ ...activityView(a, p), avatar: av[a.name] || null, admin: admins.includes(a.name) });
+    }
+    sendJson(res, 200, { items, more: items.length === 25 });
   },
 
   'POST /api/join': (req, res, body) => {
@@ -1532,6 +1551,7 @@ const routes = {
       maxBet: CASINO_MAX_BET,
       minBet: CASINO_MIN_BET,
       spinPrice: SPIN_PRICE,
+      wheelChance: SPIN_WIN_CHANCE,
       slotTable: SLOT_TABLE.filter((o) => o.flus || o.beer).map((o) => ({ id: o.id, symbol: o.symbol || '🍒🍒', flus: o.flus, beer: o.beer || 0 })),
       blackjack: p ? bjView(state.blackjack[p.name]) : null,
       log: state.casinoLog.slice(-10).reverse(),
@@ -1649,7 +1669,7 @@ const routes = {
     delta = Math.max(delta, -spinsLeft(p));
     if (delta === 0) return sendJson(res, 400, { error: `${p.name} har ingen spinn å ta.` });
     addSpins(p, delta);
-    notify(p.name, delta > 0 ? '🎁' : '➖', delta > 0 ? `Spillmesteren ga deg ${delta} spinn! 🎰` : `Spillmesteren tok ${-delta} spinn fra deg`, { url: '/' });
+    notify(p.name, delta > 0 ? '🎁' : '➖', delta > 0 ? `Spillmesteren ga deg ${delta} spinn! 🎰` : `Spillmesteren tok ${-delta} spinn fra deg`, { url: '/kasino.html#hjul' });
     state.spinLog.push({ name: p.name, delta, at: Date.now() });
     if (state.spinLog.length > 50) state.spinLog = state.spinLog.slice(-50);
     saveState();

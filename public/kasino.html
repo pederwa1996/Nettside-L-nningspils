@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@600;800&family=Monoton&family=Playfair+Display:ital,wght@0,700;1,700&family=Rye&family=Lobster&display=swap">
   <link rel="stylesheet" href="/style.css">
 </head>
-<body class="kasino" data-tab="slot">
+<body class="kasino" data-tab="wheel">
   <header class="hero casino-hero">
     <div class="marquee">
       <h1>Kasino</h1>
@@ -25,14 +25,15 @@
 
     <div id="casino" class="hidden">
       <section class="card wallet">
-        <div class="wallet-item"><span class="wallet-num" id="my-spins">0</span><span class="wallet-label">🎰 spinn</span></div>
+        <div class="wallet-item"><span class="wallet-num" id="my-spins">0</span><span class="wallet-label">🎡 spinn</span></div>
         <div class="wallet-item"><span class="wallet-num" id="my-flus">0</span><span class="wallet-label">💰 flus</span></div>
         <button type="button" class="wallet-item wallet-link" id="wallet-beers" title="Gå til baren"><span class="wallet-num" id="my-beers">0</span><span class="wallet-label">🍺 til gode ›</span></button>
       </section>
 
-      <div class="tabs">
-        <button type="button" class="tab active" data-tab="slot">🎰 Automat</button>
-        <button type="button" class="tab" data-tab="roulette">🎡 Roulette</button>
+      <div class="tabs casino-tabs">
+        <button type="button" class="tab active" data-tab="wheel">🎡 Lykkehjul</button>
+        <button type="button" class="tab" data-tab="slot">🎰 Automat</button>
+        <button type="button" class="tab" data-tab="roulette">🔴 Roulette</button>
         <button type="button" class="tab" data-tab="blackjack">🃏 Blackjack</button>
         <button type="button" class="tab" data-tab="poker">♠️ Poker</button>
         <button type="button" class="tab" data-tab="bar">🍻 Baren</button>
@@ -44,8 +45,24 @@
         <div class="step-chips" id="bet-chips"></div>
       </section>
 
+      <!-- Lykkehjulet -->
+      <section id="tab-wheel" class="card">
+        <h2>Lykkehjulet 🎡</h2>
+        <p>Hvert spinn har <strong id="chance">15 %</strong> sjanse for øl. Spinn får du ved start, i Flappy Sjef, dueller og oppgaver.</p>
+        <div class="wheel-wrap">
+          <div class="pointer">▼</div>
+          <canvas id="wheel" width="600" height="600"></canvas>
+        </div>
+        <p id="spin-result" class="result"></p>
+        <div class="spin-buttons">
+          <button id="spin-btn" class="big">Spinn! 🎡</button>
+          <button id="spin-flus-btn" class="big secondary">Spinn for <span class="spin-price">50</span> flus 💰</button>
+        </div>
+        <p id="spin-total" class="note center"></p>
+      </section>
+
       <!-- Automat -->
-      <section id="tab-slot" class="card">
+      <section id="tab-slot" class="card hidden">
         <div class="slot-machine">
           <div class="slot-top">🍺 LØNNINGSPILS 🍺</div>
           <div class="slot-reels">
@@ -195,6 +212,7 @@
   <script src="/baren.js"></script>
   <script src="/pokerbord.js"></script>
   <script src="/presence.js"></script>
+  <script src="/nav.js"></script>
   <script src="/notify.js"></script>
   <script src="/admin-bubble.js"></script>
 </body>
