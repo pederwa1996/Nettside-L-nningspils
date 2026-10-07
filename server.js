@@ -63,7 +63,7 @@ const MAX_PENDING_ORDERS = 3;
 
 // ---- Lagring ----
 function freshState() {
-  return { wallPosts: [], suggestions: [], startFlusGiven: START_FLUS, budget: { total: BUDGET_KR, price: BEER_PRICE_KR }, participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, arena: [], poker: freshPoker() };
+  return { gifts: [], wallPosts: [], suggestions: [], startFlusGiven: START_FLUS, budget: { total: BUDGET_KR, price: BEER_PRICE_KR }, participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, arena: [], poker: freshPoker() };
 }
 
 function freshPoker() {
@@ -313,6 +313,7 @@ function renameEverywhere(oldName, newName) {
     swap(a, 'name');
     if (a.with) a.with = a.with.map((n) => (n === oldName ? newName : n));
   }));
+  state.gifts.forEach((g) => ['from', 'to'].forEach((k) => swap(g, k)));
   [state.stories, state.chat, state.activity, state.orders, state.casinoLog, state.spinLog, state.wallPosts, state.suggestions].forEach((list) => list.forEach((x) => swap(x, 'name')));
   Object.values(state.reactions).forEach((r) => {
     r.likes = r.likes.map((n) => (n === oldName ? newName : n));
@@ -585,7 +586,8 @@ function beersOwed(p) {
   const used = state.orders
     .filter((o) => o.name === p.name && o.pay === 'credit' && o.status !== 'cancelled')
     .reduce((sum, o) => sum + o.qty, 0);
-  return Math.max(0, w.wheel + w.tickets + w.slot + w.task + w.pvp - used);
+  // Gaver: pils man har fått minus pils man har gitt bort
+  return Math.max(0, w.wheel + w.tickets + w.slot + w.task + w.pvp + (p.giftBeers || 0) - used);
 }
 
 // Budsjett: brukt = leverte pils (kroner lagres på bestillingen når den leveres).
@@ -648,6 +650,27 @@ function announceBeer(name, text, delayMs = 0) {
 
 // ---- Oppgaver ----
 const MAX_PENDING_TASKS = 2;
+
+// 🎁 Gaver til andre: spinn, cash eller pils (fra det man selv har)
+const GIFT_KINDS = {
+  spins: { label: 'spinn', icon: '🎡', min: 1, max: 10 },
+  cash: { label: 'cash', icon: '💰', min: 10, max: 1000 },
+  beer: { label: 'pils', icon: '🍺', min: 1, max: 3 },
+};
+function giftBalance(p, kind) {
+  if (kind === 'cash') return p.flus || 0;
+  if (kind === 'spins') return spinsLeft(p);
+  return beersOwed(p);
+}
+function giftMove(p, kind, n) {
+  if (kind === 'cash') addFlus(p, n);
+  else if (kind === 'spins') addSpins(p, n);
+  else p.giftBeers = (p.giftBeers || 0) + n;
+}
+function giftWord(kind, n) {
+  const k = GIFT_KINDS[kind];
+  return kind === 'beer' ? `${n} pils 🍺` : `${n} ${k.label} ${k.icon}`;
+}
 
 // 💡 Forslag til admin: belønning for de første forslagene fra hver person
 const SUGGESTION_SPINS = 1;
@@ -1342,6 +1365,45 @@ const routes = {
     saveState();
     broadcast('wallposts', {});
     sendJson(res, 200, { ok: true });
+  },
+
+  // ---------- 🎁 Gaver ----------
+  'GET /api/gifts': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    sendJson(res, 200, {
+      kinds: GIFT_KINDS,
+      balance: { spins: spinsLeft(p), cash: p.flus || 0, beer: beersOwed(p) },
+      received: state.gifts.filter((g) => g.to === p.name).slice(-20).reverse(),
+      sent: state.gifts.filter((g) => g.from === p.name).slice(-20).reverse(),
+    });
+  },
+
+  'POST /api/gifts': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const to = findParticipant(String(body.to || ''));
+    if (!to) return sendJson(res, 404, { error: 'Fant ikke den personen.' });
+    if (to.name === p.name) return sendJson(res, 400, { error: 'Du kan ikke gi en gave til deg selv 😄' });
+    const kind = GIFT_KINDS[body.kind] ? body.kind : null;
+    if (!kind) return sendJson(res, 400, { error: 'Velg spinn, cash eller pils.' });
+    const k = GIFT_KINDS[kind];
+    const n = Math.floor(Number(body.amount));
+    if (!Number.isFinite(n) || n < k.min || n > k.max) return sendJson(res, 400, { error: `Du kan gi ${k.min}–${k.max} ${k.label} om gangen.` });
+    if (giftBalance(p, kind) < n) return sendJson(res, 400, { error: `Du har bare ${giftBalance(p, kind)} ${k.label}.` });
+    const last = lastPostAt.get(`gift|${p.name}`) || 0;
+    if (Date.now() - last < 3000) return sendJson(res, 400, { error: 'Vent litt før du sender en ny gave.' });
+    lastPostAt.set(`gift|${p.name}`, Date.now());
+    const msg = String(body.message || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+    giftMove(p, kind, -n);
+    giftMove(to, kind, n);
+    const gift = { id: crypto.randomBytes(6).toString('hex'), from: p.name, to: to.name, kind, amount: n, msg, at: Date.now() };
+    state.gifts.push(gift);
+    if (state.gifts.length > 500) state.gifts = state.gifts.slice(-500);
+    addActivity(p.name, '🎁', `ga ${to.name} ${giftWord(kind, n)} i gave${msg ? `: «${msg}»` : ''}`);
+    notify(to.name, '🎁', `${p.name} ga deg ${giftWord(kind, n)}!${msg ? ` «${msg}»` : ''}${kind === 'beer' ? ' Løs den inn i baren 🍻' : ''}`, { url: kind === 'beer' ? '/baren.html' : `/profil.html?navn=${encodeURIComponent(p.name)}`, from: p.name });
+    saveState();
+    sendJson(res, 200, { gift, me: meView(p) });
   },
 
   // ---------- 💡 Forslag til admin ----------

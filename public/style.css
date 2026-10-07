@@ -2018,7 +2018,7 @@ body.minimal a { color: var(--gold); }
 body.minimal input, body.minimal textarea, body.minimal select {
   background: #111114 !important; color: var(--text) !important; border: 1px solid var(--line) !important; border-radius: 10px !important; box-shadow: none !important;
 }
-body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.sfx-toggle):not(.ag):not(.sg) {
+body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.sfx-toggle):not(.gift-btn):not(.gift-kind):not(.gift-amt):not(.gift-x):not(.ag):not(.sg) {
   background: var(--gold) !important; color: #141414 !important; border: 0 !important; box-shadow: none !important; text-shadow: none !important; border-radius: 10px !important; font-family: inherit !important;
 }
 body.minimal button.secondary { background: #24242a !important; color: var(--text) !important; border: 1px solid var(--line) !important; box-shadow: none !important; }
@@ -2133,7 +2133,7 @@ body.minimal {
 }
 body.minimal .card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important; }
 body.minimal input, body.minimal textarea, body.minimal select { background: #fff !important; }
-body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.sfx-toggle):not(.ag):not(.sg) {
+body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.sfx-toggle):not(.gift-btn):not(.gift-kind):not(.gift-amt):not(.gift-x):not(.ag):not(.sg) {
   background: #f5b301 !important; color: #1d1c1a !important;
 }
 body.minimal button.secondary { background: var(--soft) !important; color: var(--text) !important; border-color: var(--line) !important; }
@@ -3266,3 +3266,43 @@ body.kasino .casino-games .tab.cg-slot.active { box-shadow: 0 0 0 2px #fff6c9, 0
 /* Gullknappen dempes aldri, og sparen er like stor som de andre ikonene */
 body.kasino .casino-games .tab.cg-slot { opacity: 1 !important; filter: saturate(1.15) brightness(1.08); }
 .casino-games .cg-poker .tc-icon::before { font-size: 2.4rem !important; margin: -4px 0 -2px; }
+
+/* 🎁 Gaver */
+button.gift-btn {
+  display: block; margin: 10px auto 4px; padding: 10px 18px !important; border-radius: 999px !important; font-weight: 900;
+  background: linear-gradient(135deg, #ff6b9a, #c62a6a) !important; color: #fff !important; border: 0 !important;
+  box-shadow: 0 4px 14px rgba(198, 42, 106, 0.35) !important; animation: gift-wiggle 3.5s ease-in-out infinite;
+}
+button.gift-btn.hidden { display: none; }
+@keyframes gift-wiggle { 0%, 88%, 100% { transform: none; } 91% { transform: rotate(-4deg) scale(1.04); } 94% { transform: rotate(4deg) scale(1.04); } 97% { transform: rotate(-2deg); } }
+.gift-overlay { position: fixed; inset: 0; z-index: 130; display: flex; align-items: flex-end; justify-content: center; padding: 12px; background: rgba(20, 10, 5, 0.55); animation: toast-in 0.2s ease; }
+.gift-card {
+  position: relative; width: min(420px, 100%); max-height: 90vh; overflow-y: auto; padding: 18px 16px 16px; border-radius: 22px;
+  background: #fffaf2; color: #2b1d12; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45); animation: gift-up 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes gift-up { from { transform: translateY(40px); opacity: 0; } }
+button.gift-x { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; padding: 0 !important; border-radius: 50% !important; background: #f3ecdf !important; color: #6b4b2e !important; border: 0 !important; box-shadow: none !important; }
+.gift-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+.gift-head h2 { margin: 0; font-size: 1.2rem; color: #2b1d12; }
+.gift-av { position: relative; display: inline-flex; }
+.gift-bow { position: absolute; right: -8px; bottom: -6px; font-style: normal; font-size: 1.3rem; animation: gift-wiggle 2s ease-in-out infinite; }
+.gift-label { margin: 12px 0 6px; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #8a6f55; }
+.gift-kinds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+button.gift-kind {
+  margin: 0; padding: 10px 4px !important; display: flex; flex-direction: column; align-items: center; gap: 1px; border-radius: 14px !important;
+  background: #fff !important; color: #2b1d12 !important; border: 2px solid #ead9bf !important; box-shadow: none !important;
+}
+button.gift-kind .gk-icon { font-size: 1.6rem; }
+button.gift-kind small { font-size: 0.68rem; color: #8a6f55; }
+button.gift-kind.on { border-color: #c62a6a !important; background: #fff0f5 !important; transform: translateY(-2px); }
+button.gift-kind:disabled { opacity: 0.4; }
+.gift-amounts { display: flex; flex-wrap: wrap; gap: 6px; }
+button.gift-amt { margin: 0; min-width: 52px; padding: 8px 10px !important; border-radius: 999px !important; background: #f3ecdf !important; color: #2b1d12 !important; border: 0 !important; box-shadow: none !important; font-weight: 900; }
+button.gift-amt.on { background: #2b1d12 !important; color: #fff !important; }
+.gift-custom, .gift-msg { width: 100%; margin: 8px 0 0; background: #fff !important; color: #2b1d12 !important; border: 1px solid #ead9bf !important; }
+button.gift-send { margin-top: 12px; background: linear-gradient(135deg, #ff6b9a, #c62a6a) !important; color: #fff !important; }
+.gift-err:empty { display: none; }
+.gift-done { text-align: center; padding: 10px 4px; }
+.gift-done h2 { margin: 6px 0 4px; color: #2b1d12; }
+.gift-open { font-size: 4rem; animation: gift-pop 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.4); }
+@keyframes gift-pop { 0% { transform: scale(0.3) rotate(-20deg); } 60% { transform: scale(1.25) rotate(8deg); } 100% { transform: none; } }

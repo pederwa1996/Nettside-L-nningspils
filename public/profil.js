@@ -347,6 +347,11 @@
     $('p-avatar').replaceChildren(avatarEl(p.avatar, p.name, 120));
     $('p-name').textContent = p.name === data.viewer ? `${p.name} (deg)` : p.name;
     $('p-badge').classList.toggle('hidden', !p.isAdmin);
+    // 🎁 Gi en gave (bare på andres profil)
+    const canGift = !!data.viewer && p.name !== data.viewer;
+    $('gift-btn').classList.toggle('hidden', !canGift);
+    $('gift-btn').textContent = `🎁 Gi ${p.name.split(' ')[0]} en gave`;
+    $('gift-btn').onclick = () => window.openGift && openGift({ name: p.name, avatar: p.avatar });
     $('p-joined').textContent = lastSeenText(p);
     renderBio(p);
     renderGuestbook(p);

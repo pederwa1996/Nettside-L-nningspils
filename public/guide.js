@@ -90,6 +90,7 @@
       lines: () => [
         'Her ser du bio, bilder og alt en person har gjort. Trykk <b>📊 Stats</b> for tallene.',
         'Skriv en <b>💌 hilsen</b> på profilen til andre, eller lik 🤍 og kommenter 💬 innleggene deres. De får et varsel.',
+        '🎁 <b>Gi en gave:</b> på profilen til andre kan du gi bort spinn, cash eller pils fra det du selv har, med en liten hilsen.',
         'På din egen profil kan du skrive en bio, og under <b>🎒 Inventar</b> ligger pils til gode, lodd og innstillinger.',
       ],
     },
