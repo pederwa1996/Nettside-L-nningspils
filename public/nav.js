@@ -6,7 +6,7 @@
   const ITEMS = [
     { key: 'home', href: '/', icon: '🏠', label: 'Hjem', paths: ['/', '/index.html'] },
     { key: 'casino', href: '/kasino.html', icon: '🎰', label: 'Kasino', paths: ['/kasino.html', '/baren.html'] },
-    { key: 'pvp', href: '/pvp.html', icon: '⚔️', label: 'PvP', paths: ['/pvp.html', '/duell.html', '/mogg.html', '/spill.html'] },
+    { key: 'pvp', href: '/pvp.html', icon: '⚔️', label: 'PvP', paths: ['/pvp.html', '/duell.html', '/mogg.html', '/spill.html', '/arena.html'] },
     { key: 'tasks', href: '/oppgaver.html', icon: '🎯', label: 'Oppgaver', paths: ['/oppgaver.html'] },
     { key: 'profile', href: '/profil.html', icon: '👤', label: 'Profil', paths: ['/profil.html'] },
   ];
@@ -63,7 +63,7 @@
       const d = await res.json();
       if (!d.me) return;
       me = d.me.name;
-      const n = (d.incomingDuels || 0) + (d.incomingMoggs || 0);
+      const n = (d.incomingDuels || 0) + (d.incomingMoggs || 0) + (d.incomingArena || 0);
       const badge = nav.querySelector('[data-key="pvp"] .nav-badge');
       badge.textContent = n;
       badge.classList.toggle('hidden', !n);

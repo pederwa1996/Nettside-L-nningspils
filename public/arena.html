@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arena – Lønningspils</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="minimal">
+  <header class="hero">
+    <h1>🏟️ Arena</h1>
+    <p class="sub">Spill mot de andre om cash, spinn eller pils · <a href="/pvp.html">← PvP</a></p>
+  </header>
+
+  <main>
+    <section id="incoming-card" class="card hidden">
+      <h2>🔔 Du er utfordret</h2>
+      <div id="incoming" class="arena-list"></div>
+    </section>
+
+    <section class="card">
+      <h2>Ny utfordring</h2>
+      <p class="field-label">Spill</p>
+      <div class="arena-games" id="game-pick">
+        <button type="button" class="ag active" data-game="dice"><span>🎲</span><b>Terningduell</b><small>Høyest sum vinner. Ren flaks.</small></button>
+        <button type="button" class="ag" data-game="reaction"><span>⚡</span><b>Reaksjon</b><small>Trykk når det blir grønt. 3 runder.</small></button>
+        <button type="button" class="ag" data-game="math"><span>🧠</span><b>Hoderegning</b><small>6 regnestykker. Flest riktige, raskest.</small></button>
+      </div>
+      <p class="field-label">Motstander</p>
+      <select id="opponent"></select>
+      <p class="field-label">Spill om</p>
+      <div class="seg" id="stake-type">
+        <button type="button" class="sg active" data-type="cash">💰 Cash</button>
+        <button type="button" class="sg" data-type="spins">🎡 Spinn</button>
+        <button type="button" class="sg" data-type="beer">🍺 Pils</button>
+      </div>
+      <div class="stake-row">
+        <button type="button" class="secondary" id="stake-minus">−</button>
+        <span id="stake-amount">50</span>
+        <button type="button" class="secondary" id="stake-plus">+</button>
+      </div>
+      <p id="balance" class="note center"></p>
+      <button id="go" class="big">Spill og utfordre</button>
+      <p id="msg" class="result"></p>
+    </section>
+
+    <section class="card">
+      <h2>⏳ Venter på svar</h2>
+      <div id="outgoing" class="arena-list"></div>
+    </section>
+
+    <section class="card">
+      <h2>🏆 Siste kamper</h2>
+      <div id="recent" class="arena-list"></div>
+    </section>
+  </main>
+
+  <div id="overlay" class="arena-overlay hidden"><div class="arena-box" id="box"></div></div>
+
+  <script src="/media.js"></script>
+  <script src="/beerwins.js"></script>
+  <script src="/guide.js"></script>
+  <script src="/celebrate.js"></script>
+  <script src="/arena.js"></script>
+  <script src="/presence.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/chatbox.js"></script>
+  <script src="/notify.js"></script>
+  <script src="/admin-bubble.js"></script>
+</body>
+</html>

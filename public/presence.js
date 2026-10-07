@@ -13,6 +13,7 @@
     'kasino-bar': 'baren',
     chat: 'chatten',
     pvp: 'PvP',
+    arena: 'arenaen',
     duell: 'duell',
     mogg: 'mogg-off',
     oppgaver: 'oppgavene',

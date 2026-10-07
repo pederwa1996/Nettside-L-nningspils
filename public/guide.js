@@ -30,9 +30,18 @@
     pvp: {
       title: 'Slik funker PvP',
       lines: () => [
+        '🏟️ <b>Arena:</b> terninger, reaksjon og hoderegning om cash, spinn eller pils.',
         '✊ <b>Duell:</b> utfordre en kollega i stein, saks, papir. Vinneren tar spinnene som er satset.',
         '🗿 <b>Mogg-off:</b> ta en selfie med ditt hardeste ansikt. Høyest poeng vinner et spinn.',
         `🕊️ <b>Flappy Sjef:</b> ${S.flappy} poeng gir 1 spinn, ${S.flappy * 2} gir 2, ${S.flappy * 4} gir 3 …`,
+      ],
+    },
+    arena: {
+      title: 'Slik funker arenaen',
+      lines: () => [
+        'Velg spill, motstander og hva dere spiller om: <b>cash</b>, <b>spinn</b> eller <b>pils</b>.',
+        'Du spiller din runde først. Motstanderen får varsel, spiller sin, og vinneren tar hele potten. Uavgjort: begge får innsatsen tilbake.',
+        '🎲 Terningduell er ren flaks. ⚡ Reaksjon: trykk når det blir grønt (ikke før!). 🧠 Hoderegning: flest riktige, og raskest ved likt.',
       ],
     },
     duel: {
@@ -78,7 +87,7 @@
   const path = location.pathname.replace(/\/$/, '') || '/';
   const key = {
     '/': 'home', '/index.html': 'home', '/kasino.html': 'casino', '/pvp.html': 'pvp', '/duell.html': 'duel',
-    '/mogg.html': 'mogg', '/spill.html': 'flappy', '/oppgaver.html': 'tasks', '/profil.html': 'profile',
+    '/mogg.html': 'mogg', '/arena.html': 'arena', '/spill.html': 'flappy', '/oppgaver.html': 'tasks', '/profil.html': 'profile',
   }[path];
   if (!key) return;
 

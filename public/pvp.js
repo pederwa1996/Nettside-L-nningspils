@@ -39,8 +39,10 @@
     $('my-spins').textContent = d.me.spinsLeft;
     badge('duel-badge', d.incomingDuels);
     badge('mogg-badge', d.incomingMoggs);
+    badge('arena-badge', d.incomingArena);
     const alerts = [];
     if (d.incomingDuels) alerts.push(`<a href="/duell.html">⚔️ ${d.incomingDuels} duell${d.incomingDuels > 1 ? 'er' : ''} venter på svar</a>`);
+    if (d.incomingArena) alerts.push(`<a href="/arena.html">🏟️ ${d.incomingArena} utfordring${d.incomingArena > 1 ? 'er' : ''} i arenaen</a>`);
     if (d.incomingMoggs) alerts.push(`<a href="/mogg.html">🗿 ${d.incomingMoggs} mogg-off${d.incomingMoggs > 1 ? 's' : ''} venter på deg</a>`);
     $('pvp-alerts').innerHTML = alerts.join('<br>');
     $('pvp-alerts').classList.toggle('hidden', !alerts.length);

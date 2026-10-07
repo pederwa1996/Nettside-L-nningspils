@@ -291,7 +291,7 @@ $('feed-more').addEventListener('click', async () => {
 function feedCat(a) {
   if (/pils|🍺/.test(a.text) && ['🎡', '🎟️', '🎰', '🍺'].includes(a.icon)) return 'beer';
   if (['🎰', '🎡', '♠️', '🃏'].includes(a.icon)) return 'casino';
-  if (['⚔️', '🗿', '🕊️'].includes(a.icon)) return 'pvp';
+  if (['⚔️', '🗿', '🕊️', '🎲', '⚡', '🧠'].includes(a.icon)) return 'pvp';
   if (a.icon === '🎯') return 'tasks';
   return 'social';
 }

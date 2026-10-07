@@ -49,7 +49,7 @@ const MAX_PENDING_ORDERS = 3;
 
 // ---- Lagring ----
 function freshState() {
-  return { startFlusGiven: START_FLUS, budget: { total: BUDGET_KR, price: BEER_PRICE_KR }, participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, poker: freshPoker() };
+  return { startFlusGiven: START_FLUS, budget: { total: BUDGET_KR, price: BEER_PRICE_KR }, participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, arena: [], poker: freshPoker() };
 }
 
 function freshPoker() {
@@ -273,6 +273,7 @@ function renameEverywhere(oldName, newName) {
     if (obj && obj[key] === oldName) obj[key] = newName;
   };
   state.duels.forEach((d) => ['challenger', 'opponent', 'winner'].forEach((k) => swap(d, k)));
+  state.arena.forEach((a) => ['challenger', 'opponent', 'winner'].forEach((k) => swap(a, k)));
   state.moggs.forEach((m) => ['challenger', 'opponent', 'winner'].forEach((k) => swap(m, k)));
   state.tasks.forEach((t) => t.attempts.forEach((a) => swap(a, 'name')));
   [state.stories, state.chat, state.activity, state.orders, state.casinoLog, state.spinLog].forEach((list) => list.forEach((x) => swap(x, 'name')));
@@ -508,6 +509,7 @@ function beersWon(p) {
     tickets: p.tickets.filter((t) => winning.has(t)).length,
     slot: p.slotBeers || 0,
     task: p.taskBeers || 0,
+    pvp: p.pvpBeers || 0, // vunnet minus tapt i arenaen
   };
 }
 
@@ -517,7 +519,7 @@ function beersOwed(p) {
   const used = state.orders
     .filter((o) => o.name === p.name && o.pay === 'credit' && o.status !== 'cancelled')
     .reduce((sum, o) => sum + o.qty, 0);
-  return Math.max(0, w.wheel + w.tickets + w.slot + w.task - used);
+  return Math.max(0, w.wheel + w.tickets + w.slot + w.task + w.pvp - used);
 }
 
 // Budsjett: brukt = leverte pils (kroner lagres på bestillingen når den leveres).
@@ -687,6 +689,117 @@ function adminTaskView(t) {
   return { ...t, attempts: t.attempts.slice(-5) };
 }
 
+// ---- Arena: små PvP-spill om cash, spinn eller pils ----
+// Utfordreren spiller sin del og setter inn innsatsen. Motstanderen godtar og spiller,
+// og vinneren tar hele potten. Uavgjort: begge får innsatsen tilbake.
+const ARENA_GAMES = {
+  dice: { name: 'Terningduell', icon: '🎲' },
+  reaction: { name: 'Reaksjon', icon: '⚡' },
+  math: { name: 'Hoderegning', icon: '🧠' },
+};
+const ARENA_STAKES = {
+  cash: { label: 'cash', icon: '💰', min: 10, max: 500 },
+  spins: { label: 'spinn', icon: '🎡', min: 1, max: 5 },
+  beer: { label: 'pils', icon: '🍺', min: 1, max: 2 },
+};
+const MAX_OPEN_ARENA = 3;
+const MATH_QUESTIONS = 6;
+const arenaSessions = new Map(); // id -> { name, game, startAt, answers }
+
+function stakeBalance(p, type) {
+  if (type === 'cash') return p.flus || 0;
+  if (type === 'spins') return spinsLeft(p);
+  return beersOwed(p);
+}
+
+function moveStake(p, type, n) {
+  if (type === 'cash') addFlus(p, n);
+  else if (type === 'spins') addSpins(p, n);
+  else p.pvpBeers = (p.pvpBeers || 0) + n;
+}
+
+function stakeWord(type, n) {
+  const s = ARENA_STAKES[type];
+  return `${n} ${s.label} ${s.icon}`;
+}
+
+function newMathQuestions() {
+  const qs = [];
+  for (let i = 0; i < MATH_QUESTIONS; i++) {
+    const kind = randomInt(3);
+    let a;
+    let b;
+    let q;
+    let ans;
+    if (kind === 0) {
+      a = 12 + randomInt(78);
+      b = 12 + randomInt(78);
+      q = `${a} + ${b}`;
+      ans = a + b;
+    } else if (kind === 1) {
+      a = 40 + randomInt(60);
+      b = 5 + randomInt(35);
+      q = `${a} − ${b}`;
+      ans = a - b;
+    } else {
+      a = 3 + randomInt(10);
+      b = 3 + randomInt(10);
+      q = `${a} × ${b}`;
+      ans = a * b;
+    }
+    qs.push({ q, ans });
+  }
+  return qs;
+}
+
+// Regn ut poeng for et spill (høyere er bedre) ut fra økten serveren startet
+function arenaScore(p, game, body) {
+  if (game === 'dice') {
+    const d = [1 + randomInt(6), 1 + randomInt(6)];
+    return { score: d[0] + d[1], detail: `🎲 ${d[0]} + ${d[1]} = ${d[0] + d[1]}` };
+  }
+  const sess = arenaSessions.get(String(body.sessionId || ''));
+  if (!sess || sess.name !== p.name || sess.game !== game) throw new Error('Spillet er utløpt. Prøv igjen.');
+  arenaSessions.delete(body.sessionId);
+  const elapsed = Date.now() - sess.startAt;
+  if (game === 'reaction') {
+    const times = Array.isArray(body.times) ? body.times.slice(0, 3).map(Number) : [];
+    if (times.length !== 3 || times.some((t) => !Number.isFinite(t))) throw new Error('Mangler tidene fra reaksjonstesten.');
+    // Tjuvstart teller som 1000 ms. Raskere enn 100 ms er ikke menneskelig.
+    const clean = times.map((t) => (t < 0 ? 1000 : Math.max(100, Math.min(1000, Math.round(t)))));
+    // Testen har tilfeldige pauser på minst 1,5 s per runde, så den kan ikke ha gått raskere enn det
+    if (elapsed < 4500) throw new Error('Det gikk litt for fort. Prøv igjen.');
+    const avg = Math.round(clean.reduce((a, b) => a + b, 0) / 3);
+    return { score: -avg, detail: `⚡ ${avg} ms i snitt` };
+  }
+  // Hoderegning: antall riktige, deretter tiden målt av serveren
+  const answers = Array.isArray(body.answers) ? body.answers : [];
+  const correct = sess.questions.filter((q, i) => Number(answers[i]) === q.ans).length;
+  const secs = Math.min(600, elapsed / 1000);
+  return { score: correct * 1000 - secs, detail: `🧠 ${correct}/${MATH_QUESTIONS} riktige på ${secs.toFixed(1)} s` };
+}
+
+function arenaView(a, viewer) {
+  const v = {
+    id: a.id,
+    game: a.game,
+    gameName: ARENA_GAMES[a.game].name,
+    icon: ARENA_GAMES[a.game].icon,
+    challenger: a.challenger,
+    opponent: a.opponent,
+    stakeType: a.stakeType,
+    stake: a.stake,
+    stakeText: stakeWord(a.stakeType, a.stake),
+    status: a.status,
+    at: a.at,
+    winner: a.winner || null,
+  };
+  // Utfordrerens resultat er hemmelig til motstanderen har spilt
+  if (a.status === 'done') Object.assign(v, { cDetail: a.cDetail, oDetail: a.oDetail });
+  else if (viewer && viewer.name === a.challenger) v.cDetail = a.game === 'dice' ? '🎲 Hemmelig til motstanderen har kastet' : a.cDetail;
+  return v;
+}
+
 // ---- Duell (stein, saks, papir med innsats) ----
 const MOVES = ['stein', 'saks', 'papir'];
 const BEATS = { stein: 'saks', saks: 'papir', papir: 'stein' };
@@ -830,7 +943,7 @@ function profileStats(p) {
     return { won, lost };
   };
   return {
-    beersWon: w.wheel + w.tickets + w.slot + w.task,
+    beersWon: w.wheel + w.tickets + w.slot + w.task + w.pvp,
     beersOwed: beersOwed(p),
     spinsLeft: spinsLeft(p),
     flus: p.flus || 0,
@@ -881,7 +994,7 @@ function standings() {
       const w = beersWon(p);
       return {
         name: p.name,
-        beers: w.wheel + w.tickets + w.slot + w.task,
+        beers: w.wheel + w.tickets + w.slot + w.task + w.pvp,
         wheelBeers: w.wheel,
         ticketBeers: w.tickets,
         slotBeers: w.slot,
@@ -1070,6 +1183,7 @@ const routes = {
       incomingDuels: me ? state.duels.filter((d) => d.status === 'pending' && d.opponent === me.name).length : 0,
       openTasks: state.tasks.filter((t) => t.status === 'open').length,
       incomingMoggs: me ? state.moggs.filter((m) => m.status === 'pending' && m.opponent === me.name).length : 0,
+      incomingArena: me ? state.arena.filter((a) => a.status === 'pending' && a.opponent === me.name).length : 0,
     });
   },
 
@@ -1301,6 +1415,132 @@ const routes = {
       history: mine.filter((d) => d.status !== 'pending').slice(-10).reverse().map((d) => duelView(d, p)),
       feed: state.duels.filter((d) => d.status === 'done').slice(-10).reverse().map((d) => duelView(d, null)),
     });
+  },
+
+  // ---------- Arena ----------
+  'GET /api/arena': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const mine = state.arena.filter((a) => a.challenger === p.name || a.opponent === p.name);
+    sendJson(res, 200, {
+      me: meView(p),
+      games: ARENA_GAMES,
+      stakes: ARENA_STAKES,
+      incoming: mine.filter((a) => a.status === 'pending' && a.opponent === p.name).map((a) => arenaView(a, p)),
+      outgoing: mine.filter((a) => a.status === 'pending' && a.challenger === p.name).map((a) => arenaView(a, p)),
+      recent: state.arena.filter((a) => a.status === 'done').slice(-15).reverse().map((a) => arenaView(a, p)),
+      people: state.participants.filter((x) => x.name !== p.name).map((x) => ({ name: x.name, avatar: x.avatar || null })),
+      avatars: avatars(),
+    });
+  },
+
+  // Start et spill (reaksjon/hoderegning): serveren noterer starttiden og lager oppgavene
+  'POST /api/arena/start': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const game = String(body.game || '');
+    if (!['reaction', 'math'].includes(game)) return sendJson(res, 400, { error: 'Ukjent spill.' });
+    const id = crypto.randomBytes(8).toString('hex');
+    const sess = { name: p.name, game, startAt: Date.now() };
+    if (game === 'math') sess.questions = newMathQuestions();
+    arenaSessions.set(id, sess);
+    // Rydd bort gamle økter
+    for (const [k, v] of arenaSessions) if (Date.now() - v.startAt > 15 * 60 * 1000) arenaSessions.delete(k);
+    sendJson(res, 200, { sessionId: id, questions: sess.questions ? sess.questions.map((q) => q.q) : null });
+  },
+
+  'POST /api/arena/challenge': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const game = String(body.game || '');
+    if (!ARENA_GAMES[game]) return sendJson(res, 400, { error: 'Ukjent spill.' });
+    const opponent = findParticipant(String(body.opponent || ''));
+    if (!opponent) return sendJson(res, 400, { error: 'Velg en motstander.' });
+    if (opponent.name === p.name) return sendJson(res, 400, { error: 'Du kan ikke utfordre deg selv 😅' });
+    const type = String(body.stakeType || '');
+    const st = ARENA_STAKES[type];
+    if (!st) return sendJson(res, 400, { error: 'Velg hva dere spiller om.' });
+    const stake = Math.floor(Number(body.stake));
+    if (!Number.isFinite(stake) || stake < st.min || stake > st.max) return sendJson(res, 400, { error: `Innsatsen må være ${st.min}–${st.max} ${st.label}.` });
+    if (stakeBalance(p, type) < stake) return sendJson(res, 400, { error: `Du har bare ${stakeBalance(p, type)} ${st.label}.` });
+    const open = state.arena.filter((a) => a.status === 'pending' && a.challenger === p.name).length;
+    if (open >= MAX_OPEN_ARENA) return sendJson(res, 400, { error: `Du kan ha maks ${MAX_OPEN_ARENA} åpne utfordringer i arenaen.` });
+    const r = arenaScore(p, game, body);
+    moveStake(p, type, -stake); // holdes av til utfordringen er ferdig
+    const a = {
+      id: crypto.randomBytes(8).toString('hex'),
+      game,
+      challenger: p.name,
+      opponent: opponent.name,
+      stakeType: type,
+      stake,
+      cScore: r.score,
+      cDetail: r.detail,
+      status: 'pending',
+      at: Date.now(),
+    };
+    state.arena.push(a);
+    notify(opponent.name, ARENA_GAMES[game].icon, `${p.name} utfordret deg til ${ARENA_GAMES[game].name.toLowerCase()} om ${stakeWord(type, stake)}!`, { url: '/arena.html', from: p.name });
+    saveState();
+    broadcast('arena', { to: opponent.name });
+    sendJson(res, 200, { challenge: arenaView(a, p), me: meView(p) });
+  },
+
+  'POST /api/arena/respond': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const a = state.arena.find((x) => x.id === body.id && x.status === 'pending' && x.opponent === p.name);
+    if (!a) return sendJson(res, 400, { error: 'Fant ikke utfordringen. Kanskje den er trukket tilbake?' });
+    const challenger = findParticipant(a.challenger);
+    const word = stakeWord(a.stakeType, a.stake);
+    if (body.decline) {
+      a.status = 'declined';
+      if (challenger) moveStake(challenger, a.stakeType, a.stake);
+      notify(a.challenger, '🙅', `${p.name} takket nei til ${ARENA_GAMES[a.game].name.toLowerCase()}. Du fikk ${word} tilbake.`, { url: '/arena.html', from: p.name });
+      saveState();
+      broadcast('arena', { to: a.challenger });
+      return sendJson(res, 200, { me: meView(p) });
+    }
+    if (stakeBalance(p, a.stakeType) < a.stake) return sendJson(res, 400, { error: `Du trenger ${word} for å godta, men har bare ${stakeBalance(p, a.stakeType)}.` });
+    const r = arenaScore(p, a.game, body);
+    a.oScore = r.score;
+    a.oDetail = r.detail;
+    a.status = 'done';
+    a.doneAt = Date.now();
+    if (a.cScore === a.oScore) {
+      a.winner = null;
+      if (challenger) moveStake(challenger, a.stakeType, a.stake);
+    } else if (a.cScore > a.oScore) {
+      a.winner = a.challenger;
+      moveStake(p, a.stakeType, -a.stake);
+      if (challenger) moveStake(challenger, a.stakeType, a.stake * 2);
+    } else {
+      a.winner = p.name;
+      moveStake(p, a.stakeType, a.stake); // utfordrerens innsats er allerede trukket
+    }
+    const g = ARENA_GAMES[a.game];
+    if (a.winner) {
+      const loser = a.winner === p.name ? a.challenger : p.name;
+      addActivity(a.winner, g.icon, `slo ${loser} i ${g.name.toLowerCase()} og vant ${word}`);
+      if (a.stakeType === 'beer') announceBeer(a.winner, `🍺 ${a.winner} vant ${a.stake} pils fra ${loser} i ${g.name.toLowerCase()}!`);
+    }
+    const resultFor = (name) => (a.winner === null ? `Uavgjort! Innsatsen er betalt tilbake.` : a.winner === name ? `Du vant ${word}! 🎉` : `Du tapte ${word}.`);
+    notify(a.challenger, g.icon, `${p.name} svarte på ${g.name.toLowerCase()}: ${a.cDetail} mot ${a.oDetail}. ${resultFor(a.challenger)}`, { url: '/arena.html', from: p.name });
+    saveState();
+    broadcast('arena', { to: a.challenger });
+    sendJson(res, 200, { challenge: arenaView(a, p), result: resultFor(p.name), won: a.winner === p.name, tie: a.winner === null, me: meView(p) });
+  },
+
+  'POST /api/arena/cancel': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const a = state.arena.find((x) => x.id === body.id && x.status === 'pending' && x.challenger === p.name);
+    if (!a) return sendJson(res, 400, { error: 'Fant ikke utfordringen.' });
+    a.status = 'cancelled';
+    moveStake(p, a.stakeType, a.stake);
+    saveState();
+    broadcast('arena', { to: a.opponent });
+    sendJson(res, 200, { me: meView(p) });
   },
 
   'POST /api/duel/challenge': (req, res, body) => {
