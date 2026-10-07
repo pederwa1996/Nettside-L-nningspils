@@ -2688,8 +2688,7 @@ button.partner-chip.on::after { content: '✓'; font-weight: 900; }
 
 /* Forsiden: logoen øverst, «Lønningspils» sentrert under */
 body.minimal.home .home-hero { text-align: center; padding: 14px 16px 8px !important; }
-.brand-logo { width: min(240px, 66vw); margin: 4px auto 4px; }
-.brand-logo svg, .brand-logo img { display: block; width: 100%; height: auto; }
+.brand-logo { display: block; width: min(310px, 72vw); height: auto; margin: 6px auto 6px; }
 body.minimal.home .home-hero h1 { margin: 2px 0 0; font-size: 1.6rem !important; letter-spacing: 0.3px; }
 
 /* Tydeligere at avataren tar deg til profilen */

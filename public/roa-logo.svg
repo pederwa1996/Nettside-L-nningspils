@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 200" role="img" aria-label="Røa Elektriske – Autorisert elektro- og teleinstallatør">
+  <!-- Replika av Røa Elektriske-logoen -->
+  <rect x="12" y="14" width="856" height="7" fill="#26397a"/>
+  <text x="12" y="113" textLength="700" lengthAdjust="spacingAndGlyphs" font-family="'Century Gothic', 'Futura', 'Avenir Next', 'Avenir', 'Trebuchet MS', system-ui, sans-serif" font-size="96" font-weight="500" fill="#26397a">RØA ELEKTRISKE</text>
+  <rect x="738" y="56" width="130" height="9" fill="#26397a"/>
+  <rect x="738" y="79" width="130" height="9" fill="#26397a"/>
+  <rect x="738" y="102" width="130" height="9" fill="#26397a"/>
+  <rect x="12" y="140" width="856" height="44" fill="#26397a"/>
+  <text x="440" y="172" text-anchor="middle" textLength="760" lengthAdjust="spacing" font-family="Verdana, 'DejaVu Sans', system-ui, sans-serif" font-size="26" font-weight="700" fill="#fff">Autorisert elektro – og teleinstallatør</text>
+</svg>
