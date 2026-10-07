@@ -205,18 +205,20 @@
   }
 
   // ---------- Lykkehjulet ----------
-  const SEGMENTS = 20;
-  const BEER_SEGMENTS = [0, 7, 14]; // 3 av 20 = 15 %
-  const LOSE_SEGMENT = 10; // 1 av 20 = 5 %: mister et spinn
-  const CASH_SEGMENTS = [3, 17]; // 2 av 20 = 10 %: cash
-  const BONUS_SEGMENTS = [5, 12]; // 2 av 20 = 10 %: ett spinn til
-  const MISS_LABELS = ['Bom', 'Neste gang', 'Vann', 'Nope', 'Snart', 'Prøv igjen'];
-  const segments = Array.from({ length: SEGMENTS }, (_, i) => {
-    if (BEER_SEGMENTS.includes(i)) return { kind: 'beer', label: '🍺 ØL!' };
-    if (i === LOSE_SEGMENT) return { kind: 'lose', label: '💀 −1 SPINN' };
-    if (CASH_SEGMENTS.includes(i)) return { kind: 'cash', label: '💰 100' };
-    if (BONUS_SEGMENTS.includes(i)) return { kind: 'bonus', label: '🎡 +1 SPINN' };
-    return { kind: 'miss', label: MISS_LABELS[i % MISS_LABELS.length] };
+  // 40 felt à 2,5 %: ingen «bom», alt annet enn 💀 gir noe.
+  // 🍺 6 felt (15 %) · 🎡 +1 spinn 4 (10 %) · 💀 2 (5 %) · 💰 25: 10 · 50: 8 · 100: 6 · 200: 3 · 500: 1 (jackpot)
+  const LAYOUT = [
+    '500', '25', '50', 'beer', '25', '100', 'bonus', '25', '50', 'lose',
+    '25', '100', 'beer', '50', '25', '200', 'bonus', '50', '25', '100',
+    'beer', '25', '50', 'bonus', '100', '25', 'beer', '50', '200', '25',
+    'lose', '100', 'beer', '50', '25', 'bonus', '100', 'beer', '50', '200',
+  ];
+  const SEGMENTS = LAYOUT.length;
+  const segments = LAYOUT.map((k) => {
+    if (k === 'beer') return { kind: 'beer', label: '🍺 ØL!' };
+    if (k === 'lose') return { kind: 'lose', label: '💀 −1' };
+    if (k === 'bonus') return { kind: 'bonus', label: '🎡 +1' };
+    return { kind: `cash${k}`, cash: Number(k), label: k === '500' ? '🎰 500' : k };
   });
 
   function drawWheel() {
@@ -248,10 +250,18 @@
       } else if (s.kind === 'lose') {
         g.addColorStop(0, '#3a3a3a');
         g.addColorStop(1, '#050505');
-      } else if (s.kind === 'cash') {
+      } else if (s.kind === 'cash500') {
+        g.addColorStop(0, '#fff6cf');
+        g.addColorStop(0.45, '#1a1206');
+        g.addColorStop(1, '#000000');
+      } else if (s.kind === 'cash200') {
         g.addColorStop(0, '#9dffb4');
         g.addColorStop(0.55, '#2fbf74');
         g.addColorStop(1, '#0f6b3c');
+      } else if (s.kind === 'cash100') {
+        g.addColorStop(0, '#7fe0ff');
+        g.addColorStop(0.55, '#1a9fd6');
+        g.addColorStop(1, '#0b4a7a');
       } else if (s.kind === 'bonus') {
         g.addColorStop(0, '#e2d4ff');
         g.addColorStop(0.55, '#8a6bff');
@@ -279,8 +289,8 @@
       ctx.textBaseline = 'middle';
       ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
       ctx.shadowBlur = 4;
-      ctx.fillStyle = s.kind === 'beer' ? '#3a1d00' : s.kind === 'lose' ? '#ff5470' : '#ffffff';
-      ctx.font = s.kind === 'beer' ? '900 30px system-ui, sans-serif' : ['lose', 'cash', 'bonus'].includes(s.kind) ? '900 23px system-ui, sans-serif' : '700 21px system-ui, sans-serif';
+      ctx.fillStyle = s.kind === 'beer' ? '#3a1d00' : s.kind === 'lose' ? '#ff5470' : s.kind === 'cash500' ? '#ffd34d' : '#ffffff';
+      ctx.font = s.kind === 'beer' || s.kind === 'cash500' ? '900 22px system-ui, sans-serif' : '900 21px system-ui, sans-serif';
       if (s.kind === 'beer') ctx.shadowBlur = 0;
       ctx.fillText(s.label, R - 16, 0);
       ctx.restore();
@@ -381,7 +391,7 @@
       const fortune = $('fortune');
       fortune.classList.remove('won', 'lost');
       fortune.classList.add('spinning');
-      await wheelSpinTo(result.win ? 'beer' : result.lose ? 'lose' : result.cash ? 'cash' : result.bonus ? 'bonus' : 'miss');
+      await wheelSpinTo(result.win ? 'beer' : result.lose ? 'lose' : result.bonus ? 'bonus' : `cash${result.cash}`);
       fortune.classList.remove('spinning');
       if (result.win) fortune.classList.add('won');
       else if (result.lose) {
@@ -393,7 +403,7 @@
         : result.lose
           ? (result.lostSpin ? '💀 Au! Du traff −1 SPINN og mistet et spinn.' : '💀 Du traff −1 SPINN, men hadde ingen spinn å miste. Puh!')
           : result.cash
-            ? `💰 Du vant ${result.cash} cash!`
+            ? (result.cash >= 500 ? `🎰 JACKPOT! Du vant ${result.cash} cash!` : `💰 Du vant ${result.cash} cash!`)
             : result.bonus
               ? '🎡 Gratis spinn! Du fikk et spinn til.'
               : '😢 Ingen øl denne gangen.';
@@ -401,7 +411,9 @@
       $('spin-result').classList.add(good ? 'win' : 'lose');
       if (result.cash || result.bonus) fortune.classList.add('won');
       if (result.win) beerWin('Lykkehjulet ga deg en ekte pils!');
-      else if (result.cash) celebrate({ tier: 'win', amount: result.cash, icon: '💰', title: 'CASH!', sub: 'Lykkehjulet ga deg cash' });
+      else if (result.cash >= 500) celebrate({ tier: 'big', amount: result.cash, icon: '🎰', title: 'JACKPOT!', voice: 'v_jackpot', sub: 'Du traff det smale gullfeltet på lykkehjulet!' });
+      else if (result.cash >= 100) celebrate({ tier: 'win', amount: result.cash, icon: '💰', title: 'CASH!', sub: 'Lykkehjulet ga deg cash' });
+      else if (result.cash && window.sfx) sfx.play('coin'); // små gevinster: bare en mynt-lyd
       else if (result.bonus) celebrate({ tier: 'win', icon: '🎡', title: '+1 SPINN!', sub: 'Spinn igjen, helt gratis!' });
       else loseNudge($('spin-result'));
       wheelSpinning = false;
@@ -534,10 +546,11 @@
     drawWheel();
     $('chance').textContent = `${Math.round(data.wheelChance * 100)} %`;
     $('lose-chance').textContent = `${Math.round(data.wheelLoseChance * 100)} %`;
-    if (data.wheelCashChance !== undefined) {
-      $('cash-chance').textContent = `${Math.round(data.wheelCashChance * 100)} %`;
+    if (data.wheelCash) {
       $('bonus-chance').textContent = `${Math.round(data.wheelBonusChance * 100)} %`;
-      $('cash-prize').textContent = data.wheelCashPrize;
+      $('wheel-cash-list').innerHTML = data.wheelCash
+        .map((c) => `<li><b>${c.amount >= 500 ? '🎰 ' : '💰 '}${c.amount} cash</b><span>${String(Math.round(c.chance * 1000) / 10).replace('.', ',')} %</span></li>`)
+        .join('');
     }
     const fromHash = Object.keys(TAB_HASH).find((t) => `#${TAB_HASH[t]}` === location.hash);
     // Lenken bestemmer fanen (f.eks. #baren)

@@ -3458,3 +3458,5 @@ body.pvp-arena .math-q { font-family: 'Bebas Neue', system-ui, sans-serif; font-
 /* Spinnene står allerede i lommeboken øverst */
 .pv-panel .big-number { display: none; }
 .pv-panel .card:has(> .big-number):has(> .result:empty) { display: none; }
+.wheel-cash-list { list-style: none; margin: 4px 0 8px; padding: 0; display: grid; grid-template-columns: 1fr; gap: 2px; }
+.wheel-cash-list li { display: flex; justify-content: space-between; font-size: 0.84rem; color: #e8f0ff; border-bottom: 1px dashed rgba(255, 255, 255, 0.15); padding: 2px 0; }

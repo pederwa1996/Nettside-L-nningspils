@@ -21,10 +21,15 @@ const DRAW_FROM = process.env.DRAW_FROM === 'assigned' ? 'assigned' : 'all';
 // Sjanse for å treffe «−1 spinn»-feltet på lykkehjulet
 const SPIN_LOSE_CHANCE = process.env.SPIN_LOSE_CHANCE !== undefined ? Number(process.env.SPIN_LOSE_CHANCE) : 0.05;
 const SPIN_WIN_CHANCE = process.env.SPIN_WIN_CHANCE !== undefined ? Number(process.env.SPIN_WIN_CHANCE) : 0.15;
-// Lykkehjulet har også felt som gir cash og et nytt spinn
-const SPIN_CASH_CHANCE = process.env.SPIN_CASH_CHANCE !== undefined ? Number(process.env.SPIN_CASH_CHANCE) : 0.10;
+// Lykkehjulet har ingen «bom»: resten av feltene gir cash (snitt ca. 59 cash, under prisen på et spinn)
 const SPIN_BONUS_CHANCE = process.env.SPIN_BONUS_CHANCE !== undefined ? Number(process.env.SPIN_BONUS_CHANCE) : 0.10;
-const SPIN_CASH_PRIZE = Number(process.env.SPIN_CASH_PRIZE) || 100;
+const WHEEL_CASH = [
+  { amount: 25, chance: 0.25 },
+  { amount: 50, chance: 0.20 },
+  { amount: 100, chance: 0.15 },
+  { amount: 200, chance: 0.075 },
+  { amount: 500, chance: 0.025 }, // 🎰 jackpot (smalt felt)
+];
 // Flappy-spillet: første milepæl og hvor ofte et rør dukker opp (brukes til juksesjekk)
 const GAME_FIRST_MILESTONE = Number(process.env.GAME_FIRST_MILESTONE) || 50;
 const GAME_PIPE_INTERVAL_MS = 1500;
@@ -1539,13 +1544,26 @@ const routes = {
     const win = roll < SPIN_WIN_CHANCE * 1_000_000;
     // Lite felt som tar et ekstra spinn (bare hvis man har et å miste)
     const lose = !win && roll < (SPIN_WIN_CHANCE + SPIN_LOSE_CHANCE) * 1_000_000;
-    const cashUpTo = SPIN_WIN_CHANCE + SPIN_LOSE_CHANCE + SPIN_CASH_CHANCE;
-    const cash = !win && !lose && roll < cashUpTo * 1_000_000 ? SPIN_CASH_PRIZE : 0;
-    const bonus = !win && !lose && !cash && roll < (cashUpTo + SPIN_BONUS_CHANCE) * 1_000_000;
+    const bonusUpTo = SPIN_WIN_CHANCE + SPIN_LOSE_CHANCE + SPIN_BONUS_CHANCE;
+    const bonus = !win && !lose && roll < bonusUpTo * 1_000_000;
+    // Alt annet er cash: finn hvilket cash-felt (siste felt tar resten, så det alltid blir noe)
+    let cash = 0;
+    if (!win && !lose && !bonus) {
+      let edge = bonusUpTo;
+      cash = WHEEL_CASH[WHEEL_CASH.length - 1].amount;
+      for (const c of WHEEL_CASH) {
+        edge += c.chance;
+        if (roll < edge * 1_000_000) {
+          cash = c.amount;
+          break;
+        }
+      }
+    }
     p.spins.push(win);
     if (cash) {
       addFlus(p, cash);
-      addActivity(p.name, '🎡', `vant ${cash} cash på lykkehjulet 💰`);
+      // Bare de store gevinstene havner i Hendelser (ellers blir det spam)
+      if (cash >= 200) addActivity(p.name, '🎡', cash >= 500 ? `traff 🎰 JACKPOT på lykkehjulet og vant ${cash} cash! 💰` : `vant ${cash} cash på lykkehjulet 💰`);
     }
     if (bonus) addSpins(p, 1);
     if (win) {
@@ -2235,9 +2253,8 @@ const routes = {
       spinPacks: SPIN_PACKS,
       wheelChance: SPIN_WIN_CHANCE,
       wheelLoseChance: SPIN_LOSE_CHANCE,
-      wheelCashChance: SPIN_CASH_CHANCE,
       wheelBonusChance: SPIN_BONUS_CHANCE,
-      wheelCashPrize: SPIN_CASH_PRIZE,
+      wheelCash: WHEEL_CASH,
       slotTable: SLOT_RULES.map((r) => ({ id: r.id, combo: r.combo, label: r.label, flus: r.flus, beer: r.beer || 0, pLine: SLOT_ODDS.rules[r.id].line, pPull: SLOT_ODDS.rules[r.id].pull })),
       slotOdds: { anyWin: SLOT_ODDS.anyWin, avgCash: SLOT_ODDS.avgCash, lines: SLOT_LINES.length },
       log: state.casinoLog.slice(-10).reverse(),
