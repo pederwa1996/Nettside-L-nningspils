@@ -2855,3 +2855,17 @@ body.kasino .casino-games .cg-poker { background: radial-gradient(circle at 50% 
 /* Sjanser og regler under hjulet */
 body.kasino #tab-wheel .wheel-rules { max-width: 380px; margin: 10px auto 0; background: rgba(0, 20, 60, 0.35); border-radius: 14px; padding: 4px 14px; }
 body.kasino #tab-wheel .wheel-rules p { color: #e8f0ff; font-size: 0.86rem; }
+
+/* Spillplakatene på én linje: fire små i stedet for et stort rutenett */
+.casino-games { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+body.kasino .casino-games .tab.cg { min-height: 0; padding: 16px 3px 7px !important; border-radius: 13px !important; gap: 1px; }
+.casino-games .cg small { display: none; }
+.casino-games .cg b { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: 0.68rem; letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.casino-games .cg .tc-icon { font-size: 1.6rem; }
+.casino-games .cg .tw-icon { width: 30px; height: 30px; margin: 2px 0 3px; }
+.casino-games .cg .mini-wheel { border-width: 2px; }
+.casino-games .cg .tw-icon::after { top: -4px; border-left-width: 4px; border-right-width: 4px; border-top-width: 8px; }
+.cg-badge { top: 0; left: 0; right: 0; width: auto; transform: none; padding: 1px 0; font-size: 0.52rem; border-radius: 0; }
+.cg-foot { min-height: 0; margin-top: 3px; }
+.cg-chip { padding: 1px 6px; font-size: 0.6rem; }
+.cg-live { padding: 1px 5px; font-size: 0.56rem; }
