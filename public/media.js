@@ -67,6 +67,6 @@ function onLive(event, fn) {
 (function connectLive() {
   if (!window.EventSource) return;
   const es = new EventSource('/api/events');
-  ['chat', 'chat-reload', 'stories', 'avatars', 'tasks', 'orders', 'casino-win', 'activity', 'reactions', 'poker', 'presence', 'notify', 'beer-win', 'arena'].forEach((ev) =>
+  ['chat', 'chat-reload', 'stories', 'avatars', 'tasks', 'orders', 'casino-win', 'activity', 'reactions', 'poker', 'presence', 'notify', 'beer-win', 'arena', 'bj', 'roulette'].forEach((ev) =>
     es.addEventListener(ev, (e) => (liveHandlers[ev] || []).forEach((fn) => fn(JSON.parse(e.data)))));
 })();

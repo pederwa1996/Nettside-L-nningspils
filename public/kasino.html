@@ -39,12 +39,6 @@
         <button type="button" class="tab" data-tab="bar">🍻 Baren</button>
       </div>
 
-      <!-- Innsats i cash (roulette og blackjack) -->
-      <section id="bet-card" class="card hidden">
-        <p class="field-label">Innsats: <strong id="bet">10</strong> cash</p>
-        <div class="step-chips" id="bet-chips"></div>
-      </section>
-
       <!-- Lykkehjulet -->
       <section id="tab-wheel" class="card">
         <h2>Lykkehjulet 🎡</h2>
@@ -82,39 +76,58 @@
         </details>
       </section>
 
-      <!-- Roulette -->
+      <!-- Roulette: ett felles hjul for alle -->
       <section id="tab-roulette" class="card hidden">
+        <div class="rl-top">
+          <div id="rl-status" class="rl-status">Satse for å starte runden</div>
+          <div id="rl-history" class="rl-history"></div>
+        </div>
         <div class="wheel-wrap roulette-wrap">
           <div class="pointer">▼</div>
           <canvas id="roulette" width="600" height="600"></canvas>
+          <div id="rl-number" class="rl-number hidden"></div>
         </div>
-        <p id="roulette-result" class="result"></p>
-        <p class="field-label">Velg hva du satser på · Vinner du, får du dobbelt tilbake</p>
-        <div class="bet-grid" id="bet-grid">
-          <button type="button" class="bet-opt red" data-type="red">Rød<small>×2</small></button>
-          <button type="button" class="bet-opt black" data-type="black">Svart<small>×2</small></button>
-          <button type="button" class="bet-opt" data-type="even">Partall<small>×2</small></button>
-          <button type="button" class="bet-opt" data-type="odd">Oddetall<small>×2</small></button>
+        <p id="rl-result" class="result"></p>
+        <div class="rl-board" id="rl-board">
+          <button type="button" class="rl-spot red" data-type="red"><b>Rød</b><span class="rl-total"></span><span class="rl-chips"></span></button>
+          <button type="button" class="rl-spot black" data-type="black"><b>Svart</b><span class="rl-total"></span><span class="rl-chips"></span></button>
+          <button type="button" class="rl-spot even" data-type="even"><b>Partall</b><span class="rl-total"></span><span class="rl-chips"></span></button>
+          <button type="button" class="rl-spot odd" data-type="odd"><b>Oddetall</b><span class="rl-total"></span><span class="rl-chips"></span></button>
         </div>
-        <button id="roulette-spin" class="big">Spinn hjulet 🎡</button>
+        <p class="field-label">Trykk på et felt for å satse <strong id="rl-chip">25</strong> cash · gevinst = dobbelt tilbake</p>
+        <div class="step-chips" id="rl-chips"></div>
+        <p id="rl-mine" class="note center"></p>
+        <button type="button" id="rl-clear" class="secondary small-btn hidden">Ta tilbake innsatsene mine</button>
+        <p class="note">Ett hjul for alle i kasinoet. Første innsats starter nedtellingen, og så spinner hjulet for alle samtidig. 0 er grønn og gir huset fordelen.</p>
       </section>
 
-      <!-- Blackjack -->
+      <!-- Blackjack: ett felles bord med 5 plasser -->
       <section id="tab-blackjack" class="card hidden">
-        <div class="bj-table">
-          <p class="bj-label">Dealer <span id="dealer-value" class="bj-value"></span></p>
-          <div id="dealer-cards" class="bj-cards"></div>
-          <p class="bj-label">Deg <span id="player-value" class="bj-value"></span></p>
-          <div id="player-cards" class="bj-cards"></div>
+        <div class="bj-table2" id="bj-table">
+          <div class="bj-felt"></div>
+          <div class="bj-dealer">
+            <div class="bj-dealer-label">🤵 Dealer <span id="bj-dealer-value" class="bj-value"></span></div>
+            <div id="bj-dealer-cards" class="bj-cards2"></div>
+            <div id="bj-status" class="pk-status"></div>
+          </div>
+          <div id="bj-seats"></div>
         </div>
-        <p id="bj-result" class="result"></p>
-        <div class="bj-actions">
-          <button id="bj-deal" class="big">Del ut 🃏</button>
-          <button id="bj-hit" class="hidden">Trekk</button>
-          <button id="bj-stand" class="secondary hidden">Stå</button>
-          <button id="bj-double" class="secondary hidden">Doble</button>
+        <div id="bj-bet" class="bj-bet hidden">
+          <p class="field-label">Innsats: <strong id="bj-bet-amount">25</strong> cash</p>
+          <div class="step-chips" id="bj-chips"></div>
+          <button type="button" id="bj-bet-btn" class="big">Sats</button>
         </div>
-        <p class="note">Dealer trekker til 17. Blackjack betaler 3:2. Du kan doble på de to første kortene.</p>
+        <div id="bj-actions" class="pk-actions hidden">
+          <div class="pk-buttons">
+            <button type="button" id="bj-hit">Trekk</button>
+            <button type="button" class="secondary" id="bj-stand">Stå</button>
+            <button type="button" class="secondary" id="bj-double">Doble</button>
+          </div>
+        </div>
+        <p id="bj-msg" class="result"></p>
+        <p id="bj-info" class="note center"></p>
+        <button type="button" id="bj-leave" class="secondary small-btn hidden">Reis deg fra bordet</button>
+        <p class="note">Ett bord for alle med 5 plasser. Sett deg og sats; første innsats starter nedtellingen. Dealer trekker til 17, blackjack betaler 3:2, og du kan doble på de to første kortene.</p>
       </section>
 
       <!-- Poker -->
@@ -213,6 +226,8 @@
   <script src="/kasino.js"></script>
   <script src="/baren.js"></script>
   <script src="/pokerbord.js"></script>
+  <script src="/bjbord.js"></script>
+  <script src="/roulettebord.js"></script>
   <script src="/presence.js"></script>
   <script src="/nav.js"></script>
   <script src="/chatbox.js"></script>

@@ -6,6 +6,7 @@ const path = require('path');
 const crypto = require('crypto');
 const supabase = require('./supabase');
 const { createPoker, SEATS: POKER_SEATS } = require('./poker');
+const { createTables } = require('./tables');
 const { TASKS: DEFAULT_TASKS, RETIRED: RETIRED_TASKS } = require('./tasks-default');
 
 // ---- Innstillinger (kan overstyres med miljøvariabler) ----
@@ -121,13 +122,16 @@ function normalizeState(s) {
   out.budget = { total: BUDGET_KR, price: BEER_PRICE_KR, ...(s && s.budget) };
   out.casinoLog = out.casinoLog.filter((e) => e.won !== undefined); // gamle oppføringer hadde annet format
   if (!s.activity) out.activity = backfillActivity(out);
-  // Blackjack-hender fra før kasinoet gikk over til flus ble spilt med spinn: gi innsatsen tilbake
-  for (const [name, h] of Object.entries(out.blackjack)) {
-    if (h.currency === 'flus') continue;
+  // Blackjack var tidligere personlig per mobil; nå er det et felles bord.
+  // Uferdige hender fra før gir innsatsen tilbake (spinn for de aller eldste, ellers cash).
+  for (const [name, h] of Object.entries(out.blackjack || {})) {
     const p = out.participants.find((x) => x.name === name);
-    if (h.status === 'playing' && p) p.bonusSpins = (p.bonusSpins || 0) + h.bet;
-    delete out.blackjack[name];
+    if (h.status === 'playing' && p) {
+      if (h.currency === 'flus') p.flus = (p.flus || 0) + h.bet;
+      else p.bonusSpins = (p.bonusSpins || 0) + h.bet;
+    }
   }
+  out.blackjack = {};
   return out;
 }
 
@@ -288,6 +292,7 @@ function renameEverywhere(oldName, newName) {
     (p.guestbook || []).forEach((c) => swap(c, 'from'));
   });
   state.poker.seats.forEach((x) => swap(x, 'name'));
+  tables.rename(oldName, newName);
   if (state.poker.hand) Object.values(state.poker.hand.players).forEach((x) => swap(x, 'name'));
   for (const map of [state.moggBest, state.blackjack]) {
     if (map[oldName]) {
@@ -433,18 +438,6 @@ function moggView(m, viewer) {
 }
 
 // ---- Kasino ----
-// Rød/svart på et europeisk roulettehjul
-const RED_NUMBERS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
-
-// Som i et vanlig kasino: europeisk hjul (0–36), alle innsatser betaler 1:1.
-// 18 av 37 tall vinner (48,6 %). Bare 0 er husets fordel, akkurat som på ekte.
-const ROULETTE_BETS = {
-  red: { label: 'Rød', wins: (n) => RED_NUMBERS.has(n) },
-  black: { label: 'Svart', wins: (n) => n !== 0 && !RED_NUMBERS.has(n) },
-  even: { label: 'Partall', wins: (n) => n !== 0 && n % 2 === 0 },
-  odd: { label: 'Oddetall', wins: (n) => n % 2 === 1 },
-};
-
 function addFlus(p, n) {
   p.flus = (p.flus || 0) + n;
 }
@@ -581,88 +574,6 @@ function announceBeer(name, text, delayMs = 0) {
     if (recentBeerWins.length > 10) recentBeerWins.shift();
     broadcast('beer-win', e);
   }, delayMs);
-}
-
-// Blackjack
-const SUITS = ['♠', '♥', '♦', '♣'];
-const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-
-function newDeck() {
-  const deck = [];
-  for (const s of SUITS) for (const r of RANKS) deck.push({ r, s });
-  return pickRandom(deck, deck.length); // ny stokket kortstokk hver runde
-}
-
-function handValue(cards) {
-  let total = 0;
-  let aces = 0;
-  for (const c of cards) {
-    if (c.r === 'A') {
-      total += 11;
-      aces++;
-    } else total += ['J', 'Q', 'K'].includes(c.r) ? 10 : Number(c.r);
-  }
-  while (total > 21 && aces > 0) {
-    total -= 10;
-    aces--;
-  }
-  return total;
-}
-
-const isBlackjack = (cards) => cards.length === 2 && handValue(cards) === 21;
-
-function bjView(h) {
-  if (!h) return null;
-  const done = h.status === 'done';
-  return {
-    status: h.status,
-    bet: h.bet,
-    player: h.player,
-    playerValue: handValue(h.player),
-    // Dealerens andre kort holdes skjult til runden er ferdig
-    dealer: done ? h.dealer : [h.dealer[0], { hidden: true }],
-    dealerValue: done ? handValue(h.dealer) : handValue([h.dealer[0]]),
-    canDouble: !done && h.player.length === 2 && !h.doubled,
-    result: h.result || null,
-    net: h.net ?? null,
-  };
-}
-
-// Avslutter hånden: dealer trekker til 17, så sammenlignes hendene
-function settleBlackjack(p, h, { dealerPlays = true } = {}) {
-  const pv = handValue(h.player);
-  if (dealerPlays && pv <= 21) {
-    while (handValue(h.dealer) < 17) h.dealer.push(h.deck.pop());
-  }
-  const dv = handValue(h.dealer);
-  let payout = 0;
-  if (pv > 21) h.result = 'bust';
-  else if (isBlackjack(h.player) && !isBlackjack(h.dealer)) {
-    h.result = 'blackjack';
-    payout = h.bet + Math.max(1, Math.floor(h.bet * 1.5));
-  } else if (isBlackjack(h.dealer) && !isBlackjack(h.player)) h.result = 'dealer-blackjack';
-  else if (dv > 21) {
-    h.result = 'dealer-bust';
-    payout = h.bet * 2;
-  } else if (pv > dv) {
-    h.result = 'win';
-    payout = h.bet * 2;
-  } else if (pv === dv) {
-    h.result = 'push';
-    payout = h.bet;
-  } else h.result = 'lose';
-  addFlus(p, payout);
-  h.net = payout - h.bet;
-  h.status = 'done';
-  delete h.deck;
-  // Gevinsten som vises er hele utbetalingen (innsats + gevinst), som i et ekte kasino
-  logCasino(p, 'blackjack', { won: h.net > 0 ? payout : 0, net: h.net, detail: h.result });
-}
-
-function activeHand(p) {
-  const h = state.blackjack[p.name];
-  if (!h || h.status !== 'playing') throw new Error('Du har ingen hånd i spill. Trykk «Del ut».');
-  return h;
 }
 
 // ---- Oppgaver ----
@@ -869,6 +780,23 @@ const poker = createPoker({
   blinds: POKER_BLINDS,
   minBuyIn: POKER_MIN_BUYIN,
   maxBuyIn: POKER_MAX_BUYIN,
+});
+
+// ---- Felles blackjack-bord og roulette ----
+const tables = createTables({
+  state: () => state,
+  save: saveState,
+  broadcast,
+  findParticipant,
+  addFlus: (p, n) => addFlus(p, n),
+  shuffle: (arr) => pickRandom(arr, arr.length),
+  randomInt,
+  minBet: CASINO_MIN_BET,
+  maxBet: CASINO_MAX_BET,
+  onWin: (name, game, won, net, detail) => {
+    const p = findParticipant(name);
+    if (p) logCasino(p, game, { won, net, detail });
+  },
 });
 
 // ---- Aktivitet og reaksjoner (likes/kommentarer) ----
@@ -1976,27 +1904,57 @@ const routes = {
       wheelChance: SPIN_WIN_CHANCE,
       wheelLoseChance: SPIN_LOSE_CHANCE,
       slotTable: SLOT_TABLE.filter((o) => o.flus || o.beer).map((o) => ({ id: o.id, symbol: o.symbol || '🍒🍒', flus: o.flus, beer: o.beer || 0 })),
-      blackjack: p ? bjView(state.blackjack[p.name]) : null,
       log: state.casinoLog.slice(-10).reverse(),
       avatars: avatars(),
     });
   },
 
-  'POST /api/casino/roulette': (req, res, body) => {
+  // ---------- Felles blackjack-bord ----------
+  'GET /api/bj': (req, res) => {
+    const p = currentParticipant(req);
+    sendJson(res, 200, { me: meView(p), table: tables.bj.view(p, avatars()) });
+  },
+  'POST /api/bj/sit': (req, res, body) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    const bet = parseBet(p, body.amount);
-    const kind = ROULETTE_BETS[body.type];
-    if (!kind) return sendJson(res, 400, { error: 'Velg rød, svart, partall eller oddetall.' });
-    const number = randomInt(37);
-    const won = kind.wins(number);
-    const net = won ? bet : -bet;
-    // Utbetaling = innsatsen tilbake + like mye i gevinst (satser 25, får 50)
-    const payout = won ? bet * 2 : 0;
-    addFlus(p, net);
-    logCasino(p, 'roulette', { won: payout, net, detail: `${kind.label} → ${number}` });
-    saveState();
-    sendJson(res, 200, { number, color: number === 0 ? 'green' : RED_NUMBERS.has(number) ? 'red' : 'black', won, net, bet, payout, me: meView(p) });
+    tables.bj.sit(p, body.seat);
+    sendJson(res, 200, { me: meView(p), table: tables.bj.view(p, avatars()) });
+  },
+  'POST /api/bj/leave': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    tables.bj.leave(p);
+    sendJson(res, 200, { me: meView(p), table: tables.bj.view(p, avatars()) });
+  },
+  'POST /api/bj/bet': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    tables.bj.bet(p, body.amount);
+    sendJson(res, 200, { me: meView(p), table: tables.bj.view(p, avatars()) });
+  },
+  'POST /api/bj/act': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    tables.bj.act(p, String(body.action || ''));
+    sendJson(res, 200, { me: meView(p), table: tables.bj.view(p, avatars()) });
+  },
+
+  // ---------- Felles roulette ----------
+  'GET /api/roulette': (req, res) => {
+    const p = currentParticipant(req);
+    sendJson(res, 200, { me: meView(p), table: tables.roulette.view(p, avatars()) });
+  },
+  'POST /api/roulette/bet': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    tables.roulette.bet(p, String(body.type || ''), body.amount);
+    sendJson(res, 200, { me: meView(p), table: tables.roulette.view(p, avatars()) });
+  },
+  'POST /api/roulette/clear': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    tables.roulette.clear(p);
+    sendJson(res, 200, { me: meView(p), table: tables.roulette.view(p, avatars()) });
   },
 
   'POST /api/casino/slot': (req, res, body) => {
@@ -2017,59 +1975,6 @@ const routes = {
     sendJson(res, 200, { reels, flus: outcome.flus, beer: outcome.beer || 0, me: meView(p) });
   },
 
-  'POST /api/casino/bj/deal': (req, res, body) => {
-    const p = currentParticipant(req);
-    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    const cur = state.blackjack[p.name];
-    if (cur && cur.status === 'playing') return sendJson(res, 400, { error: 'Du har allerede en hånd i spill.' });
-    const bet = parseBet(p, body.amount);
-    addFlus(p, -bet); // innsatsen trekkes med en gang
-    const deck = newDeck();
-    const h = { bet, currency: 'flus', deck, player: [deck.pop(), deck.pop()], dealer: [deck.pop(), deck.pop()], status: 'playing', doubled: false };
-    state.blackjack[p.name] = h;
-    // Blackjack på første to kort avgjøres med en gang
-    if (isBlackjack(h.player) || isBlackjack(h.dealer)) settleBlackjack(p, h, { dealerPlays: false });
-    saveState();
-    sendJson(res, 200, { blackjack: bjView(h), me: meView(p) });
-  },
-
-  'POST /api/casino/bj/hit': (req, res) => {
-    const p = currentParticipant(req);
-    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    const h = activeHand(p);
-    h.player.push(h.deck.pop());
-    const v = handValue(h.player);
-    if (v > 21) settleBlackjack(p, h, { dealerPlays: false });
-    else if (v === 21) settleBlackjack(p, h);
-    saveState();
-    sendJson(res, 200, { blackjack: bjView(h), me: meView(p) });
-  },
-
-  'POST /api/casino/bj/stand': (req, res) => {
-    const p = currentParticipant(req);
-    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    const h = activeHand(p);
-    settleBlackjack(p, h);
-    saveState();
-    sendJson(res, 200, { blackjack: bjView(h), me: meView(p) });
-  },
-
-  'POST /api/casino/bj/double': (req, res) => {
-    const p = currentParticipant(req);
-    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    const h = activeHand(p);
-    if (h.player.length !== 2 || h.doubled) return sendJson(res, 400, { error: 'Du kan bare doble på de to første kortene.' });
-    if ((p.flus || 0) < h.bet) return sendJson(res, 400, { error: `Du trenger ${h.bet} cash til for å doble.` });
-    addFlus(p, -h.bet);
-    h.bet *= 2;
-    h.doubled = true;
-    h.player.push(h.deck.pop()); // ett kort, så står du
-    settleBlackjack(p, h, { dealerPlays: handValue(h.player) <= 21 });
-    saveState();
-    sendJson(res, 200, { blackjack: bjView(h), me: meView(p) });
-  },
-
-  // ---- Admin: gi eller ta spinn ----
   'POST /api/admin/players': (req, res, body) => {
     if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     sendJson(res, 200, {
@@ -2496,6 +2401,7 @@ async function start() {
   }
 
   poker.restore(); // avbryt en hånd som var i gang da serveren stoppet
+  tables.restore(); // samme for blackjack-bordet og rouletten
 
   if (removedTasks) {
     console.log(`🧹 Fjernet ${removedTasks} utgåtte oppgaver`);

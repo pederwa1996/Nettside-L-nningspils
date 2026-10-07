@@ -3,10 +3,7 @@
 (function () {
   const $ = (id) => document.getElementById(id);
   let data = null;
-  let bet = 10;
-  let betType = 'red';
   let busy = false;
-  let rotation = 0;
   let wheelRotation = 0;
   let wheelSpinning = false;
 
@@ -36,32 +33,9 @@
       $('spin-btn').textContent = me.spinsLeft > 0 ? `Spinn! 🎡 (${me.spinsLeft} igjen)` : 'Ingen spinn igjen';
     }
     $('spin-total').textContent = me.spinWins ? `Du har vunnet ${me.spinWins} øl på hjulet totalt 🍺` : '';
-    renderChips();
   }
-
-  // ---------- Innsats (flus) ----------
-  const CHIPS = [10, 25, 50, 100, 200];
-
-  function renderChips() {
-    const wrap = $('bet-chips');
-    wrap.innerHTML = '';
-    const flus = data.me ? data.me.flus : 0;
-    const chips = CHIPS.filter((c) => c >= data.minBet && c <= data.maxBet);
-    if (!chips.includes(bet)) bet = chips[0];
-    chips.forEach((c) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'chip' + (c === bet ? ' active' : '');
-      b.textContent = c;
-      b.disabled = c > flus;
-      b.addEventListener('click', () => {
-        bet = c;
-        renderChips();
-      });
-      wrap.appendChild(b);
-    });
-    $('bet').textContent = bet;
-  }
+  // Bordene (blackjack, roulette, poker) oppdaterer lommeboken øverst
+  window.casinoSetWallet = (me) => data && me && setWallet(me);
 
   // ---------- Automat ----------
   const SYMBOLS = ['🍒', '🍋', '🔔', '⭐', '7️⃣', '💎', '🍺'];
@@ -153,197 +127,10 @@
     });
   }
 
-  // ---------- Roulette ----------
-  const ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-  const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
-  const colorOf = (n) => (n === 0 ? '#1f9d55' : RED.has(n) ? '#c0392b' : '#1b1e2e');
-
-  function drawRoulette() {
-    const canvas = $('roulette');
-    const ctx = canvas.getContext('2d');
-    const r = canvas.width / 2;
-    const seg = (Math.PI * 2) / ORDER.length;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ORDER.forEach((n, i) => {
-      const start = -Math.PI / 2 + i * seg - seg / 2;
-      ctx.beginPath();
-      ctx.moveTo(r, r);
-      ctx.arc(r, r, r - 6, start, start + seg);
-      ctx.closePath();
-      ctx.fillStyle = colorOf(n);
-      ctx.fill();
-      ctx.strokeStyle = '#c9a227';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.save();
-      ctx.translate(r, r);
-      ctx.rotate(start + seg / 2 + Math.PI / 2);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 24px system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(String(n), 0, -r + 40);
-      ctx.restore();
-    });
-    ctx.beginPath();
-    ctx.arc(r, r, r * 0.55, 0, Math.PI * 2);
-    ctx.fillStyle = '#5a3d1a';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(r, r, r * 0.2, 0, Math.PI * 2);
-    ctx.fillStyle = '#c9a227';
-    ctx.fill();
-  }
-
-  function spinTo(number) {
-    const segDeg = 360 / ORDER.length;
-    const idx = ORDER.indexOf(number);
-    const jitter = (Math.random() - 0.5) * segDeg * 0.6;
-    const wanted = (360 - idx * segDeg + jitter + 360) % 360;
-    const current = ((rotation % 360) + 360) % 360;
-    rotation += 360 * 5 + ((wanted - current + 360) % 360);
-    $('roulette').style.transform = `rotate(${rotation}deg)`;
-    return sleep(5200);
-  }
-
-  $('bet-grid').addEventListener('click', (e) => {
-    const b = e.target.closest('.bet-opt');
-    if (!b) return;
-    betType = b.dataset.type;
-    document.querySelectorAll('.bet-opt').forEach((x) => x.classList.toggle('selected', x === b));
-  });
-
-  $('roulette-spin').addEventListener('click', async () => {
-    if (busy) return;
-    busy = true;
-    $('roulette-spin').disabled = true;
-    $('roulette-result').textContent = '';
-    $('roulette-result').className = 'result';
-    try {
-      const r = await api('/api/casino/roulette', { type: betType, amount: bet });
-      await spinTo(r.number);
-      setWallet(r.me);
-      const colorName = r.color === 'green' ? 'grønn' : r.color === 'red' ? 'rød' : 'svart';
-      $('roulette-result').textContent = r.won
-        ? `🎉 ${r.number} ${colorName}! Du vant ${flusWord(r.payout)}! (${r.bet} i innsats + ${r.net} i gevinst)`
-        : `${r.number} ${colorName}. Du tapte ${flusWord(r.net)} 😢`;
-      $('roulette-result').classList.add(r.won ? 'win' : 'lose');
-      if (r.won) celebrate({ tier: r.payout >= 200 ? 'big' : 'win', amount: r.payout, icon: r.color === 'red' ? '🔴' : '⚫', sub: `${r.number} ${colorName}! Innsats ${r.bet} → ${r.payout} tilbake` });
-      else loseNudge($('roulette-result'));
-    } catch (err) {
-      $('roulette-result').textContent = err.message;
-      $('roulette-result').classList.add('lose');
-    }
-    busy = false;
-    $('roulette-spin').disabled = false;
-    loadLog();
-  });
-
-  // ---------- Blackjack ----------
-  function cardEl(c, delay) {
-    const d = document.createElement('div');
-    if (c.hidden) {
-      d.className = 'playing-card back';
-    } else {
-      d.className = 'playing-card' + (c.s === '♥' || c.s === '♦' ? ' red' : '');
-      d.innerHTML = '<span class="pc-corner"></span><span class="pc-suit"></span>';
-      d.querySelector('.pc-corner').textContent = `${c.r}${c.s}`;
-      d.querySelector('.pc-suit').textContent = c.s;
-    }
-    if (delay) d.style.animationDelay = `${delay}ms`;
-    return d;
-  }
-
-  const RESULT_TEXT = {
-    blackjack: (n) => [`🃏 BLACKJACK! Du vant ${flusWord(n)}!`, 'win'],
-    win: (n) => [`🎉 Du vant ${flusWord(n)}!`, 'win'],
-    'dealer-bust': (n) => [`💥 Dealer gikk over 21! Du vant ${flusWord(n)}!`, 'win'],
-    push: () => ['🤝 Uavgjort. Du får innsatsen tilbake.', ''],
-    lose: (n) => [`Dealer vant. Du tapte ${flusWord(n)} 😢`, 'lose'],
-    bust: (n) => [`💥 Over 21! Du tapte ${flusWord(n)} 😢`, 'lose'],
-    'dealer-blackjack': (n) => [`Dealer fikk blackjack. Du tapte ${flusWord(n)} 😢`, 'lose'],
-  };
-
-  let shownCards = { dealer: 0, player: 0 };
-
-  function renderBlackjack(h, animate) {
-    const playing = h && h.status === 'playing';
-    $('bj-deal').classList.toggle('hidden', playing);
-    $('bj-hit').classList.toggle('hidden', !playing);
-    $('bj-stand').classList.toggle('hidden', !playing);
-    $('bj-double').classList.toggle('hidden', !playing || !h.canDouble);
-    $('bj-deal').textContent = h ? 'Ny runde 🃏' : 'Del ut 🃏';
-    if (!h) {
-      $('dealer-cards').innerHTML = '';
-      $('player-cards').innerHTML = '';
-      $('dealer-value').textContent = '';
-      $('player-value').textContent = '';
-      return;
-    }
-    // Animer bare kortene som er nye siden sist
-    ['dealer', 'player'].forEach((who) => {
-      const wrap = $(`${who}-cards`);
-      wrap.innerHTML = '';
-      h[who].forEach((c, i) => {
-        const isNew = animate && (i >= shownCards[who] || (who === 'dealer' && i === 1 && !c.hidden));
-        const el = cardEl(c, isNew ? (i - Math.min(i, shownCards[who])) * 180 : 0);
-        if (isNew) el.classList.add('deal');
-        wrap.appendChild(el);
-      });
-      shownCards[who] = h[who].filter((c) => !c.hidden).length;
-    });
-    $('dealer-value').textContent = h.dealerValue;
-    $('player-value').textContent = h.playerValue;
-    if (h.status === 'done') {
-      // Ved gevinst vises hele utbetalingen (innsats + gevinst)
-      const [text, cls] = RESULT_TEXT[h.result](h.net > 0 ? h.bet + h.net : h.net);
-      $('bj-result').textContent = text;
-      $('bj-result').className = `result ${cls}`;
-    } else {
-      $('bj-result').textContent = `Innsats: ${flusWord(h.bet)}`;
-      $('bj-result').className = 'result';
-    }
-  }
-
-  async function bjAction(path, body) {
-    if (busy) return;
-    busy = true;
-    document.querySelectorAll('.bj-actions button').forEach((b) => (b.disabled = true));
-    try {
-      if (path === '/api/casino/bj/deal') shownCards = { dealer: 0, player: 0 };
-      const r = await api(path, body || {});
-      setWallet(r.me);
-      renderBlackjack(r.blackjack, true);
-      if (r.blackjack.status === 'done') {
-        loadLog();
-        celebrateBlackjack(r.blackjack);
-      }
-    } catch (err) {
-      $('bj-result').textContent = err.message;
-      $('bj-result').className = 'result lose';
-    }
-    busy = false;
-    document.querySelectorAll('.bj-actions button').forEach((b) => (b.disabled = false));
-  }
-
-  function celebrateBlackjack(h) {
-    const payout = h.bet + h.net;
-    // Vent til dealerens kort er delt ut før popupen kommer
-    setTimeout(() => {
-      if (h.result === 'blackjack') celebrate({ tier: 'big', amount: payout, title: 'BLACKJACK!', icon: '🃏', sub: `Innsats ${h.bet} → ${payout} tilbake` });
-      else if (h.net > 0) celebrate({ tier: payout >= 200 ? 'big' : 'win', amount: payout, icon: h.result === 'dealer-bust' ? '💥' : '🃏', sub: h.result === 'dealer-bust' ? 'Dealeren gikk over 21!' : `${h.playerValue} slår ${h.dealerValue}` });
-      else if (h.net < 0) loseNudge($('bj-result'));
-    }, 700);
-  }
-
   // Pils vunnet: størst feiring, med snarvei til baren
   function beerWin(sub) {
     celebrate({ tier: 'beer', sub: `${sub} Løs den inn i baren, så kommer spillmesteren med den til bordet.`, action: { label: '🍻 Til baren', onClick: () => showTab('bar') } });
   }
-
-  $('bj-deal').addEventListener('click', () => bjAction('/api/casino/bj/deal', { amount: bet }));
-  $('bj-hit').addEventListener('click', () => bjAction('/api/casino/bj/hit'));
-  $('bj-stand').addEventListener('click', () => bjAction('/api/casino/bj/stand'));
-  $('bj-double').addEventListener('click', () => bjAction('/api/casino/bj/double'));
 
   // ---------- Lykkehjulet ----------
   const SEGMENTS = 20;
@@ -445,8 +232,9 @@
     if (window.updatePresenceRoom) window.updatePresenceRoom();
     document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.tab === name));
     Object.keys(TAB_HASH).forEach((t) => $(`tab-${t}`).classList.toggle('hidden', t !== name));
-    $('bet-card').classList.toggle('hidden', !['roulette', 'blackjack'].includes(name));
     if (name === 'poker' && window.refreshPoker) window.refreshPoker();
+    if (name === 'blackjack' && window.refreshBj) window.refreshBj();
+    if (name === 'roulette' && window.refreshRoulette) window.refreshRoulette();
     history.replaceState(null, '', `#${TAB_HASH[name]}`);
     // Baren har sin egen oversikt over flus og bestillinger: hent den på nytt
     if (name === 'bar' && window.refreshBar) window.refreshBar();
@@ -454,11 +242,16 @@
     if (name !== 'bar') api('/api/casino').then((d) => d.me && setWallet(d.me)).catch(() => {});
   }
   document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
+  // Lenker til en annen fane på samme side (f.eks. #roulette) bytter fane
+  window.addEventListener('hashchange', () => {
+    const tab = Object.keys(TAB_HASH).find((t) => `#${TAB_HASH[t]}` === location.hash);
+    if (tab && data && data.me) showTab(tab);
+  });
   // «Pils til gode» i lommeboken tar deg rett til baren
   $('wallet-beers').addEventListener('click', () => { showTab('bar'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
   // ---------- Live gevinster ----------
-  const GAME_ICON = { roulette: '🎡', blackjack: '🃏', slot: '🎰', poker: '♠️' };
+  const GAME_ICON = { roulette: '🔴', blackjack: '🃏', slot: '🎰', poker: '♠️' };
   const GAME_NAME = { roulette: 'roulette', blackjack: 'blackjack', slot: 'automaten', poker: 'pokerbordet' };
 
   function winText(e) {
@@ -534,19 +327,12 @@
     setWallet(data.me);
     renderPaytable(data.slotTable);
     initReels();
-    drawRoulette();
     drawWheel();
     $('chance').textContent = `${Math.round(data.wheelChance * 100)} %`;
     $('lose-chance').textContent = `${Math.round(data.wheelLoseChance * 100)} %`;
-    document.querySelector('.bet-opt[data-type="red"]').classList.add('selected');
     const fromHash = Object.keys(TAB_HASH).find((t) => `#${TAB_HASH[t]}` === location.hash);
-    if (data.blackjack) {
-      shownCards = { dealer: 9, player: 9 };
-      renderBlackjack(data.blackjack, false);
-    } else renderBlackjack(null);
-    // Lenken bestemmer fanen (f.eks. #baren). Ellers: fortsett en uferdig blackjack-hånd.
+    // Lenken bestemmer fanen (f.eks. #baren)
     if (fromHash) showTab(fromHash);
-    else if (data.blackjack && data.blackjack.status === 'playing') showTab('blackjack');
   }
 
   init();
