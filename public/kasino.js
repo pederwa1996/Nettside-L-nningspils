@@ -84,6 +84,7 @@
     $('slot-result').textContent = '';
     $('slot-result').className = 'result';
     document.querySelector('.slot-machine').classList.remove('jackpot');
+    pullLever();
     try {
       const r = await api('/api/casino/slot', { pay });
       await spinReels(r.reels);
@@ -110,6 +111,34 @@
     if (data.me) setWallet(data.me);
     loadLog();
   }
+
+  // Spaken på siden av automaten: trekkes ned og spretter opp igjen
+  function pullLever() {
+    const lever = $('sm-lever');
+    lever.classList.remove('pulled');
+    void lever.offsetWidth;
+    lever.classList.add('pulled');
+  }
+  $('sm-lever').addEventListener('click', () => {
+    if (busy || !data || !data.me) return;
+    if (data.me.spinsLeft >= 1) pullSlot('spin');
+    else pullSlot('flus');
+  });
+  // Lyspærer rundt toppen av automaten og rundt lykkehjulet
+  (function bulbs() {
+    const top = $('sm-bulbs');
+    for (let i = 0; i < 13; i++) top.appendChild(Object.assign(document.createElement('i'), { style: `--i:${i}` }));
+    const ring = $('wheel-lights');
+    const N = 24;
+    for (let i = 0; i < N; i++) {
+      const b = document.createElement('i');
+      const a = (i / N) * Math.PI * 2;
+      b.style.left = `${50 + 48.5 * Math.cos(a)}%`;
+      b.style.top = `${50 + 48.5 * Math.sin(a)}%`;
+      b.style.setProperty('--i', i);
+      ring.appendChild(b);
+    }
+  })();
 
   $('slot-pull').addEventListener('click', () => pullSlot('spin'));
   $('slot-pull-flus').addEventListener('click', () => pullSlot('flus'));
@@ -147,17 +176,45 @@
     const canvas = $('wheel');
     const ctx = canvas.getContext('2d');
     const r = canvas.width / 2;
+    const R = r - 22; // innenfor gullkanten
     const seg = (Math.PI * 2) / SEGMENTS;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Gullkant
+    const rim = ctx.createRadialGradient(r, r, R - 4, r, r, r);
+    rim.addColorStop(0, '#7a5410');
+    rim.addColorStop(0.35, '#ffe08a');
+    rim.addColorStop(0.6, '#d4a530');
+    rim.addColorStop(1, '#6b4708');
+    ctx.beginPath();
+    ctx.arc(r, r, r - 2, 0, Math.PI * 2);
+    ctx.fillStyle = rim;
+    ctx.fill();
+
     segments.forEach((s, i) => {
       const start = -Math.PI / 2 + i * seg;
+      const g = ctx.createRadialGradient(r, r, R * 0.15, r, r, R);
+      if (s.kind === 'beer') {
+        g.addColorStop(0, '#fff3c4');
+        g.addColorStop(0.55, '#ffc928');
+        g.addColorStop(1, '#d48a00');
+      } else if (s.kind === 'lose') {
+        g.addColorStop(0, '#3a3a3a');
+        g.addColorStop(1, '#050505');
+      } else if (i % 2) {
+        g.addColorStop(0, '#b3192c');
+        g.addColorStop(1, '#5c0814');
+      } else {
+        g.addColorStop(0, '#2b6fd6');
+        g.addColorStop(1, '#0e2f6b');
+      }
       ctx.beginPath();
       ctx.moveTo(r, r);
-      ctx.arc(r, r, r - 6, start, start + seg);
+      ctx.arc(r, r, R, start, start + seg);
       ctx.closePath();
-      ctx.fillStyle = s.kind === 'beer' ? '#f5b301' : s.kind === 'lose' ? '#111111' : i % 2 ? '#5a0a14' : '#7a0d1c';
+      ctx.fillStyle = g;
       ctx.fill();
-      ctx.strokeStyle = '#d4a530';
+      ctx.strokeStyle = '#f2cf6b';
       ctx.lineWidth = 3;
       ctx.stroke();
       ctx.save();
@@ -165,20 +222,43 @@
       ctx.rotate(start + seg / 2);
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = s.kind === 'beer' ? '#2a1500' : s.kind === 'lose' ? '#ff4d6d' : '#fff3c4';
-      ctx.font = s.kind === 'miss' ? '22px system-ui, sans-serif' : 'bold 24px system-ui, sans-serif';
-      if (s.kind === 'beer') ctx.font = 'bold 30px system-ui, sans-serif';
-      ctx.fillText(s.label, r - 24, 0);
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = s.kind === 'beer' ? '#3a1d00' : s.kind === 'lose' ? '#ff5470' : '#ffffff';
+      ctx.font = s.kind === 'beer' ? '900 30px system-ui, sans-serif' : s.kind === 'lose' ? '900 23px system-ui, sans-serif' : '700 21px system-ui, sans-serif';
+      if (s.kind === 'beer') ctx.shadowBlur = 0;
+      ctx.fillText(s.label, R - 16, 0);
       ctx.restore();
     });
+
+    // Glans over hele hjulet
+    const shine = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    shine.addColorStop(0, 'rgba(255, 255, 255, 0.18)');
+    shine.addColorStop(0.5, 'rgba(255, 255, 255, 0)');
     ctx.beginPath();
-    ctx.arc(r, r, 40, 0, Math.PI * 2);
-    ctx.fillStyle = '#f5b301';
+    ctx.arc(r, r, R, 0, Math.PI * 2);
+    ctx.fillStyle = shine;
     ctx.fill();
-    ctx.font = '40px system-ui';
+
+    // Nav i midten
+    const hub = ctx.createRadialGradient(r - 14, r - 14, 4, r, r, 58);
+    hub.addColorStop(0, '#fff6cf');
+    hub.addColorStop(0.5, '#f5b301');
+    hub.addColorStop(1, '#8a5d00');
+    ctx.beginPath();
+    ctx.arc(r, r, 56, 0, Math.PI * 2);
+    ctx.fillStyle = hub;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = 12;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#6b4708';
+    ctx.stroke();
+    ctx.font = '50px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🍺', r, r + 2);
+    ctx.fillText('🍺', r, r + 3);
   }
 
   function wheelSpinTo(kind) {
@@ -203,7 +283,13 @@
     $('spin-result').className = 'result';
     try {
       const result = await api('/api/spin', { pay });
+      const fortune = $('fortune');
+      fortune.classList.remove('won', 'lost');
+      fortune.classList.add('spinning');
       await wheelSpinTo(result.win ? 'beer' : result.lose ? 'lose' : 'miss');
+      fortune.classList.remove('spinning');
+      if (result.win) fortune.classList.add('won');
+      else if (result.lose) fortune.classList.add('lost');
       $('spin-result').textContent = result.win
         ? '🎉 Gratulerer! Du vant en øl! 🍺 Hent den i baren.'
         : result.lose

@@ -43,9 +43,11 @@
       <section id="tab-wheel" class="card">
         <h2>Lykkehjulet 🎡</h2>
         <p>Hvert spinn har <strong id="chance">15 %</strong> sjanse for øl, men pass deg for <strong>💀 −1 SPINN</strong> (<span id="lose-chance">5 %</span>): da mister du et spinn til.</p>
-        <div class="wheel-wrap">
-          <div class="pointer">▼</div>
+        <div class="wheel-wrap fortune" id="fortune">
+          <div class="wheel-lights" id="wheel-lights"></div>
+          <div class="fortune-pointer"></div>
           <canvas id="wheel" width="600" height="600"></canvas>
+          <div class="fortune-stand"></div>
         </div>
         <p id="spin-result" class="result"></p>
         <div class="spin-buttons">
@@ -57,13 +59,28 @@
 
       <!-- Automat -->
       <section id="tab-slot" class="card hidden">
-        <div class="slot-machine">
-          <div class="slot-top">🍺 LØNNINGSPILS 🍺</div>
-          <div class="slot-reels">
-            <div class="reel"><div class="strip"></div></div>
-            <div class="reel"><div class="strip"></div></div>
-            <div class="reel"><div class="strip"></div></div>
+        <div class="slot-machine vintage">
+          <div class="sm-crown">
+            <div class="sm-bulbs" id="sm-bulbs"></div>
+            <div class="sm-title">LØNNINGSPILS</div>
+            <div class="sm-sub">★ ROYAL JACKPOT ★</div>
           </div>
+          <div class="sm-body">
+            <div class="sm-window">
+              <div class="slot-reels">
+                <div class="reel"><div class="strip"></div></div>
+                <div class="reel"><div class="strip"></div></div>
+                <div class="reel"><div class="strip"></div></div>
+              </div>
+              <div class="sm-payline"></div>
+            </div>
+            <button type="button" class="sm-lever" id="sm-lever" title="Trekk i spaken (1 spinn)" aria-label="Trekk i spaken">
+              <span class="sm-arm"><span class="sm-knob"></span></span>
+              <span class="sm-hub"></span>
+            </button>
+          </div>
+          <div class="sm-plate">🍺🍺🍺 = 1 PILS · 💎💎💎 = 500</div>
+          <div class="sm-tray"><span></span></div>
         </div>
         <p id="slot-result" class="result"></p>
         <div class="spin-buttons">

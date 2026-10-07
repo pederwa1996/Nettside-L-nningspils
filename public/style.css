@@ -1168,7 +1168,7 @@ body.kasino { transition: background-color 0.4s; }
 body.kasino h1, body.kasino h2, body.kasino .tab, body.kasino .slot-top { transition: color 0.3s; }
 
 /* ---------- 🎰 Automat: Las Vegas-neon ---------- */
-body.kasino[data-tab="slot"] {
+body.kasino[data-tab="slot-neon"] {
   background-color: #0b0614;
   background-image:
     radial-gradient(ellipse at 20% 0%, rgba(255, 46, 196, 0.35), transparent 50%),
@@ -1178,14 +1178,14 @@ body.kasino[data-tab="slot"] {
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 40px),
     linear-gradient(180deg, #1a0b2e, #07030d);
 }
-body.kasino[data-tab="slot"] .card {
+body.kasino[data-tab="slot-neon"] .card {
   background: rgba(16, 6, 30, 0.88);
   border: 2px solid #ff2ec4;
   box-shadow: 0 0 14px rgba(255, 46, 196, 0.6), inset 0 0 18px rgba(255, 46, 196, 0.15), 0 0 0 4px rgba(0, 229, 255, 0.25);
 }
-body.kasino[data-tab="slot"] .marquee { background: #12061f; border-color: #00e5ff; box-shadow: 0 0 22px #00e5ff, inset 0 0 20px rgba(0, 229, 255, 0.3); }
-body.kasino[data-tab="slot"] .marquee::before { border-color: #ff2ec4; filter: drop-shadow(0 0 4px #ff2ec4); }
-body.kasino[data-tab="slot"] .marquee h1 {
+body.kasino[data-tab="slot-neon"] .marquee { background: #12061f; border-color: #00e5ff; box-shadow: 0 0 22px #00e5ff, inset 0 0 20px rgba(0, 229, 255, 0.3); }
+body.kasino[data-tab="slot-neon"] .marquee::before { border-color: #ff2ec4; filter: drop-shadow(0 0 4px #ff2ec4); }
+body.kasino[data-tab="slot-neon"] .marquee h1 {
   font-family: 'Monoton', cursive;
   font-weight: 400;
   background: none;
@@ -1194,32 +1194,32 @@ body.kasino[data-tab="slot"] .marquee h1 {
   text-shadow: 0 0 6px #ff2ec4, 0 0 16px #ff2ec4, 0 0 30px #ff2ec4;
   filter: none;
 }
-body.kasino[data-tab="slot"] h2,
-body.kasino[data-tab="slot"] .wallet-num {
+body.kasino[data-tab="slot-neon"] h2,
+body.kasino[data-tab="slot-neon"] .wallet-num {
   background: none;
   -webkit-text-fill-color: #b9fbff;
   color: #b9fbff;
   text-shadow: 0 0 10px #00e5ff;
 }
-body.kasino[data-tab="slot"] .tab { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
-body.kasino[data-tab="slot"] .tab.active { background: #ff2ec4; color: #fff; box-shadow: 0 0 16px #ff2ec4; }
-body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.ag):not(.sg) {
+body.kasino[data-tab="slot-neon"] .tab { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
+body.kasino[data-tab="slot-neon"] .tab.active { background: #ff2ec4; color: #fff; box-shadow: 0 0 16px #ff2ec4; }
+body.kasino[data-tab="slot-neon"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.rl-spot):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cel-action):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.cb-close):not(.wall-more):not(.wallet-link):not(.ag):not(.sg) {
   background: linear-gradient(180deg, #00f0ff, #00a8c6);
   color: #08010f;
   border-color: #00e5ff;
   box-shadow: 0 0 18px rgba(0, 229, 255, 0.7);
   text-shadow: none;
 }
-body.kasino[data-tab="slot"] button.secondary { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
-body.kasino[data-tab="slot"] .slot-machine {
+body.kasino[data-tab="slot-neon"] button.secondary { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
+body.kasino[data-tab="slot-neon"] .slot-machine {
   background: linear-gradient(180deg, #2a0f4a, #12061f);
   border-color: #00e5ff;
   box-shadow: 0 0 0 3px #ff2ec4, 0 0 30px rgba(255, 46, 196, 0.6);
 }
-body.kasino[data-tab="slot"] .slot-top { font-family: 'Monoton', cursive; font-weight: 400; color: #ffe6fa; text-shadow: 0 0 8px #ff2ec4; letter-spacing: 3px; }
-body.kasino[data-tab="slot"] .reel { border-color: #00e5ff; box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.35), 0 0 10px rgba(0, 229, 255, 0.5); }
-body.kasino[data-tab="slot"] .wallet-item { border-color: rgba(0, 229, 255, 0.5); }
-body.kasino[data-tab="slot"] .note, body.kasino[data-tab="slot"] .muted { color: #c9b3e6; }
+body.kasino[data-tab="slot-neon"] .slot-top { font-family: 'Monoton', cursive; font-weight: 400; color: #ffe6fa; text-shadow: 0 0 8px #ff2ec4; letter-spacing: 3px; }
+body.kasino[data-tab="slot-neon"] .reel { border-color: #00e5ff; box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.35), 0 0 10px rgba(0, 229, 255, 0.5); }
+body.kasino[data-tab="slot-neon"] .wallet-item { border-color: rgba(0, 229, 255, 0.5); }
+body.kasino[data-tab="slot-neon"] .note, body.kasino[data-tab="slot-neon"] .muted { color: #c9b3e6; }
 
 /* ---------- 🎡 Roulette: Monte Carlo ---------- */
 body.kasino[data-tab="roulette"] {
@@ -2380,3 +2380,62 @@ body.kasino[data-tab="poker"] .poker-felt { border-width: 7px; box-shadow: 0 0 0
 .rl-spot:disabled { opacity: 0.85; cursor: default; }
 #tab-roulette .step-chips { justify-content: center; }
 .bj-felt::after { left: 24%; right: 24%; top: 46%; line-height: 1.4; }
+
+/* =========================================================
+   🎡 Lykkehjulet: lysring, gullpil og fot
+   ========================================================= */
+.wheel-wrap.fortune { position: relative; max-width: 320px; margin: 30px auto 40px; }
+.fortune canvas { box-shadow: 0 0 0 3px #3a2400, 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 50px rgba(255, 200, 80, 0.25) !important; border-radius: 50%; position: relative; z-index: 1; }
+.wheel-lights { position: absolute; inset: -13px; z-index: 2; pointer-events: none; }
+.wheel-lights i { position: absolute; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%; background: #fff3b0; box-shadow: 0 0 6px 2px rgba(255, 211, 77, 0.8); animation: bulb-blink 1.2s ease-in-out infinite; }
+.wheel-lights i:nth-child(odd) { animation-delay: 0.6s; }
+@keyframes bulb-blink { 50% { background: #7a5a10; box-shadow: none; } }
+.fortune.spinning .wheel-lights i { animation: bulb-chase 0.48s linear infinite; animation-delay: calc(var(--i) * 0.02s); }
+@keyframes bulb-chase { 0%, 60% { background: #7a5a10; box-shadow: none; } 80% { background: #fff; box-shadow: 0 0 10px 3px #ffd34d; } }
+.fortune.won .wheel-lights i { background: #9dffb4; box-shadow: 0 0 10px 3px #39ff6a; animation: bulb-blink 0.25s infinite; }
+.fortune.lost .wheel-lights i { background: #ff7a8f; box-shadow: 0 0 8px 2px #ff3b5c; animation: none; }
+.fortune.won canvas { box-shadow: 0 0 0 3px #3a2400, 0 0 60px rgba(255, 220, 90, 0.9) !important; }
+.fortune-pointer { position: absolute; left: 50%; top: -24px; z-index: 3; width: 34px; height: 44px; margin-left: -17px; background: linear-gradient(180deg, #fff3c4, #f5b301 50%, #8a5d00); clip-path: polygon(0 0, 100% 0, 100% 45%, 50% 100%, 0 45%); filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); }
+.fortune-pointer::after { content: ''; position: absolute; left: 50%; top: 8px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #c0182a; box-shadow: inset 0 -2px 2px rgba(0, 0, 0, 0.4); }
+.fortune-stand { position: absolute; left: 50%; bottom: -30px; width: 46%; height: 36px; margin-left: -23%; z-index: 0; background: linear-gradient(180deg, #d4a530, #6b4708); clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); border-radius: 0 0 8px 8px; }
+
+/* =========================================================
+   🎰 Automaten: gammel, klassisk spilleautomat i gull
+   ========================================================= */
+body.kasino .slot-machine.vintage {
+  position: relative; max-width: 350px; margin: 4px auto 0; padding: 0 0 12px;
+  background: linear-gradient(90deg, #7a5208, #ffe08a 16%, #d4a530 34%, #fff6d0 50%, #c8941e 66%, #ffe08a 84%, #7a5208);
+  border: 3px solid #4a3004; border-radius: 28px 28px 18px 18px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.7), inset 0 -8px 14px rgba(0, 0, 0, 0.35), 0 14px 30px rgba(0, 0, 0, 0.65);
+}
+.sm-crown {
+  position: relative; margin: -3px -3px 12px; padding: 12px 10px 10px; text-align: center;
+  border-radius: 140px 140px 14px 14px / 80px 80px 14px 14px;
+  background: radial-gradient(ellipse at 50% 120%, #8e1121, #3a0409 70%);
+  border: 3px solid #4a3004; box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.65), inset 0 0 0 3px #d4a530;
+}
+.sm-bulbs { display: flex; justify-content: space-between; padding: 0 18px; margin-bottom: 6px; }
+.sm-bulbs i { width: 10px; height: 10px; border-radius: 50%; background: #fff3b0; box-shadow: 0 0 7px 2px rgba(255, 211, 77, 0.8); animation: bulb-blink 1s ease-in-out infinite; animation-delay: calc(var(--i) * 0.11s); }
+.slot-machine.vintage.jackpot .sm-bulbs i { animation: bulb-blink 0.2s infinite; }
+.sm-title {
+  font-family: 'Cinzel Decorative', Georgia, serif; font-weight: 900; font-size: 1.45rem; letter-spacing: 2px; line-height: 1.1;
+  background: linear-gradient(180deg, #fffbe6, #ffd34d 55%, #a86f00); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #2a0206);
+}
+.sm-sub { margin-top: 2px; font-size: 0.66rem; font-weight: 800; letter-spacing: 3px; color: #ffe08a; }
+.sm-body { display: flex; align-items: center; gap: 4px; padding-left: 12px; }
+.sm-window { position: relative; flex: 1; padding: 9px; border-radius: 12px; background: linear-gradient(180deg, #2a1a05, #0d0701); border: 4px solid #8a5d00; box-shadow: inset 0 0 0 2px #ffe08a, inset 0 8px 18px rgba(0, 0, 0, 0.75); }
+.slot-machine.vintage .reel { background: linear-gradient(180deg, #d9cfb8, #fffdf5 28%, #fffdf5 72%, #d9cfb8) !important; border: 2px solid #b8860b !important; border-radius: 8px; box-shadow: inset 0 6px 10px rgba(0, 0, 0, 0.35), inset 0 -6px 10px rgba(0, 0, 0, 0.35) !important; }
+.sm-payline { position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; margin-top: -1px; background: rgba(220, 20, 40, 0.85); box-shadow: 0 0 6px rgba(255, 0, 0, 0.7); pointer-events: none; }
+.sm-payline::before, .sm-payline::after { content: ''; position: absolute; top: -5px; border: 6px solid transparent; }
+.sm-payline::before { left: -4px; border-left-color: #d01020; }
+.sm-payline::after { right: -4px; border-right-color: #d01020; }
+.sm-lever { position: relative; flex: none; width: 36px; height: 150px; margin-right: -22px; padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; cursor: pointer; }
+.sm-arm { position: absolute; left: 50%; bottom: 42px; width: 8px; height: 96px; margin-left: -4px; border-radius: 4px; background: linear-gradient(90deg, #8a8a8a, #f8f8f8, #8f8f8f); transform-origin: 50% 100%; }
+.sm-knob { position: absolute; top: -20px; left: 50%; width: 30px; height: 30px; margin-left: -15px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff9a9a, #d01020 55%, #5a0006); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.55); }
+.sm-hub { position: absolute; left: 50%; bottom: 26px; width: 26px; height: 32px; margin-left: -13px; border-radius: 8px; background: linear-gradient(90deg, #7a5208, #ffe08a, #7a5208); border: 2px solid #4a3004; }
+.sm-lever.pulled .sm-arm { animation: lever-pull 0.9s ease; }
+@keyframes lever-pull { 0% { transform: scaleY(1); } 25%, 55% { transform: scaleY(-0.5); } 100% { transform: scaleY(1); } }
+.sm-plate { margin: 12px 16px 0; padding: 6px 8px; border-radius: 8px; text-align: center; font-size: 0.74rem; font-weight: 900; letter-spacing: 0.5px; color: #3a2400; background: linear-gradient(180deg, #fff6d0, #d4a530); border: 2px solid #8a5d00; box-shadow: inset 0 1px 0 #fff; }
+.sm-tray { position: relative; margin: 10px auto 0; width: 58%; height: 20px; border-radius: 0 0 16px 16px; background: linear-gradient(180deg, #120a02, #3a2400); border: 3px solid #8a5d00; border-top: 0; box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.7); }
+.slot-machine.vintage.jackpot { animation: jackpot 0.4s ease-in-out 6 alternate; }
