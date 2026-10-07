@@ -513,8 +513,14 @@ function logCasino(p, game, { won = 0, beer = 0, net = 0, detail = '' }) {
 
 // Grønn tekst øverst til høyre for alle når noen vinner en pils. Venter til
 // hjulet/automaten har stoppet, så vinneren ikke får vite det før animasjonen er ferdig.
+const recentBeerWins = []; // de siste, så en side som lastes akkurat nå også får dem med seg
 function announceBeer(name, text, delayMs = 0) {
-  setTimeout(() => broadcast('beer-win', { name, text, at: Date.now() }), delayMs);
+  setTimeout(() => {
+    const e = { id: crypto.randomBytes(5).toString('hex'), name, text, at: Date.now() };
+    recentBeerWins.push(e);
+    if (recentBeerWins.length > 10) recentBeerWins.shift();
+    broadcast('beer-win', e);
+  }, delayMs);
 }
 
 // Blackjack
@@ -1006,6 +1012,10 @@ const routes = {
   },
 
   // Veggen: hva alle har gjort, nyeste først. ?before=<tid> henter eldre.
+  'GET /api/beer-wins': (req, res) => {
+    sendJson(res, 200, { now: Date.now(), wins: recentBeerWins });
+  },
+
   'GET /api/feed': (req, res) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
