@@ -45,7 +45,7 @@ function render() {
     $('home-flus').textContent = me.flus;
     $('home-beers').textContent = me.beersOwed;
     $('me-name').textContent = me.isAdmin ? `${me.name} 👑` : me.name;
-    $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 30));
+    $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 50));
     $('avatar-missing').classList.toggle('hidden', !!me.avatar);
     $('home-beers').closest('a').classList.toggle('has-beer', me.beersOwed > 0);
     // Bar-ikonet: gløder og viser antall når man har pils til gode

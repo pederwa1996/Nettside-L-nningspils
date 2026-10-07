@@ -2964,3 +2964,32 @@ body.kasino .casino-games .tab.cg.active::after {
 .cg-badge { font-size: 0.46rem; letter-spacing: 0.2px; }
 .cg-live { font-size: 0.52rem; padding: 1px 4px; }
 .cg-chip { font-size: 0.56rem; padding: 1px 5px; }
+
+/* Roterende hjul (lykkehjul og roulette) må aldri gjøre siden bredere: da zoomer mobilen ut og inn */
+html, body { overflow-x: clip; }
+body.kasino #tab-wheel, body.kasino #tab-roulette { overflow: hidden; }
+
+/* Spillknappene i kasinoet: like store kvadrater */
+body.kasino .casino-games .tab.cg { aspect-ratio: 1 / 1; min-height: 0; height: auto; justify-content: center; padding: 12px 2px 4px !important; }
+.casino-games .cg .cg-foot { margin-top: 2px; }
+.casino-games .cg .cg-chip { display: none; }
+.casino-games .cg .cg-foot { position: absolute; right: 2px; top: 15px; margin: 0; min-height: 0; }
+
+/* Forsiden: profilkortet ved siden av storyene */
+.story-row { align-items: center; gap: 12px; margin-bottom: 6px; }
+.me-card {
+  flex: none; width: 128px; padding: 8px 6px 6px; border-radius: 18px; text-align: center;
+  background: #fff; border: 1px solid #d9cdb8; box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 4px 14px rgba(90, 60, 20, 0.14);
+}
+.me-card.hidden { display: none; }
+.mc-who { display: flex; flex-direction: column; align-items: center; gap: 1px; text-decoration: none !important; color: var(--text) !important; }
+.mc-who .me-av-wrap { margin-bottom: 3px; }
+.mc-who .me-av-go { width: 18px; height: 18px; font-size: 0.85rem; right: -3px; bottom: -2px; }
+.mc-name { max-width: 100%; font-size: 0.86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-link { font-size: 0.66rem; font-weight: 800; color: #b07800; }
+.mc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #ece3d3; }
+.mc-stats a { display: flex; flex-direction: column; align-items: center; line-height: 1.1; padding: 3px 0; border-radius: 8px; text-decoration: none !important; color: var(--text) !important; }
+.mc-stats a:active { background: #f3ecdf; }
+.mc-stats b { font-size: 0.85rem; }
+.mc-stats span { font-size: 0.75rem; }
+.mc-stats a.has-beer { background: #fff3cf; }

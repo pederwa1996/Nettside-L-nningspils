@@ -15,17 +15,20 @@
 
   <main>
     <!-- Story -->
-    <!-- Liten «meg»-linje: trykk på bildet for profilen -->
-    <div id="me-bar" class="me-bar hidden">
-      <a href="/profil.html" class="me-bar-who" title="Gå til profilen din">
-        <span class="me-av-wrap"><span id="me-avatar"></span><i class="me-av-go" aria-hidden="true">›</i></span>
-        <span class="me-who-text"><span class="me-hi">Hei, <b id="me-name"></b></span><small>Din profil ›</small></span>
-      </a>
-      <a class="mb-chip" href="/kasino.html#hjul" title="Spinn"><span id="home-spins">0</span> 🎡</a>
-      <a class="mb-chip" href="/kasino.html" title="Cash"><span id="home-flus">0</span> 💰</a>
-      <a class="mb-chip beer-link" href="/baren.html" title="Pils til gode – løs inn i baren"><span id="home-beers">0</span> 🍺</a>
-    </div>
+    <!-- Profilkortet ved siden av storyene: bildet ditt, navn og spinn/cash/pils -->
     <div class="story-row">
+      <div id="me-bar" class="me-card hidden">
+        <a href="/profil.html" class="mc-who" title="Gå til profilen din">
+          <span class="me-av-wrap"><span id="me-avatar"></span><i class="me-av-go" aria-hidden="true">›</i></span>
+          <b id="me-name" class="mc-name"></b>
+          <small class="mc-link">Din profil ›</small>
+        </a>
+        <div class="mc-stats">
+          <a href="/kasino.html#hjul" title="Spinn"><b id="home-spins">0</b><span>🎡</span></a>
+          <a href="/kasino.html" title="Cash"><b id="home-flus">0</b><span>💰</span></a>
+          <a href="/baren.html" class="beer-link" title="Pils til gode – løs inn i baren"><b id="home-beers">0</b><span>🍺</span></a>
+        </div>
+      </div>
       <div id="stories-bar" class="stories-bar"></div>
     </div>
 
