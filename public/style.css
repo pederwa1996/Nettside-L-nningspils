@@ -1523,3 +1523,7 @@ body.kasino[data-tab="roulette"] .tab.active { background: linear-gradient(180de
 .stool.me .stool-guest .avatar { border-color: #f7b733; box-shadow: 0 0 12px rgba(247, 183, 51, 0.8); }
 .stool:not(.taken) { opacity: 0.55; }
 .bar-crowd { margin: 4px 0 14px; }
+
+/* Ikke logget inn: bare registreringen synes */
+body.logged-out .bottom-nav,
+body.logged-out #stories-bar { display: none !important; }

@@ -105,10 +105,14 @@ function render() {
   $('participant-count').textContent = data.participantCount;
   $('tickets-left').textContent = data.ticketsLeft;
 
-  // Etter trekningen kan man ikke registrere seg, men man kan fortsatt logge inn med kode
-  const onHome = !document.getElementById('view-home').classList.contains('hidden');
-  $('join-section').classList.toggle('hidden', !!me || !onHome);
-  $('join-form').classList.toggle('hidden', !!draw);
+  // Man kan alltid registrere seg. Etter trekningen eller når loddene er tomme får man bare ingen lodd.
+  // Ikke logget inn: alltid Hjem, så registreringen synes (også hvis lenken var til #spill eller #stilling)
+  if (!me && $('view-home').classList.contains('hidden')) showView('home', { scroll: false });
+  $('join-section').classList.toggle('hidden', !!me);
+  $('join-lead').classList.toggle('hidden', !!draw || data.ticketsLeft < settings.ticketsPerPerson);
+  $('join-lead-late').classList.toggle('hidden', !(draw || data.ticketsLeft < settings.ticketsPerPerson));
+  // Før man er logget inn er resten av siden (meny, story, stilling) skjult
+  document.body.classList.toggle('logged-out', !me);
   $('me-section').classList.toggle('hidden', !me);
   $('wheel-section').classList.toggle('hidden', !me);
   $('game-card').classList.toggle('hidden', !me);
@@ -151,6 +155,7 @@ function render() {
     $('avatar-missing').classList.toggle('hidden', !!me.avatar);
     const winSet = new Set(me.winningTickets);
     $('my-tickets').innerHTML = '';
+    if (!me.tickets.length) $('my-tickets').innerHTML = '<p class="note">Du ble med etter at loddene var delt ut, så du har ingen lodd. Spinn, spill og oppgaver gjelder fortsatt!</p>';
     me.tickets.forEach((t) => {
       const el = document.createElement('div');
       el.className = 'ticket' + (winSet.has(t) ? ' winner' : '');
@@ -340,6 +345,7 @@ document.addEventListener('presence', (e) => {
 const VIEW_HASH = { home: '', games: '#spill', standings: '#stilling' };
 
 function showView(name, { scroll = true } = {}) {
+  if (data && !data.me) name = 'home'; // ikke logget inn: bare registreringen
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('hidden', v.id !== `view-${name}`));
   document.querySelectorAll('.bottom-nav [data-view]').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
   // Storyen og registreringen hører til Hjem

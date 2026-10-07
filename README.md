@@ -6,6 +6,8 @@ Nettside for lønningspils med lodd, loddtrekning og lykkehjul.
 
 - **Lodd:** Deltakere åpner linken, tar et profilbilde med mobilen og skriver navnet sitt. De får da 5 tilfeldige lodd av totalt 100.
 - **Én per person:** Samme navn kan ikke brukes to ganger, og hver enhet (cookie) og IP-adresse kan bare registrere én person.
+- **Innlogging kreves:** Før man har registrert seg (eller logget inn med kode) ser man bare registreringen på forsiden. Menyen og storyen er skjult, og alle andre sider (kasino, chat, oppgaver, profil osv.) sender en tilbake til forsiden. Bare `/admin.html` og `/admin-spinn.html` er åpne, fordi de har eget passord.
+- **Alltid åpent for nye:** Man kan registrere seg også etter loddtrekningen, og når alle loddene er delt ut. Da får man bare ingen lodd, men spinn, flus og alt annet som vanlig.
 - **Flere enheter:** Er man registrert på mobilen, kan man bruke samme profil på PC-en: trykk «💻 Bruk på en annen enhet» på forsiden, og skriv inn koden (eller åpne lenken) på den andre enheten under «Logg inn med kode». Koden virker én gang og går ut etter 10 minutter.
 - **Lykkehjul:** Hver deltaker har 3 spinn. Hvert spinn har 15 % sjanse for øl. Resultatet avgjøres på serveren, så det kan ikke jukses fra nettleseren.
 - **Flappy Sjef:** På `/spill.html` kan man spille Flappy Bird med sjefens ansikt for å tjene flere spinn. 50 poeng gir 1 nytt spinn, 100 gir 2, 200 gir 3, 400 gir 4 osv. Hver belønning gis én gang per person. Det finnes en toppliste med beste poengsum per person. Serveren avviser poengsummer som er umulige å nå på tiden spillet varte. Sjefens ansikt ligger i `public/boss.png`.

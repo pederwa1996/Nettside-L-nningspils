@@ -879,11 +879,18 @@ function serveMedia(pathname, res) {
   });
 }
 
+const OPEN_PAGES = new Set(['index.html', 'admin.html', 'admin-spinn.html']);
+
 function serveStatic(req, res) {
   const urlPath = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   const file = path.normalize(path.join(PUBLIC_DIR, urlPath === '/' ? 'index.html' : urlPath));
   if (!file.startsWith(PUBLIC_DIR)) {
     res.writeHead(403);
+    return res.end();
+  }
+  // Alle sider utenom forsiden og admin krever at man er registrert/logget inn
+  if (file.endsWith('.html') && !OPEN_PAGES.has(path.basename(file)) && !currentParticipant(req)) {
+    res.writeHead(302, { Location: '/', 'Cache-Control': 'no-store' });
     return res.end();
   }
   fs.readFile(file, (err, content) => {
@@ -892,6 +899,8 @@ function serveStatic(req, res) {
       return res.end('Fant ikke siden');
     }
     const headers = { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' };
+    // HTML skal ikke caches, ellers kan nettleseren vise en side man ikke lenger har tilgang til
+    if (file.endsWith('.html')) headers['Cache-Control'] = 'no-store';
     if (urlPath.startsWith('/vendor/')) headers['Cache-Control'] = 'public, max-age=604800';
     res.writeHead(200, headers);
     res.end(content);
@@ -923,8 +932,6 @@ const routes = {
 
     const name = String(body.name || '').trim().replace(/\s+/g, ' ');
     if (name.length < 2 || name.length > 40) return sendJson(res, 400, { error: 'Navnet må være mellom 2 og 40 tegn.' });
-    if (state.draw) return sendJson(res, 400, { error: 'Loddtrekningen er allerede gjennomført.' });
-
     const key = normalizeName(name);
     if (state.participants.some((p) => normalizeName(p.name) === key)) {
       return sendJson(res, 409, { error: 'Det navnet er allerede tatt. Én registrering per person!' });
@@ -937,17 +944,17 @@ const routes = {
 
     if (!body.avatar) return sendJson(res, 400, { error: 'Du må ta et profilbilde 📸' });
 
+    // Man kan alltid bli med. Etter trekningen, eller når loddene er tomme, får man bare ingen lodd.
     const used = usedTickets();
     const free = [];
-    for (let i = 1; i <= TOTAL_TICKETS; i++) if (!used.has(i)) free.push(i);
-    if (free.length < TICKETS_PER_PERSON) return sendJson(res, 409, { error: 'Beklager, alle loddene er delt ut.' });
+    if (!state.draw) for (let i = 1; i <= TOTAL_TICKETS; i++) if (!used.has(i)) free.push(i);
 
     const participant = {
       name,
       token: crypto.randomBytes(24).toString('hex'),
       ip,
       avatar: saveImage(body.avatar, 'avatars'),
-      tickets: pickRandom(free, TICKETS_PER_PERSON).sort((a, b) => a - b),
+      tickets: pickRandom(free, Math.min(TICKETS_PER_PERSON, free.length)).sort((a, b) => a - b),
       spins: [],
       flus: START_FLUS,
       joinedAt: new Date().toISOString(),
