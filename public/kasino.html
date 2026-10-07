@@ -72,14 +72,16 @@
                 <div class="reel"><div class="strip"></div></div>
                 <div class="reel"><div class="strip"></div></div>
               </div>
-              <div class="sm-payline"></div>
+              <div class="sm-payline" data-row="0"><b>1</b></div>
+              <div class="sm-payline" data-row="1"><b>2</b></div>
+              <div class="sm-payline" data-row="2"><b>3</b></div>
             </div>
             <button type="button" class="sm-lever" id="sm-lever" title="Trekk i spaken (1 spinn)" aria-label="Trekk i spaken">
               <span class="sm-arm"><span class="sm-knob"></span></span>
               <span class="sm-hub"></span>
             </button>
           </div>
-          <div class="sm-plate">🍺🍺🍺 = 1 PILS · 💎💎💎 = 500</div>
+          <div class="sm-plate">3 LINJER · 🍺🍺🍺 = 1 PILS · 💎💎💎 = 1500</div>
           <div class="sm-tray"><span></span></div>
         </div>
         <p id="slot-result" class="result"></p>
@@ -87,9 +89,14 @@
           <button id="slot-pull" class="big">Trekk i spaken (1 spinn) 🎰</button>
           <button id="slot-pull-flus" class="big secondary">Trekk for <span class="spin-price">50</span> cash 💰</button>
         </div>
-        <details class="tips">
-          <summary>Gevinster</summary>
-          <ul id="paytable" class="paytable"></ul>
+        <details class="tips paytable-box" open>
+          <summary>🏆 Gevinster og sannsynlighet</summary>
+          <p class="note">Hver av de 3 linjene (topp, midt, bunn) betaler for seg. Sjansen er for at minst én linje gir premien i ett trekk.</p>
+          <table class="paytable2">
+            <thead><tr><th>Kombinasjon</th><th>Premie</th><th>Sjanse</th></tr></thead>
+            <tbody id="paytable"></tbody>
+          </table>
+          <p id="slot-odds" class="note"></p>
         </details>
       </section>
 

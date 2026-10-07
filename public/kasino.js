@@ -38,8 +38,9 @@
   window.casinoSetWallet = (me) => data && me && setWallet(me);
 
   // ---------- Automat ----------
-  const SYMBOLS = ['🍒', '🍋', '🔔', '⭐', '7️⃣', '💎', '🍺'];
-  const SYMBOL_H = 84;
+  const SYMBOLS = ['🍒', '🍋', '🍊', '🔔', '⭐', '7️⃣', '💎', '🍺'];
+  const SYMBOL_H = 58;
+  const ROWS = 3;
   const strips = [...document.querySelectorAll('.reel .strip')];
 
   function setReel(strip, symbols) {
@@ -53,27 +54,35 @@
   }
 
   function initReels() {
-    strips.forEach((st) => setReel(st, [SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]]));
+    strips.forEach((st) => setReel(st, Array.from({ length: ROWS }, () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)])));
   }
 
   // Ruller hvert hjul gjennom tilfeldige symboler og stopper på resultatet, ett etter ett
+  // result[hjul] = [topp, midt, bunn]
   function spinReels(result) {
     return Promise.all(strips.map((st, i) => {
       const filler = Array.from({ length: 18 + i * 6 }, () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
-      const current = st.lastElementChild ? st.lastElementChild.textContent : SYMBOLS[0];
-      setReel(st, [current, ...filler, result[i]]);
+      const current = [...st.children].slice(0, ROWS).map((d) => d.textContent);
+      setReel(st, [...current, ...filler, ...result[i]]);
       st.style.transition = 'none';
       st.style.transform = 'translateY(0)';
       void st.offsetHeight; // tving omtegning før animasjonen starter
       const dur = 1.2 + i * 0.5;
       st.style.transition = `transform ${dur}s cubic-bezier(0.12, 0.7, 0.2, 1)`;
-      st.style.transform = `translateY(-${(filler.length + 1) * SYMBOL_H}px)`;
+      st.style.transform = `translateY(-${(current.length + filler.length) * SYMBOL_H}px)`;
       return sleep(dur * 1000 + 50);
     })).then(() => strips.forEach((st, i) => {
       st.style.transition = 'none';
       st.style.transform = 'translateY(0)';
-      setReel(st, [result[i]]);
+      setReel(st, result[i]);
     }));
+  }
+
+  function markLines(lines) {
+    document.querySelectorAll('.sm-payline').forEach((el) => {
+      const hit = lines.find((l) => l.row === Number(el.dataset.row));
+      el.classList.toggle('win', !!hit);
+    });
   }
 
   async function pullSlot(pay) {
@@ -84,20 +93,24 @@
     $('slot-result').textContent = '';
     $('slot-result').className = 'result';
     document.querySelector('.slot-machine').classList.remove('jackpot');
+    markLines([]);
     pullLever();
     try {
       const r = await api('/api/casino/slot', { pay });
       await spinReels(r.reels);
       setWallet(r.me);
+      markLines(r.lines);
+      const lineText = r.lines.map((l) => `Linje ${l.row + 1}: ${l.combo} ${l.beer ? '= 1 pils' : `+${l.flus}`}`).join(' · ');
       if (r.beer) {
-        $('slot-result').textContent = '🍺🍺🍺 TRE PILS PÅ RAD! Du har vunnet en pils! Hent den i baren 🍻';
+        $('slot-result').textContent = `🍺🍺🍺 TRE PILS PÅ RAD! Du har vunnet en pils! ${lineText}`;
         $('slot-result').classList.add('win');
         document.querySelector('.slot-machine').classList.add('jackpot');
-        beerWin('🍺🍺🍺 Tre pils på rad på automaten!');
+        beerWin(`🍺🍺🍺 Tre pils på rad på automaten!${r.flus ? ` Pluss ${r.flus} cash.` : ''}`);
       } else if (r.flus) {
-        $('slot-result').textContent = `🎉 Du vant ${flusWord(r.flus)}!`;
+        $('slot-result').textContent = `🎉 Du vant ${flusWord(r.flus)}! ${lineText}`;
         $('slot-result').classList.add('win');
-        celebrate({ tier: r.flus >= 100 ? 'big' : 'win', amount: r.flus, icon: r.reels[0], sub: r.reels.join(' ') });
+        const best = r.lines.reduce((a, b) => (b.flus > a.flus ? b : a));
+        celebrate({ tier: r.flus >= 200 ? 'big' : 'win', amount: r.flus, icon: best.combo.slice(0, 2), title: r.lines.length > 1 ? `${r.lines.length} LINJER!` : 'DU VANT!', sub: r.lines.map((l) => `${l.combo} ${l.label} +${l.flus}`).join(' · ') });
       } else {
         $('slot-result').textContent = 'Ingen gevinst denne gangen.';
         $('slot-result').classList.add('lose');
@@ -143,17 +156,29 @@
   $('slot-pull').addEventListener('click', () => pullSlot('spin'));
   $('slot-pull-flus').addEventListener('click', () => pullSlot('flus'));
 
-  function renderPaytable(table) {
-    const ul = $('paytable');
-    ul.innerHTML = '';
+  // Prosent med fornuftig antall desimaler («1 av N» for de sjeldne)
+  function pct(p) {
+    if (p >= 0.1) return `${Math.round(p * 100)} %`;
+    if (p >= 0.01) return `${(p * 100).toFixed(1).replace('.', ',')} %`;
+    return `${(p * 100).toFixed(2).replace('.', ',')} %`;
+  }
+  const oneIn = (p) => `1 av ${Math.round(1 / p).toLocaleString('no-NO')}`;
+
+  function renderPaytable(table, odds) {
+    const tb = $('paytable');
+    tb.innerHTML = '';
     table.forEach((o) => {
-      const li = document.createElement('li');
-      const sym = o.id === 'cherry2' ? '🍒🍒 (to kirsebær)' : o.symbol.repeat(3);
-      li.innerHTML = '<span class="pt-sym"></span><span class="pt-win"></span>';
-      li.querySelector('.pt-sym').textContent = sym;
-      li.querySelector('.pt-win').textContent = o.beer ? '1 pils 🍺' : `${o.flus} cash`;
-      ul.appendChild(li);
+      const tr = document.createElement('tr');
+      if (o.beer) tr.className = 'pt-beer';
+      tr.innerHTML = '<td><span class="pt-combo"></span><small class="pt-label"></small></td><td class="pt-prize"></td><td class="pt-odds"><b></b><small></small></td>';
+      tr.querySelector('.pt-combo').textContent = o.combo;
+      tr.querySelector('.pt-label').textContent = o.label;
+      tr.querySelector('.pt-prize').textContent = o.beer ? '1 pils 🍺' : `${o.flus} cash`;
+      tr.querySelector('.pt-odds b').textContent = pct(o.pPull);
+      tr.querySelector('.pt-odds small').textContent = oneIn(o.pPull);
+      tb.appendChild(tr);
     });
+    if (odds) $('slot-odds').textContent = `Gevinst på minst én linje: ${pct(odds.anyWin)} av trekkene. Snittgevinst: ca. ${Math.round(odds.avgCash)} cash per trekk (prisen er ${data.spinPrice}).`;
   }
 
   // Pils vunnet: størst feiring, med snarvei til baren
@@ -411,7 +436,7 @@
     renderLog(data.log);
     if (!data.me) return;
     setWallet(data.me);
-    renderPaytable(data.slotTable);
+    renderPaytable(data.slotTable, data.slotOdds);
     initReels();
     drawWheel();
     $('chance').textContent = `${Math.round(data.wheelChance * 100)} %`;

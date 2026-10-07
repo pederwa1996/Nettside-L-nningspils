@@ -452,33 +452,72 @@ function parseBet(p, amount) {
 
 // ---- Automaten (koster 1 spinn, gir flus eller pils) ----
 // Utfallet trekkes fra tabellen (vekter av 1000), hjulene tegnes etterpå så de passer.
-const SLOT_SYMBOLS = ['🍒', '🍋', '🔔', '⭐', '7️⃣', '💎', '🍺'];
-const SLOT_TABLE = [
-  { id: 'pils', weight: 20, symbol: '🍺', flus: 0, beer: 1 }, // 2 % sjanse for tre pils på rad
-  // Minste gevinst er halve innsatsen (25), nest minste lik innsatsen (50), og så oppover
-  { id: 'diamond', weight: 10, symbol: '💎', flus: 500 },
-  { id: 'seven', weight: 20, symbol: '7️⃣', flus: 300 },
-  { id: 'star', weight: 40, symbol: '⭐', flus: 150 },
-  { id: 'bell', weight: 70, symbol: '🔔', flus: 100 },
-  { id: 'lemon', weight: 100, symbol: '🍋', flus: 75 },
-  { id: 'cherry3', weight: 120, symbol: '🍒', flus: 50 },
-  { id: 'cherry2', weight: 200, flus: 25 }, // to kirsebær
-  { id: 'none', weight: 420, flus: 0 },
+// ---- Automaten: 3 hjul × 3 rader = 3 gevinstlinjer ----
+// Hver rute trekkes med vekt per symbol. Hver linje (topp, midt, bunn) gir den første
+// regelen som passer. Sannsynlighetene regnes ut nøyaktig ved oppstart og vises i appen.
+// Snitt per trekk er ca. 35 cash + ca. 1,8 % sjanse for en pils, under prisen på 50.
+const SLOT_WEIGHTS = { '🍒': 18, '🍋': 14, '🍊': 12, '🔔': 10, '⭐': 8, '7️⃣': 6, '💎': 4, '🍺': 16 };
+const SLOT_SYMBOLS = Object.keys(SLOT_WEIGHTS);
+const FRUIT = new Set(['🍒', '🍋', '🍊']);
+const LUCKY = new Set(['7️⃣', '💎', '⭐']);
+const triple = (sym) => (l) => l[0] === sym && l[1] === sym && l[2] === sym;
+const SLOT_RULES = [
+  { id: 'pils', combo: '🍺🍺🍺', label: 'Tre pils', flus: 0, beer: 1, test: triple('🍺') },
+  { id: 'diamond', combo: '💎💎💎', label: 'Diamanter', flus: 1500, test: triple('💎') },
+  { id: 'seven', combo: '7️⃣7️⃣7️⃣', label: 'Tre sjuere', flus: 750, test: triple('7️⃣') },
+  { id: 'star', combo: '⭐⭐⭐', label: 'Stjerner', flus: 500, test: triple('⭐') },
+  { id: 'bell', combo: '🔔🔔🔔', label: 'Bjeller', flus: 300, test: triple('🔔') },
+  { id: 'orange', combo: '🍊🍊🍊', label: 'Appelsiner', flus: 200, test: triple('🍊') },
+  { id: 'lucky', combo: '7️⃣💎⭐', label: 'Lykketreff (7️⃣ 💎 ⭐ blandet)', flus: 200, test: (l) => l.every((x) => LUCKY.has(x)) && new Set(l).size > 1 },
+  { id: 'lemon', combo: '🍋🍋🍋', label: 'Sitroner', flus: 150, test: triple('🍋') },
+  { id: 'cherry3', combo: '🍒🍒🍒', label: 'Kirsebær', flus: 125, test: triple('🍒') },
+  { id: 'salad', combo: '🍒🍋🍊', label: 'Fruktsalat (én av hver)', flus: 75, test: (l) => new Set(l).size === 3 && l.every((x) => FRUIT.has(x)) },
+  { id: 'beer2', combo: '🍺🍺', label: 'To pils på linjen', flus: 50, test: (l) => l.filter((x) => x === '🍺').length === 2 },
+  { id: 'cherry2', combo: '🍒🍒', label: 'To kirsebær fra venstre', flus: 25, test: (l) => l[0] === '🍒' && l[1] === '🍒' },
 ];
+const SLOT_LINES = ['Topp', 'Midt', 'Bunn'];
+
+function slotLine(line) {
+  return SLOT_RULES.find((r) => r.test(line)) || null;
+}
+
+// Nøyaktig sannsynlighet per linje og per trekk (minst én av de tre linjene)
+const SLOT_ODDS = (() => {
+  const total = SLOT_SYMBOLS.reduce((s, x) => s + SLOT_WEIGHTS[x], 0);
+  const pr = (x) => SLOT_WEIGHTS[x] / total;
+  const per = {};
+  let ev = 0;
+  for (const a of SLOT_SYMBOLS) for (const b of SLOT_SYMBOLS) for (const c of SLOT_SYMBOLS) {
+    const r = slotLine([a, b, c]);
+    if (!r) continue;
+    const p = pr(a) * pr(b) * pr(c);
+    per[r.id] = (per[r.id] || 0) + p;
+    ev += p * r.flus;
+  }
+  const out = {};
+  SLOT_RULES.forEach((r) => {
+    const p = per[r.id] || 0;
+    out[r.id] = { line: p, pull: 1 - (1 - p) ** SLOT_LINES.length };
+  });
+  const none = 1 - Object.values(per).reduce((s, p) => s + p, 0);
+  return { rules: out, anyWin: 1 - none ** SLOT_LINES.length, avgCash: ev * SLOT_LINES.length };
+})();
+
+function slotSymbol() {
+  let roll = randomInt(SLOT_SYMBOLS.reduce((s, x) => s + SLOT_WEIGHTS[x], 0));
+  return SLOT_SYMBOLS.find((x) => (roll -= SLOT_WEIGHTS[x]) < 0);
+}
 
 function pullSlot() {
-  let roll = randomInt(1000);
-  const outcome = SLOT_TABLE.find((o) => (roll -= o.weight) < 0);
-  let reels;
-  if (outcome.symbol) reels = [outcome.symbol, outcome.symbol, outcome.symbol];
-  else if (outcome.id === 'cherry2') {
-    const other = pickRandom(SLOT_SYMBOLS.filter((x) => x !== '🍒'), 1)[0];
-    reels = pickRandom(['🍒', '🍒', other], 3);
-  } else {
-    // Ingen gevinst: tre forskjellige symboler, maks ett kirsebær
-    reels = pickRandom(SLOT_SYMBOLS, 3);
-  }
-  return { outcome, reels };
+  // reels[hjul][rad]
+  const reels = [0, 1, 2].map(() => [slotSymbol(), slotSymbol(), slotSymbol()]);
+  const lines = [];
+  SLOT_LINES.forEach((name, row) => {
+    const line = reels.map((col) => col[row]);
+    const r = slotLine(line);
+    if (r) lines.push({ row, name, id: r.id, label: r.label, combo: line.join(''), flus: r.flus, beer: r.beer || 0 });
+  });
+  return { reels, lines, flus: lines.reduce((s, l) => s + l.flus, 0), beer: lines.reduce((s, l) => s + l.beer, 0) };
 }
 
 // Pils vunnet på lykkehjulet: spinn betalt med spinn + spinn betalt med flus
@@ -1903,7 +1942,8 @@ const routes = {
       spinPrice: SPIN_PRICE,
       wheelChance: SPIN_WIN_CHANCE,
       wheelLoseChance: SPIN_LOSE_CHANCE,
-      slotTable: SLOT_TABLE.filter((o) => o.flus || o.beer).map((o) => ({ id: o.id, symbol: o.symbol || '🍒🍒', flus: o.flus, beer: o.beer || 0 })),
+      slotTable: SLOT_RULES.map((r) => ({ id: r.id, combo: r.combo, label: r.label, flus: r.flus, beer: r.beer || 0, pLine: SLOT_ODDS.rules[r.id].line, pPull: SLOT_ODDS.rules[r.id].pull })),
+      slotOdds: { anyWin: SLOT_ODDS.anyWin, avgCash: SLOT_ODDS.avgCash, lines: SLOT_LINES.length },
       log: state.casinoLog.slice(-10).reverse(),
       avatars: avatars(),
     });
@@ -1962,17 +2002,17 @@ const routes = {
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
     const pay = body.pay === 'flus' ? 'flus' : 'spin';
     payForSpin(p, pay);
-    const { outcome, reels } = pullSlot();
-    if (outcome.flus) addFlus(p, outcome.flus);
-    if (outcome.beer) p.slotBeers = (p.slotBeers || 0) + outcome.beer;
+    const r = pullSlot();
+    if (r.flus) addFlus(p, r.flus);
+    if (r.beer) p.slotBeers = (p.slotBeers || 0) + r.beer;
     logCasino(p, 'slot', {
-      won: outcome.flus,
-      beer: outcome.beer || 0,
-      net: outcome.flus - (pay === 'flus' ? SPIN_PRICE : 0),
-      detail: reels.join(''),
+      won: r.flus,
+      beer: r.beer,
+      net: r.flus - (pay === 'flus' ? SPIN_PRICE : 0),
+      detail: r.lines.map((l) => l.combo).join(' + '),
     });
     saveState();
-    sendJson(res, 200, { reels, flus: outcome.flus, beer: outcome.beer || 0, me: meView(p) });
+    sendJson(res, 200, { ...r, me: meView(p) });
   },
 
   'POST /api/admin/players': (req, res, body) => {
