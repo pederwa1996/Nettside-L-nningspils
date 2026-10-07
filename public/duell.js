@@ -1,6 +1,9 @@
 'use strict';
 
-const $ = (id) => document.getElementById(id);
+// ✊ Duell (stein, saks, papir) på PvP-siden.
+(function () {
+
+const $ = (id) => document.getElementById(`du-${id}`); // duell ligger på PvP-siden med egne id-er
 const EMOJI = { stein: '✊', saks: '✌️', papir: '✋' };
 const LABEL = { stein: 'Stein', saks: 'Saks', papir: 'Papir' };
 
@@ -34,6 +37,46 @@ function moveButtons(onPick) {
     wrap.appendChild(b);
   });
   return wrap;
+}
+
+// Nedtelling «Stein … saks … papir!» med to knyttnever som rister, så trekkene avsløres
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function showdown(d, myName) {
+  const overlay = document.getElementById('ar-overlay');
+  const box = document.getElementById('ar-box');
+  if (!overlay || !box) return;
+  const them = d.challenger;
+  box.innerHTML = `<p class="dice-title duel-title">✊ Duell</p>
+    <div class="rps-stage">
+      <div class="rps-side"><span class="rps-hand left">✊</span><b>${them.split(' ')[0]}</b></div>
+      <div class="rps-vs">VS</div>
+      <div class="rps-side"><span class="rps-hand right">✊</span><b>Deg</b></div>
+    </div>
+    <p class="rps-call" id="du-call"></p>`;
+  overlay.classList.remove('hidden');
+  const call = document.getElementById('du-call');
+  const hands = box.querySelectorAll('.rps-hand');
+  for (const word of ['Stein …', 'saks …', 'papir …']) {
+    call.textContent = word;
+    hands.forEach((h) => { h.classList.remove('pump'); void h.offsetWidth; h.classList.add('pump'); });
+    if (window.sfx) sfx.play('drum');
+    // eslint-disable-next-line no-await-in-loop
+    await sleep(650);
+  }
+  hands[0].textContent = EMOJI[d.challengerMove];
+  hands[1].textContent = EMOJI[d.opponentMove];
+  hands.forEach((h) => h.classList.add('reveal'));
+  call.textContent = 'NÅ!';
+  if (window.sfx) sfx.play('clash');
+  await sleep(900);
+  const won = d.winner === myName;
+  if (d.winner) hands[won ? 1 : 0].classList.add('winner');
+  call.textContent = !d.winner ? '🤝 Uavgjort – du får spinnene tilbake' : won ? `🏆 Du vant ${spinsWord(d.stake * 2)}!` : `😬 ${them.split(' ')[0]} vant`;
+  call.className = `rps-call ${!d.winner ? '' : won ? 'win' : 'lose'}`;
+  await sleep(1600);
+  overlay.classList.add('hidden');
+  box.innerHTML = '';
+  if (won && window.celebrate) celebrate({ tier: 'win', icon: EMOJI[d.opponentMove], title: 'DU VANT DUELLEN!', sub: `+${spinsWord(d.stake * 2)}` });
 }
 
 function spinsWord(n) {
@@ -108,6 +151,7 @@ function render() {
     box.appendChild(p);
     box.appendChild(moveButtons((m) => act(async () => {
       const r = await api('/api/duel/respond', { duelId: d.id, move: m });
+      await showdown(r.duel, me.name);
       const won = r.duel.winner === me.name;
       showMsg(resultText(r.duel, me.name), r.duel.winner ? (won ? 'win' : 'lose') : '');
     })));
@@ -181,7 +225,8 @@ $('challenge-moves').replaceWith(Object.assign(moveButtons((m) => act(async () =
   if (!opponent) throw new Error('Velg en motstander.');
   await api('/api/duel/challenge', { opponent, stake, move: m });
   showMsg(`Utfordring sendt til ${opponent}! Du valgte ${LABEL[m].toLowerCase()} ${EMOJI[m]}`, 'win');
-})), { id: 'challenge-moves' }));
+})), { id: 'du-challenge-moves' }));
 
 refresh();
 setInterval(() => !busy && refresh(), 4000);
+})();

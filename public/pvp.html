@@ -3,58 +3,243 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PvP – Lønningspils</title>
+  <title>PvP Arena – Lønningspils</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap">
   <link rel="stylesheet" href="/style.css">
 </head>
-<body class="minimal pvp-page">
-  <header class="hero">
-    <h1>⚔️ PvP</h1>
-    <p class="sub">Utfordre de andre og vinn spinn</p>
+<body class="pvp-arena" data-tab="dice">
+  <header class="hero pvp-hero">
+    <div class="pvp-sign">
+      <h1><span class="ps-swords">⚔️</span> PvP ARENA</h1>
+      <p class="pvp-tagline">Utfordre kollegaene · vinn cash, spinn og pils</p>
+    </div>
   </header>
 
   <main>
-    <section class="card center">
-      <p class="big-number">Du har <strong id="my-spins">0</strong> spinn</p>
-      <p id="pvp-alerts" class="duel-alert hidden"></p>
+    <!-- Det du har å spille med -->
+    <section class="card wallet pvp-wallet">
+      <div class="wallet-item"><span class="wallet-num" id="pv-spins">0</span><span class="wallet-label">🎡 spinn</span></div>
+      <div class="wallet-item"><span class="wallet-num" id="pv-flus">0</span><span class="wallet-label">💰 cash</span></div>
+      <div class="wallet-item"><span class="wallet-num" id="pv-beers">0</span><span class="wallet-label">🍺 pils</span></div>
     </section>
+    <p id="pvp-alerts" class="pvp-alerts hidden"></p>
 
-    <div class="tile-grid">
-      <a class="tile wide arena-tile" href="/arena.html">
-        <span class="tile-icon">🏟️</span><strong>Arena</strong>
-        <small>🎲 Terninger, ⚡ reaksjon og 🧠 hoderegning. Spill om cash, spinn eller pils.</small>
-        <span class="tile-here hidden" data-rooms="arena"></span>
-        <span id="arena-badge" class="tile-badge hidden"></span>
-      </a>
-      <a class="tile" href="/duell.html">
-        <span class="tile-icon">✊</span><strong>Duell</strong>
-        <small>Stein, saks, papir. Sats spinn mot en kollega.</small>
-        <span class="tile-here hidden" data-rooms="duell"></span>
-        <span id="duel-badge" class="tile-badge hidden"></span>
-      </a>
-      <a class="tile" href="/mogg.html">
-        <span class="tile-icon">🗿</span><strong>Mogg-off</strong>
-        <small>Hardeste chad-ansikt vinner et spinn.</small>
-        <span class="tile-here hidden" data-rooms="mogg"></span>
-        <span id="mogg-badge" class="tile-badge hidden"></span>
-      </a>
-      <a class="tile wide" href="/spill.html">
-        <span class="tile-icon">🕊️</span><strong>Flappy Sjef</strong>
-        <small id="game-rule">Slå highscoren og tjen spinn.</small>
-        <span class="tile-here hidden" data-rooms="flappy"></span>
-      </a>
+    <!-- Velg kamp: alle spillene på én linje -->
+    <div class="pvp-menu">
+      <p class="pvp-menu-label"><span class="cm-fire">🔥</span> Velg kamp <span class="cm-fire">🔥</span></p>
+      <div class="pvp-games">
+        <button type="button" class="pg pg-dice active" data-tab="dice"><i class="pg-icon">🎲</i><b>Terning</b><em class="pg-badge hidden" data-game="dice"></em><span class="pg-live" data-room="arena-dice"></span></button>
+        <button type="button" class="pg pg-reaction" data-tab="reaction"><i class="pg-icon">⚡</i><b>Reaksjon</b><em class="pg-badge hidden" data-game="reaction"></em><span class="pg-live" data-room="arena-reaction"></span></button>
+        <button type="button" class="pg pg-math" data-tab="math"><i class="pg-icon">🧠</i><b>Hoderegning</b><em class="pg-badge hidden" data-game="math"></em><span class="pg-live" data-room="arena-math"></span></button>
+        <button type="button" class="pg pg-duel" data-tab="duel"><i class="pg-icon">✊</i><b>Duell</b><em class="pg-badge hidden" data-game="duel"></em><span class="pg-live" data-room="duell"></span></button>
+        <button type="button" class="pg pg-mogg" data-tab="mogg"><i class="pg-icon">🗿</i><b>Mogg-off</b><em class="pg-badge hidden" data-game="mogg"></em><span class="pg-live" data-room="mogg"></span></button>
+        <button type="button" class="pg pg-flappy" data-tab="flappy"><i class="pg-icon">🕊️</i><b>Flappy</b><span class="pg-live" data-room="flappy"></span></button>
+      </div>
     </div>
 
-    <section class="card">
-      <h2>🕊️ Flappy Sjef-toppliste</h2>
-      <ol id="leaderboard" class="leaderboard"></ol>
-    </section>
+    <!-- 🎲⚡🧠 Arena-spillene -->
+    <div id="pv-arena" class="pv-panel">
+      <section id="ar-incoming-card" class="card hidden">
+      <h2>🔔 Du er utfordret</h2>
+      <div id="ar-incoming" class="arena-list"></div>
+      </section>
+
+      <section class="card pv-play">
+      <h2 id="ar-title">Ny utfordring</h2>
+      <p id="ar-rules" class="note pv-rules"></p>
+      <div class="arena-games hidden" id="ar-game-pick">
+      <button type="button" class="ag active" data-game="dice"><span>🎲</span><b>Terningduell</b><small>Høyest sum vinner. Ren flaks.</small></button>
+      <button type="button" class="ag" data-game="reaction"><span>⚡</span><b>Reaksjon</b><small>Trykk når det blir grønt. 3 runder.</small></button>
+      <button type="button" class="ag" data-game="math"><span>🧠</span><b>Hoderegning</b><small>6 regnestykker. Flest riktige, raskest.</small></button>
+      </div>
+      <p class="field-label">Motstander</p>
+      <select id="ar-opponent"></select>
+      <p class="field-label">Spill om</p>
+      <div class="seg" id="ar-stake-type">
+      <button type="button" class="sg active" data-type="cash">💰 Cash</button>
+      <button type="button" class="sg" data-type="spins">🎡 Spinn</button>
+      <button type="button" class="sg" data-type="beer">🍺 Pils</button>
+      </div>
+      <div class="stake-row">
+      <button type="button" class="secondary" id="ar-stake-minus">−</button>
+      <span id="ar-stake-amount">50</span>
+      <button type="button" class="secondary" id="ar-stake-plus">+</button>
+      </div>
+      <p id="ar-balance" class="note center"></p>
+      <button id="ar-go" class="big">Spill og utfordre</button>
+      <p id="ar-msg" class="result"></p>
+      </section>
+
+      <section class="card">
+      <h2>⏳ Venter på svar</h2>
+      <div id="ar-outgoing" class="arena-list"></div>
+      </section>
+
+      <section class="card">
+      <h2>🏆 Siste kamper</h2>
+      <div id="ar-recent" class="arena-list"></div>
+      </section>
+
+    </div>
+
+    <!-- ✊ Duell -->
+    <div id="pv-duel" class="pv-panel hidden">
+      <section id="du-not-joined" class="card hidden">
+      <p>Du må <a href="/">hente lodd</a> før du kan duellere.</p>
+      </section>
+
+      <div id="du-duel-app" class="hidden">
+      <section class="card">
+      <p class="center big-number">Du har <strong id="du-my-spins">0</strong> spinn</p>
+      <p id="du-msg" class="result"></p>
+      </section>
+
+      <section id="du-incoming-section" class="card hidden highlight">
+      <h2>🔔 Du er utfordret!</h2>
+      <div id="du-incoming"></div>
+      </section>
+
+      <section class="card">
+      <h2>Utfordre noen</h2>
+      <label class="field">Motstander
+      <select id="du-opponent"></select>
+      </label>
+      <label class="field">Innsats (spinn)
+      <div class="stepper">
+      <button type="button" class="secondary" id="du-stake-minus">−</button>
+      <span id="du-stake">1</span>
+      <button type="button" class="secondary" id="du-stake-plus">+</button>
+      </div>
+      </label>
+      <p class="field-label">Ditt hemmelige trekk</p>
+      <div class="moves" id="du-challenge-moves"></div>
+      <p class="note">Vinneren tar hele potten. Blir det uavgjort, får du innsatsen tilbake.</p>
+      </section>
+
+      <section id="du-outgoing-section" class="card hidden">
+      <h2>Venter på svar</h2>
+      <div id="du-outgoing"></div>
+      </section>
+
+      <section class="card">
+      <h2>Dine dueller</h2>
+      <ul id="du-history" class="duel-list"></ul>
+      </section>
+      </div>
+
+      <section class="card">
+      <h2>📣 Siste dueller</h2>
+      <ul id="du-feed" class="duel-list"></ul>
+      </section>
+
+    </div>
+
+    <!-- 🗿 Mogg-off -->
+    <div id="pv-mogg" class="pv-panel hidden">
+      <section class="card">
+      <h2>🏆 Chad-pallen</h2>
+      <div id="mg-podium" class="podium"></div>
+      <ol id="mg-podium-rest" class="leaderboard" start="4"></ol>
+      </section>
+
+      <section id="mg-not-joined" class="card hidden">
+      <p>Du må <a href="/">registrere deg</a> før du kan mogge.</p>
+      </section>
+
+      <div id="mg-mogg-app" class="hidden">
+      <section class="card">
+      <p class="center big-number">Du har <strong id="mg-my-spins">0</strong> spinn</p>
+      <p id="mg-msg" class="result"></p>
+      </section>
+
+      <section id="mg-incoming-section" class="card hidden highlight">
+      <h2>🔔 Du er utfordret!</h2>
+      <div id="mg-incoming"></div>
+      </section>
+
+      <section class="card">
+      <h2>Utfordre noen</h2>
+      <p>Begge tar en selfie med sitt hardeste chad-ansikt. Høyest score vinner <strong>1 spinn</strong> fra den andre.</p>
+      <label class="field">Motstander
+      <select id="mg-opponent"></select>
+      </label>
+      <button id="mg-challenge-btn" class="big">📸 Ta selfie og utfordre</button>
+      <button id="mg-practice-btn" class="secondary practice-btn">Øv deg først (lagres ikke)</button>
+      <details class="tips">
+      <summary>Hvordan får jeg høy score?</summary>
+      <ul>
+      <li><strong>Jegerøyne:</strong> myse litt, men ikke lukk øynene</li>
+      <li><strong>Intense bryn:</strong> senk brynene</li>
+      <li><strong>Kjevelinje:</strong> munnen igjen, bit sammen</li>
+      <li><strong>Steinansikt:</strong> ikke et snev av smil</li>
+      <li><strong>Rett i kamera:</strong> hodet rett, ansiktet godt synlig</li>
+      </ul>
+      <p class="note">Scoren måler kun hvor godt du tar chad-ansiktet, ikke hvordan du ser ut. 10.00 er nesten umulig.</p>
+      </details>
+      </section>
+
+      <section id="mg-outgoing-section" class="card hidden">
+      <h2>Venter på svar</h2>
+      <div id="mg-outgoing"></div>
+      </section>
+      </div>
+
+      <section class="card">
+      <h2>📣 Siste mogg-offs</h2>
+      <div id="mg-feed"></div>
+      </section>
+
+    </div>
+
+    <!-- 🕊️ Flappy Sjef -->
+    <div id="pv-flappy" class="pv-panel hidden">
+      <section class="card pv-play flappy-card">
+        <h2>🕊️ Flappy Sjef</h2>
+        <p class="note pv-rules" id="game-rule">Slå highscoren og tjen spinn.</p>
+        <a class="big pv-play-btn" href="/spill.html">▶ Spill Flappy Sjef</a>
+      </section>
+      <section class="card">
+        <h2>🏆 Toppliste</h2>
+        <ol id="leaderboard" class="leaderboard"></ol>
+      </section>
+    </div>
   </main>
+
+  <div id="ar-overlay" class="arena-overlay hidden"><div class="arena-box" id="ar-box"></div></div>
+  <!-- Analyse og resultat -->
+  <div id="mg-analyze" class="story-overlay hidden">
+  <div class="analyze-box">
+  <img id="mg-analyze-img" class="analyze-img" alt="">
+  <div id="mg-analyze-busy">
+  <div class="scanline"></div>
+  <p id="mg-analyze-step" class="center">Analyserer ...</p>
+  </div>
+  <div id="mg-analyze-result" class="hidden">
+  <p class="mogg-score" id="mg-analyze-score">0.00</p>
+  <p class="mogg-verdict" id="mg-analyze-verdict"></p>
+  <div id="mg-analyze-parts" class="mogg-parts"></div>
+  </div>
+  <p id="mg-analyze-error" class="error"></p>
+  <div class="story-actions">
+  <button type="button" class="secondary" id="mg-analyze-cancel">Avbryt</button>
+  <button type="button" class="secondary hidden" id="mg-analyze-retake">📸 Nytt bilde</button>
+  <button type="button" class="hidden" id="mg-analyze-submit">Send inn</button>
+  </div>
+  </div>
+  </div>
+  <input id="mg-camera" type="file" accept="image/*" capture="user" hidden>
+
+
 
   <script src="/media.js"></script>
   <script src="/sfx.js"></script>
   <script src="/beerwins.js"></script>
   <script src="/guide.js"></script>
+  <script src="/celebrate.js"></script>
   <script src="/pvp.js"></script>
+  <script src="/arena.js"></script>
+  <script src="/duell.js"></script>
+  <script type="module" src="/mogg.js"></script>
   <script src="/presence.js"></script>
   <script src="/nav.js"></script>
   <script src="/chatbox.js"></script>

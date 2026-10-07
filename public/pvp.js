@@ -1,14 +1,48 @@
 'use strict';
 
-// PvP-siden: snarveier til duell, mogg-off og Flappy Sjef, med varsler og toppliste.
+// PvP-arenaen: alle spillene på én side, med en rad knapper øverst (som i kasinoet).
+// 🎲 Terning · ⚡ Reaksjon · 🧠 Hoderegning (arena.js) · ✊ Duell (duell.js) · 🗿 Mogg-off (mogg.js) · 🕊️ Flappy
 (function () {
   const $ = (id) => document.getElementById(id);
+  const TABS = {
+    dice: { hash: 'terninger', panel: 'pv-arena', room: 'arena' },
+    reaction: { hash: 'reaksjon', panel: 'pv-arena', room: 'arena' },
+    math: { hash: 'hoderegning', panel: 'pv-arena', room: 'arena' },
+    duel: { hash: 'duell', panel: 'pv-duel', room: 'duell' },
+    mogg: { hash: 'mogg', panel: 'pv-mogg', room: 'mogg' },
+    flappy: { hash: 'flappy', panel: 'pv-flappy', room: 'pvp' },
+  };
   let me = null;
+  let tab = Object.keys(TABS).find((k) => `#${TABS[k].hash}` === location.hash) || 'dice';
 
-  function badge(id, n) {
-    $(id).textContent = n;
-    $(id).classList.toggle('hidden', !n);
+  function showTab(name, { sound = false } = {}) {
+    tab = name;
+    const t = TABS[name];
+    document.body.dataset.tab = name;
+    document.body.dataset.room = t.room;
+    document.querySelectorAll('.pvp-games .pg').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
+    ['pv-arena', 'pv-duel', 'pv-mogg', 'pv-flappy'].forEach((p) => $(p).classList.toggle('hidden', p !== t.panel));
+    if (t.panel === 'pv-arena' && window.arenaSetGame) window.arenaSetGame(name);
+    history.replaceState(null, '', `${location.pathname}${location.search}#${t.hash}`);
+    if (window.updatePresenceRoom) window.updatePresenceRoom();
+    if (sound && window.sfx) sfx.play('tap');
   }
+  document.querySelectorAll('.pvp-games .pg').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab, { sound: true })));
+  window.addEventListener('hashchange', () => {
+    const k = Object.keys(TABS).find((x) => `#${TABS[x].hash}` === location.hash);
+    if (k && k !== tab) showTab(k);
+  });
+
+  // Røde tall på knappene: utfordringer som venter på deg
+  function setBadge(game, n) {
+    const b = document.querySelector(`.pg-badge[data-game="${game}"]`);
+    if (!b) return;
+    b.textContent = n;
+    b.classList.toggle('hidden', !n);
+  }
+  window.onArenaData = (d) => {
+    ['dice', 'reaction', 'math'].forEach((g) => setBadge(g, d.incoming.filter((a) => a.game === g).length));
+  };
 
   function renderLeaderboard(list, avatars) {
     const ol = $('leaderboard');
@@ -36,34 +70,35 @@
     }
     if (!d.me) return;
     me = d.me.name;
-    $('my-spins').textContent = d.me.spinsLeft;
-    badge('duel-badge', d.incomingDuels);
-    badge('mogg-badge', d.incomingMoggs);
-    badge('arena-badge', d.incomingArena);
+    $('pv-spins').textContent = d.me.spinsLeft;
+    $('pv-flus').textContent = d.me.flus;
+    $('pv-beers').textContent = d.me.beersOwed;
+    setBadge('duel', d.incomingDuels);
+    setBadge('mogg', d.incomingMoggs);
     const alerts = [];
-    if (d.incomingDuels) alerts.push(`<a href="/duell.html">⚔️ ${d.incomingDuels} duell${d.incomingDuels > 1 ? 'er' : ''} venter på svar</a>`);
-    if (d.incomingArena) alerts.push(`<a href="/arena.html">🏟️ ${d.incomingArena} utfordring${d.incomingArena > 1 ? 'er' : ''} i arenaen</a>`);
-    if (d.incomingMoggs) alerts.push(`<a href="/mogg.html">🗿 ${d.incomingMoggs} mogg-off${d.incomingMoggs > 1 ? 's' : ''} venter på deg</a>`);
-    $('pvp-alerts').innerHTML = alerts.join('<br>');
+    if (d.incomingArena) alerts.push(`<a href="#terninger">🏟️ ${d.incomingArena} utfordring${d.incomingArena > 1 ? 'er' : ''} i arenaen</a>`);
+    if (d.incomingDuels) alerts.push(`<a href="#duell">✊ ${d.incomingDuels} duell${d.incomingDuels > 1 ? 'er' : ''} venter på svar</a>`);
+    if (d.incomingMoggs) alerts.push(`<a href="#mogg">🗿 ${d.incomingMoggs} mogg-off${d.incomingMoggs > 1 ? 's' : ''} venter på deg</a>`);
+    $('pvp-alerts').innerHTML = alerts.join(' · ');
     $('pvp-alerts').classList.toggle('hidden', !alerts.length);
     const first = d.settings.gameFirstMilestone;
-    $('game-rule').textContent = `${first} poeng = 1 spinn, ${first * 2} = 2, ${first * 4} = 3 …`;
+    $('game-rule').textContent = `Fly mellom rørene. ${first} poeng = 1 spinn, ${first * 2} = 2, ${first * 4} = 3 …`;
     renderLeaderboard(d.leaderboard, d.avatars);
   }
 
-  // Hvem er i hvert spill nå (fra presence.js)
+  // Hvor mange som er i hvert spill nå (arenaen telles samlet på de tre arena-knappene)
   document.addEventListener('presence', (e) => {
     const { rooms } = e.detail;
-    document.querySelectorAll('.tile-here').forEach((el) => {
-      const people = el.dataset.rooms.split(',').flatMap((r) => rooms[r] || []);
-      el.classList.toggle('hidden', !people.length);
-      el.innerHTML = '';
-      people.slice(0, 3).forEach((x) => el.appendChild(avatarEl(x.avatar, x.name, 20)));
-      el.appendChild(document.createTextNode(` ${people.length} her nå`));
+    document.querySelectorAll('.pg-live').forEach((el) => {
+      const room = el.dataset.room.startsWith('arena') ? 'arena' : el.dataset.room;
+      const n = (rooms[room] || []).filter((x) => x.name !== me).length;
+      el.textContent = n ? `🟢 ${n}` : '';
     });
   });
 
   onLive('notify', (msg) => (!msg || msg.to === me) && load());
+  onLive('arena', load);
   setInterval(load, 15000);
+  showTab(tab);
   load();
 })();

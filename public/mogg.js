@@ -1,6 +1,6 @@
 import { analyzeFace, preload, verdict, PART_LABELS } from '/mogg-analyze.mjs';
 
-const $ = (id) => document.getElementById(id);
+const $ = (id) => document.getElementById(`mg-${id}`); // mogg-off ligger på PvP-siden med egne id-er
 let data = null;
 let busy = false;
 let flow = null; // { mode: 'challenge'|'respond'|'practice', opponent?, id?, result? }

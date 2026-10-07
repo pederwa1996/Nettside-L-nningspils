@@ -34,8 +34,8 @@ function render() {
   $('set-password-nudge').classList.toggle('hidden', !me || me.hasPassword);
 
   const alerts = [];
-  if (data.incomingDuels) alerts.push(`<a href="/duell.html">⚔️ ${data.incomingDuels} duell${data.incomingDuels > 1 ? 'er' : ''} venter på svar</a>`);
-  if (data.incomingMoggs) alerts.push(`<a href="/mogg.html">🗿 ${data.incomingMoggs} mogg-off${data.incomingMoggs > 1 ? 's' : ''} venter på deg</a>`);
+  if (data.incomingDuels) alerts.push(`<a href="/pvp.html#duell">⚔️ ${data.incomingDuels} duell${data.incomingDuels > 1 ? 'er' : ''} venter på svar</a>`);
+  if (data.incomingMoggs) alerts.push(`<a href="/pvp.html#mogg">🗿 ${data.incomingMoggs} mogg-off${data.incomingMoggs > 1 ? 's' : ''} venter på deg</a>`);
   $('home-alerts').innerHTML = alerts.join('<br>');
   $('home-alerts').classList.toggle('hidden', !alerts.length || !me);
   renderStandings(data.standings, me);
@@ -408,11 +408,11 @@ function renderNextStep(me, settings) {
   const challenges = (data.incomingDuels || 0) + (data.incomingMoggs || 0) + (data.incomingArena || 0);
   let s;
   if (me.beersOwed > 0) s = ['🍻', `Du har ${me.beersOwed} pils til gode!`, 'Trykk her for å løse inn i baren – spillmesteren kommer med den', '/baren.html', 'beer'];
-  else if (challenges) s = ['⚔️', `Du er utfordret (${challenges})`, 'Svar på utfordringen og vinn spinn, cash eller pils', data.incomingArena ? '/arena.html' : data.incomingDuels ? '/duell.html' : '/mogg.html', 'pvp'];
+  else if (challenges) s = ['⚔️', `Du er utfordret (${challenges})`, 'Svar på utfordringen og vinn spinn, cash eller pils', data.incomingArena ? '/pvp.html#terninger' : data.incomingDuels ? '/pvp.html#duell' : '/pvp.html#mogg', 'pvp'];
   else if (me.spinsLeft > 0) s = ['🎡', `Spinn lykkehjulet (${me.spinsLeft} spinn igjen)`, `${Math.round(settings.spinWinChance * 100)} % sjanse for en ekte pils hver gang`, '/kasino.html#hjul', 'spin'];
   else if (me.flus >= 100) s = ['🛒', 'Tom for spinn? Kjøp flere', 'Spinn til lykkehjulet fra 100 cash – billigere i pakker', '/kasino.html#hjul', 'spin'];
   else if (data.openTasks) s = ['🎯', 'Tom for spinn? Løs en oppgave', `${data.openTasks} ledige oppgaver gir spinn, cash eller pils`, '/oppgaver.html', 'tasks'];
-  else s = ['⚔️', 'Utfordre noen i arenaen', 'Spill om cash, spinn eller pils', '/arena.html', 'pvp'];
+  else s = ['⚔️', 'Utfordre noen i arenaen', 'Spill om cash, spinn eller pils', '/pvp.html#terninger', 'pvp'];
   const [icon, title, sub, href, kind] = s;
   $('ns-icon').textContent = icon;
   $('ns-title').textContent = title;

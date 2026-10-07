@@ -30,12 +30,14 @@
       ],
     },
     pvp: {
-      title: 'Slik funker PvP',
+      title: 'Slik funker PvP-arenaen',
       lines: () => [
-        '🏟️ <b>Arena:</b> terninger, reaksjon og hoderegning om cash, spinn eller pils.',
-        '✊ <b>Duell:</b> utfordre en kollega i stein, saks, papir. Vinneren tar spinnene som er satset.',
-        '🗿 <b>Mogg-off:</b> ta en selfie med ditt hardeste ansikt. Høyest poeng vinner et spinn.',
+        'Velg kamp i raden øverst: 🎲 Terning, ⚡ Reaksjon, 🧠 Hoderegning, ✊ Duell, 🗿 Mogg-off og 🕊️ Flappy.',
+        '🎲⚡🧠 Velg motstander og hva dere spiller om (<b>cash</b>, <b>spinn</b> eller <b>pils</b>). Du spiller først, motstanderen får varsel, og vinneren tar hele potten.',
+        '🎲 <b>Terning:</b> du rister begeret, og terningene ligger skjult til motstanderen kaster.',
+        '✊ <b>Duell:</b> stein, saks, papir om spinn. 🗿 <b>Mogg-off:</b> hardeste chad-ansikt vinner et spinn.',
         `🕊️ <b>Flappy Sjef:</b> ${S.flappy} poeng gir 1 spinn, ${S.flappy * 2} gir 2, ${S.flappy * 4} gir 3 …`,
+        'Røde tall på knappene betyr at noen har utfordret deg.',
       ],
     },
     bar: {

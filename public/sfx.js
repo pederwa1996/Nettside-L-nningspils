@@ -74,6 +74,8 @@
     notify: ['notify', 0.7], cheers: ['cheers', 0.9], send: ['send', 0.5], pop: ['pop', 0.6], sad: ['sad', 0.7], like: ['like', 0.6],
     win: ['win', 0.6], bigwin: ['bigwin', 0.6], lose: ['lose', 0.5], reels: ['reels', 0.45], ballroll: ['ballroll', 0.55], pour: ['pour', 0.6],
     v_jackpot: ['v_jackpot', 1], v_blackjack: ['v_blackjack', 1], v_pils: ['v_pils', 1], v_storgevinst: ['v_storgevinst', 1],
+    diceshake: ['diceshake', 0.8], diceroll: ['diceroll', 0.8], dicestop: ['dicestop', 0.9], drum: ['drum', 0.8], clash: ['clash', 0.7],
+    go: ['go', 0.6], buzzer: ['buzzer', 0.5],
     v_potten: ['v_potten', 1], v_nomore: ['v_nomore', 0.9], v_skaal: ['v_skaal', 1], v_kjipt: ['v_kjipt', 1],
   };
   const buffers = {};
@@ -151,6 +153,17 @@
     ballDrop: () => [0, 0.11, 0.19, 0.24, 0.27].forEach((t, i) => tone(2400 - i * 150, { t, dur: 0.02, type: 'triangle', vol: 0.05 - i * 0.008 })),
     // 💀 −1 SPINN på lykkehjulet
     skull: () => tone(220, { dur: 0.3, type: 'sine', vol: 0.06, to: 140 }),
+    // PvP: terninger, tromme, sverd, start og feil
+    diceshake: () => [0, 0.08, 0.17, 0.24, 0.33, 0.41].forEach((t) => noise(0.05, { t, freq: 2600, q: 3, vol: 0.06 })),
+    diceroll: () => [0, 0.12, 0.26, 0.42, 0.6, 0.82, 1.1].forEach((t, i) => noise(0.05, { t, freq: 1800, q: 3, vol: 0.07 - i * 0.007 })),
+    dicestop: () => {
+      noise(0.04, { freq: 1500, q: 3, vol: 0.09 });
+      noise(0.04, { t: 0.07, freq: 1300, q: 3, vol: 0.07 });
+    },
+    drum: () => tone(90, { dur: 0.3, vol: 0.12, to: 55 }),
+    clash: () => noise(0.25, { freq: 4200, q: 2, vol: 0.08 }),
+    go: () => tone(880, { dur: 0.15, type: 'square', vol: 0.03 }),
+    buzzer: () => tone(140, { dur: 0.35, type: 'sawtooth', vol: 0.04 }),
     // Vanlig knappetrykk
     tap: () => tone(700, { dur: 0.03, type: 'triangle', vol: 0.025 }),
 
@@ -195,7 +208,7 @@
   let lastTick = 0;
   function play(name) {
     if (window.__sfxLog) window.__sfxLog.push(name); // brukes av testene
-    if (muted || !SOUNDS[name]) return;
+    if (muted) return;
     // Ikke spill tikk tettere enn hvert 28. ms (blir bare sus)
     if (name === 'tick' || name === 'reelTick') {
       const now = performance.now();
@@ -204,6 +217,7 @@
     }
     // Ekte lyd hvis den er lastet, ellers den syntetiske
     if (FILES[name] && sample(name)) return;
+    if (!SOUNDS[name]) return;
     try {
       SOUNDS[name]();
     } catch { /* ignorer */ }

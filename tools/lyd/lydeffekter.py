@@ -20,6 +20,14 @@ SFX = {
   'bigwin':    ('big casino jackpot win, bells ringing and coins pouring out of a slot machine, celebratory', 3.0),
   'lose':      ('soft short descending two-note womp, subtle and friendly, game lose', 0.8),
   'skull':     ('short ominous low boom with a creepy whoosh, spooky game penalty', 0.9),
+  # PvP
+  'diceshake': ('two dice rattling inside a leather dice cup being shaken, close up', 1.6),
+  'diceroll':  ('two dice tumbling and rolling across a wooden table', 1.8),
+  'dicestop':  ('two dice landing on a wooden table, short click clack', 0.5),
+  'drum':      ('single deep taiko drum hit, short, dramatic', 0.6),
+  'clash':     ('two swords clashing, metallic impact, short', 0.8),
+  'go':        ('short bright electronic go beep, game start', 0.5),
+  'buzzer':    ('short game show wrong answer buzzer', 0.7),
   # Baren
   'cheers':    ('two full beer glasses clinking together, cheers, in a lively bar', 1.0),
   'pour':      ('cold beer pouring from a bar tap into a glass, foamy fizz', 3.0),

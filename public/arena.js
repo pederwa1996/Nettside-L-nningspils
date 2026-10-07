@@ -3,7 +3,7 @@
 // Arena: små PvP-spill om cash, spinn eller pils.
 // Utfordreren spiller sin del først; motstanderen får varsel, spiller, og vinneren tar potten.
 (function () {
-  const $ = (id) => document.getElementById(id);
+  const $ = (id) => document.getElementById(`ar-${id}`); // arenaen ligger på PvP-siden med egne id-er
   let data = null;
   let game = 'dice';
   let stakeType = 'cash';
@@ -48,10 +48,103 @@
     box.innerHTML = '';
   }
 
+  // ---------- 🎲 Terninger: begeret ristes, terningene ruller ut og spretter ----------
+  const PIPS = { 1: [5], 2: [1, 9], 3: [1, 5, 9], 4: [1, 3, 7, 9], 5: [1, 3, 5, 7, 9], 6: [1, 3, 4, 6, 7, 9] };
+  function dieHtml(n, cls = '') {
+    return `<div class="die ${cls}" data-n="${n}">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => `<i class="${PIPS[n].includes(i) ? 'pip' : ''}"></i>`).join('')}</div>`;
+  }
+  function setDie(d, n) {
+    d.dataset.n = n;
+    [...d.children].forEach((p, i) => p.classList.toggle('pip', PIPS[n].includes(i + 1)));
+  }
+  const parseDice = (detail) => {
+    const m = /(\d)\s*\+\s*(\d)/.exec(detail || '');
+    return m ? [Number(m[1]), Number(m[2])] : null;
+  };
+  // Terningene triller ut og lander på verdiene (ca. 2 s)
+  async function rollDiceInto(wrap, values) {
+    wrap.innerHTML = `${dieHtml(1 + Math.floor(Math.random() * 6), 'rolling')}${dieHtml(1 + Math.floor(Math.random() * 6), 'rolling r2')}`;
+    const dice = [...wrap.querySelectorAll('.die')];
+    if (window.sfx) sfx.play('diceroll');
+    const end = performance.now() + 1700;
+    let last = 0;
+    await new Promise((resolve) => {
+      (function frame(now) {
+        // Bytt side ofte i starten, sjeldnere mot slutten (som ekte terninger som roer seg)
+        const left = end - now;
+        const every = left > 900 ? 70 : left > 400 ? 140 : 260;
+        if (now - last > every) {
+          last = now;
+          dice.forEach((d) => setDie(d, 1 + Math.floor(Math.random() * 6)));
+        }
+        if (now < end) requestAnimationFrame(frame);
+        else resolve();
+      })(performance.now());
+    });
+    dice.forEach((d, i) => {
+      setDie(d, values[i]);
+      d.classList.remove('rolling');
+      d.classList.add('landed');
+    });
+    if (window.sfx) sfx.play('dicestop');
+    await sleep(350);
+  }
+  function countUp(el, to, ms = 600) {
+    const t0 = performance.now();
+    return new Promise((resolve) => {
+      (function f(now) {
+        const p = Math.min(1, (now - t0) / ms);
+        el.textContent = Math.round(to * p);
+        if (p < 1) requestAnimationFrame(f);
+        else resolve();
+      })(t0);
+    });
+  }
+
+  // Utfordreren: rist begeret og slå det i bordet. Terningene er hemmelige til motstanderen kaster.
   async function playDice() {
-    show('<div class="ag-big dice-roll">🎲🎲</div><p>Terningene kastes …</p>');
-    await sleep(1100);
+    show(`<p class="dice-title">🎲 Terningduell</p>
+      <div class="dice-table"><div class="dice-cup shaking"></div><div class="dice-row" id="ar-dice-me"></div></div>
+      <p class="dice-status" id="ar-dice-status">Rister begeret …</p>`);
+    if (window.sfx) sfx.play('diceshake');
+    await sleep(1600);
+    const cup = box.querySelector('.dice-cup');
+    cup.classList.remove('shaking');
+    cup.classList.add('slam');
+    if (window.sfx) sfx.play('dicestop');
+    $('dice-status').textContent = 'Kastet! Terningene ligger skjult under begeret 🤫';
+    await sleep(1300);
     return {};
+  }
+
+  // Motstanderen: begeret til utfordreren løftes, så kaster du selv
+  async function showDiceDuel(c, me) {
+    const theirs = parseDice(c.cDetail);
+    const mine = parseDice(c.oDetail);
+    if (!theirs || !mine) return;
+    show(`<p class="dice-title">🎲 Terningduell</p>
+      <div class="dice-side"><span class="ds-name">${c.challenger.split(' ')[0]}</span><div class="dice-table small"><div class="dice-cup"></div><div class="dice-row" id="ar-dice-them"></div></div><b class="ds-sum" id="ar-sum-them">?</b></div>
+      <div class="dice-vs">VS</div>
+      <div class="dice-side"><span class="ds-name">Deg</span><div class="dice-table"><div class="dice-cup shaking"></div><div class="dice-row" id="ar-dice-me"></div></div><b class="ds-sum" id="ar-sum-me">?</b></div>
+      <p class="dice-status" id="ar-dice-status">Rister begeret …</p>`);
+    // Løft begeret til motstanderen
+    $('dice-them').innerHTML = dieHtml(theirs[0], 'landed') + dieHtml(theirs[1], 'landed');
+    const cups = box.querySelectorAll('.dice-cup');
+    await sleep(500);
+    cups[0].classList.add('lift');
+    await countUp($('sum-them'), theirs[0] + theirs[1], 400);
+    if (window.sfx) sfx.play('diceshake');
+    await sleep(1000);
+    cups[1].classList.remove('shaking');
+    cups[1].classList.add('lift');
+    $('dice-status').textContent = 'Terningene ruller …';
+    await rollDiceInto($('dice-me'), mine);
+    await countUp($('sum-me'), mine[0] + mine[1], 500);
+    const a = theirs[0] + theirs[1];
+    const b = mine[0] + mine[1];
+    $('dice-status').textContent = b > a ? '🏆 Du vant!' : b < a ? `😬 ${c.challenger.split(' ')[0]} vant` : '🤝 Uavgjort';
+    $('dice-status').className = `dice-status ${b > a ? 'win' : b < a ? 'lose' : ''}`;
+    await sleep(1100);
   }
 
   async function playReaction() {
@@ -71,7 +164,7 @@
 
   function reactionRound(round) {
     return new Promise((resolve) => {
-      show(`<p class="muted">Runde ${round} av 3</p><div class="react-pad wait" id="pad">Vent på grønt …</div>`);
+      show(`<p class="muted">Runde ${round} av 3</p><div class="react-pad wait" id="ar-pad">Vent på grønt …</div>`);
       const pad = $('pad');
       let greenAt = 0;
       let done = false;
@@ -79,6 +172,7 @@
         greenAt = performance.now();
         pad.className = 'react-pad go';
         pad.textContent = 'TRYKK!';
+        if (window.sfx) sfx.play('go');
       }, 1500 + Math.random() * 2000);
       pad.addEventListener('pointerdown', () => {
         if (done) return;
@@ -87,6 +181,7 @@
           clearTimeout(timer);
           pad.className = 'react-pad foul';
           pad.textContent = 'Tjuvstart! 😬';
+          if (window.sfx) sfx.play('buzzer');
           return setTimeout(() => resolve(-1), 700);
         }
         const t = performance.now() - greenAt;
@@ -109,9 +204,9 @@
 
   function mathQuestion(q, i, n, start) {
     return new Promise((resolve) => {
-      show(`<p class="muted">Regnestykke ${i + 1} av ${n} · <span id="clock">0.0</span> s</p>
+      show(`<p class="muted">Regnestykke ${i + 1} av ${n} · <span id="ar-clock">0.0</span> s</p>
         <div class="ag-big math-q">${q} = ?</div>
-        <form id="mform" class="math-form"><input id="mans" type="number" inputmode="numeric" autocomplete="off" required><button type="submit">${i + 1 < n ? 'Neste' : 'Ferdig'}</button></form>`);
+        <form id="ar-mform" class="math-form"><input id="ar-mans" type="number" inputmode="numeric" autocomplete="off" required><button type="submit">${i + 1 < n ? 'Neste' : 'Ferdig'}</button></form>`);
       const tick = setInterval(() => {
         const c = $('clock');
         if (c) c.textContent = ((performance.now() - start) / 1000).toFixed(1);
@@ -155,13 +250,14 @@
       if (decline) {
         await api('/api/arena/respond', { id: a.id, decline: true });
       } else {
-        const payload = await PLAY[a.game]();
+        const payload = a.game === 'dice' ? {} : await PLAY[a.game]();
         const r = await api('/api/arena/respond', { id: a.id, ...payload });
         const c = r.challenge;
+        if (a.game === 'dice') await showDiceDuel(c);
         show(`<div class="ag-big">${r.won ? '🏆' : r.tie ? '🤝' : '😬'}</div>
           <p><b>Du:</b> ${c.oDetail}<br><b>${c.challenger}:</b> ${c.cDetail}</p>
           <p class="arena-result ${r.won ? 'win' : r.tie ? '' : 'lose'}">${r.result}</p>
-          <button type="button" id="close-res">OK</button>`);
+          <button type="button" id="ar-close-res">OK</button>`);
         $('close-res').addEventListener('click', hide);
         if (r.won && window.celebrate) {
           celebrate({
@@ -235,7 +331,7 @@
     const have = balanceOf(stakeType);
     $('balance').textContent = `Du har ${have} ${LABEL[stakeType]}. Vinneren tar ${stake * 2}.`;
     $('go').disabled = have < stake;
-    document.querySelectorAll('#stake-type .sg').forEach((b) => b.classList.toggle('active', b.dataset.type === stakeType));
+    document.querySelectorAll('#ar-stake-type .sg').forEach((b) => b.classList.toggle('active', b.dataset.type === stakeType));
   }
 
   function render() {
@@ -255,11 +351,11 @@
     renderStake();
   }
 
-  document.querySelectorAll('#game-pick .ag').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#ar-game-pick .ag').forEach((b) => b.addEventListener('click', () => {
     game = b.dataset.game;
-    document.querySelectorAll('#game-pick .ag').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('#ar-game-pick .ag').forEach((x) => x.classList.toggle('active', x === b));
   }));
-  document.querySelectorAll('#stake-type .sg').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#ar-stake-type .sg').forEach((b) => b.addEventListener('click', () => {
     stakeType = b.dataset.type;
     renderStake();
   }));
@@ -274,10 +370,29 @@
     renderStake();
   });
 
+  // Knappene øverst på PvP-siden velger spillet (terning, reaksjon, hoderegning)
+  const INFO = {
+    dice: ['🎲 Terningduell', 'Begge kaster to terninger. Høyest sum vinner potten. Ren flaks, ren spenning.'],
+    reaction: ['⚡ Reaksjon', 'Trykk så fort du kan når feltet blir grønt. 3 runder, laveste snitt vinner. Tjuvstart gir straff.'],
+    math: ['🧠 Hoderegning', '6 regnestykker. Flest riktige vinner, og ved likt vinner den raskeste.'],
+  };
+  window.arenaSetGame = (g) => {
+    if (!INFO[g]) return;
+    game = g;
+    $('title').textContent = INFO[g][0];
+    $('rules').textContent = INFO[g][1];
+    $('go').textContent = { dice: '🎲 Kast og utfordre', reaction: '⚡ Start og utfordre', math: '🧠 Start og utfordre' }[g];
+    document.querySelectorAll('#ar-game-pick .ag').forEach((x) => x.classList.toggle('active', x.dataset.game === g));
+  };
+  window.arenaData = () => data;
+  // PvP-siden kan ha valgt fane før arena.js var lastet
+  if (['dice', 'reaction', 'math'].includes(document.body.dataset.tab)) window.arenaSetGame(document.body.dataset.tab);
+
   async function load() {
     try {
       data = await api('/api/arena');
       render();
+      if (window.onArenaData) window.onArenaData(data);
     } catch (err) {
       msg(err.message, 'lose');
     }

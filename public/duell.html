@@ -3,74 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Duell – Lønningspils</title>
-  <link rel="stylesheet" href="/style.css">
+  <title>PvP – Lønningspils</title>
+  <!-- Flyttet: alle PvP-spillene ligger nå på /pvp.html -->
+  <script>location.replace('/pvp.html' + location.search + '#duell');</script>
 </head>
-<body class="minimal">
-  <header class="hero">
-    <h1>⚔️ Duell</h1>
-    <p class="sub">Stein, saks, papir om spinn · <a href="/pvp.html">← PvP</a></p>
-  </header>
-
-  <main>
-    <section id="not-joined" class="card hidden">
-      <p>Du må <a href="/">hente lodd</a> før du kan duellere.</p>
-    </section>
-
-    <div id="duel-app" class="hidden">
-      <section class="card">
-        <p class="center big-number">Du har <strong id="my-spins">0</strong> spinn</p>
-        <p id="msg" class="result"></p>
-      </section>
-
-      <section id="incoming-section" class="card hidden highlight">
-        <h2>🔔 Du er utfordret!</h2>
-        <div id="incoming"></div>
-      </section>
-
-      <section class="card">
-        <h2>Utfordre noen</h2>
-        <label class="field">Motstander
-          <select id="opponent"></select>
-        </label>
-        <label class="field">Innsats (spinn)
-          <div class="stepper">
-            <button type="button" class="secondary" id="stake-minus">−</button>
-            <span id="stake">1</span>
-            <button type="button" class="secondary" id="stake-plus">+</button>
-          </div>
-        </label>
-        <p class="field-label">Ditt hemmelige trekk</p>
-        <div class="moves" id="challenge-moves"></div>
-        <p class="note">Vinneren tar hele potten. Blir det uavgjort, får du innsatsen tilbake.</p>
-      </section>
-
-      <section id="outgoing-section" class="card hidden">
-        <h2>Venter på svar</h2>
-        <div id="outgoing"></div>
-      </section>
-
-      <section class="card">
-        <h2>Dine dueller</h2>
-        <ul id="history" class="duel-list"></ul>
-      </section>
-    </div>
-
-    <section class="card">
-      <h2>📣 Siste dueller</h2>
-      <ul id="feed" class="duel-list"></ul>
-    </section>
-  </main>
-
-  <script src="/media.js"></script>
-  <script src="/sfx.js"></script>
-  <script src="/beerwins.js"></script>
-  <script src="/guide.js"></script>
-  <script src="/duell.js"></script>
-  <script src="/presence.js"></script>
-  <script src="/nav.js"></script>
-  <script src="/chatbox.js"></script>
-  <script src="/notify.js"></script>
-  <script src="/admin-bubble.js"></script>
-</body>
+<body><p><a href="/pvp.html#duell">Gå til PvP ›</a></p></body>
 </html>

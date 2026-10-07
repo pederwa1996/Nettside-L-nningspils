@@ -1687,7 +1687,7 @@ const routes = {
       at: Date.now(),
     };
     state.arena.push(a);
-    notify(opponent.name, ARENA_GAMES[game].icon, `${p.name} utfordret deg til ${ARENA_GAMES[game].name.toLowerCase()} om ${stakeWord(type, stake)}!`, { url: '/arena.html', from: p.name });
+    notify(opponent.name, ARENA_GAMES[game].icon, `${p.name} utfordret deg til ${ARENA_GAMES[game].name.toLowerCase()} om ${stakeWord(type, stake)}!`, { url: `/pvp.html#${{ dice: 'terninger', reaction: 'reaksjon', math: 'hoderegning' }[a ? a.game : game]}`, from: p.name });
     saveState();
     broadcast('arena', { to: opponent.name });
     sendJson(res, 200, { challenge: arenaView(a, p), me: meView(p) });
@@ -1703,7 +1703,7 @@ const routes = {
     if (body.decline) {
       a.status = 'declined';
       if (challenger) moveStake(challenger, a.stakeType, a.stake);
-      notify(a.challenger, '🙅', `${p.name} takket nei til ${ARENA_GAMES[a.game].name.toLowerCase()}. Du fikk ${word} tilbake.`, { url: '/arena.html', from: p.name });
+      notify(a.challenger, '🙅', `${p.name} takket nei til ${ARENA_GAMES[a.game].name.toLowerCase()}. Du fikk ${word} tilbake.`, { url: `/pvp.html#${{ dice: 'terninger', reaction: 'reaksjon', math: 'hoderegning' }[a ? a.game : game]}`, from: p.name });
       saveState();
       broadcast('arena', { to: a.challenger });
       return sendJson(res, 200, { me: meView(p) });
@@ -1732,7 +1732,7 @@ const routes = {
       if (a.stakeType === 'beer') announceBeer(a.winner, `🍺 ${a.winner} vant ${a.stake} pils fra ${loser} i ${g.name.toLowerCase()}!`);
     }
     const resultFor = (name) => (a.winner === null ? `Uavgjort! Innsatsen er betalt tilbake.` : a.winner === name ? `Du vant ${word}! 🎉` : `Du tapte ${word}.`);
-    notify(a.challenger, g.icon, `${p.name} svarte på ${g.name.toLowerCase()}: ${a.cDetail} mot ${a.oDetail}. ${resultFor(a.challenger)}`, { url: '/arena.html', from: p.name });
+    notify(a.challenger, g.icon, `${p.name} svarte på ${g.name.toLowerCase()}: ${a.cDetail} mot ${a.oDetail}. ${resultFor(a.challenger)}`, { url: `/pvp.html#${{ dice: 'terninger', reaction: 'reaksjon', math: 'hoderegning' }[a ? a.game : game]}`, from: p.name });
     saveState();
     broadcast('arena', { to: a.challenger });
     sendJson(res, 200, { challenge: arenaView(a, p), result: resultFor(p.name), won: a.winner === p.name, tie: a.winner === null, me: meView(p) });
@@ -1774,7 +1774,7 @@ const routes = {
       createdAt: new Date().toISOString(),
     };
     state.duels.push(duel);
-    notify(opponent.name, '⚔️', `${p.name} utfordret deg til stein, saks, papir om ${stake} spinn!`, { url: '/duell.html', from: p.name });
+    notify(opponent.name, '⚔️', `${p.name} utfordret deg til stein, saks, papir om ${stake} spinn!`, { url: '/pvp.html#duell', from: p.name });
     saveState();
     sendJson(res, 200, { duel: duelView(duel, p), me: meView(p) });
   },
@@ -1790,7 +1790,7 @@ const routes = {
       d.status = 'declined';
       d.finishedAt = new Date().toISOString();
       if (challenger) addSpins(challenger, d.stake);
-      notify(d.challenger, '🙅', `${p.name} takket nei til duellen. Du fikk ${d.stake} spinn tilbake.`, { url: '/duell.html', from: p.name });
+      notify(d.challenger, '🙅', `${p.name} takket nei til duellen. Du fikk ${d.stake} spinn tilbake.`, { url: '/pvp.html#duell', from: p.name });
       saveState();
       return sendJson(res, 200, { duel: duelView(d, p), me: meView(p) });
     }
@@ -1823,7 +1823,7 @@ const routes = {
         : `${mine} tapte mot ${theirs}: ${other} vant ${d.stake} spinn`;
     };
     addActivity(d.challenger, '⚔️', duelText(d.challenger));
-    notify(d.challenger, '⚔️', `${p.name} svarte på duellen: ${duelText(d.challenger)}`, { url: '/duell.html', from: p.name });
+    notify(d.challenger, '⚔️', `${p.name} svarte på duellen: ${duelText(d.challenger)}`, { url: '/pvp.html#duell', from: p.name });
     addActivity(d.opponent, '⚔️', duelText(d.opponent));
     saveState();
     sendJson(res, 200, { duel: duelView(d, p), me: meView(p) });
@@ -1984,7 +1984,7 @@ const routes = {
       at: Date.now(),
     };
     state.moggs.push(m);
-    notify(opponent.name, '🗿', `${p.name} utfordret deg til mogg-off!`, { url: '/mogg.html', from: p.name });
+    notify(opponent.name, '🗿', `${p.name} utfordret deg til mogg-off!`, { url: '/pvp.html#mogg', from: p.name });
     recordMoggBest(p.name, url, score);
     saveState();
     sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
@@ -2000,7 +2000,7 @@ const routes = {
     if (body.decline) {
       m.status = 'declined';
       if (challenger) addSpins(challenger, 1);
-      notify(m.challenger, '🙅', `${p.name} takket nei til mogg-off. Du fikk spinnet tilbake.`, { url: '/mogg.html', from: p.name });
+      notify(m.challenger, '🙅', `${p.name} takket nei til mogg-off. Du fikk spinnet tilbake.`, { url: '/pvp.html#mogg', from: p.name });
       saveState();
       return sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
     }
@@ -2026,7 +2026,7 @@ const routes = {
     }
     recordMoggBest(p.name, m.opponentUrl, score);
     addActivity(m.challenger, '🗿', moggText(m, m.challenger), { url: m.challengerUrl });
-    notify(m.challenger, '🗿', `${p.name} svarte på mogg-off: ${m.winner ? 'du ' : ''}${moggText(m, m.challenger)}`, { url: '/mogg.html', from: p.name });
+    notify(m.challenger, '🗿', `${p.name} svarte på mogg-off: ${m.winner ? 'du ' : ''}${moggText(m, m.challenger)}`, { url: '/pvp.html#mogg', from: p.name });
     addActivity(m.opponent, '🗿', moggText(m, m.opponent), { url: m.opponentUrl });
     saveState();
     sendJson(res, 200, { mogg: moggView(m, p), me: meView(p) });
