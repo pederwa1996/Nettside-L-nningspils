@@ -39,9 +39,12 @@
 
   function renderTask(t) {
     const me = data.me;
-    const card = el('section', `card task task-${t.status}`);
+    const card = el('section', `card task task-${t.status}${t.beer ? ' task-beer' : ''}`);
     const head = el('div', 'task-head');
-    head.append(el('h3', 'task-title', t.title), el('span', 'task-reward', `🎰 ${spinsWord(t.reward)} + 💰 ${t.cash} cash`));
+    head.append(el('h3', 'task-title', t.title), t.beer
+      ? el('span', 'task-reward beer', '🍺 1 PILS')
+      : el('span', 'task-reward', `🎰 ${spinsWord(t.reward)} + 💰 ${t.cash} cash`));
+    if (t.beer) card.append(el('span', 'task-hard', '🔥 Skikkelig vanskelig'));
     card.append(head, el('p', 'task-desc', t.desc));
     card.append(el('p', 'note', t.proof === 'photo' ? '📸 Bevis: bilde' : '✍️ Bevis: skriv hva du gjorde (bilde valgfritt)'));
 
@@ -51,7 +54,7 @@
 
     if (t.status === 'done') {
       const mine = me && t.completedBy === me.name;
-      card.append(el('p', 'task-status done', mine ? `✅ Du løste denne og fikk ${spinsWord(t.reward)} og ${t.cash} cash!` : `✅ Løst av ${t.completedBy}`));
+      card.append(el('p', 'task-status done', mine ? (t.beer ? '✅ Du klarte den og vant en pils! Løs den inn i baren 🍻' : `✅ Du løste denne og fikk ${spinsWord(t.reward)} og ${t.cash} cash!`) : `✅ Løst av ${t.completedBy}`));
       return card;
     }
     if (t.status === 'pending') {
@@ -140,7 +143,8 @@
     if (me) $('my-spins').textContent = me.spinsLeft;
     const list = $('tasks');
     list.innerHTML = '';
-    const tasks = data.tasks.slice().sort((a, b) => sortKey(a) - sortKey(b) || b.reward - a.reward);
+    // Ledige pils-oppgaver først, så etter belønning
+    const tasks = data.tasks.slice().sort((a, b) => sortKey(a) - sortKey(b) || (b.beer || 0) - (a.beer || 0) || b.reward - a.reward);
     if (!tasks.length) list.append(el('p', 'muted center', 'Ingen oppgaver ennå.'));
     tasks.forEach((t) => list.appendChild(renderTask(t)));
   }

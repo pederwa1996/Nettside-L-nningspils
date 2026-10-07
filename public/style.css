@@ -2032,3 +2032,9 @@ body.inv-open #profile > section:not(.profile-card):not(#inventory) { display: n
 .gb-text { overflow-wrap: anywhere; line-height: 1.35; }
 .gb-body small { font-size: 0.7rem; }
 .gb-del { flex: none; width: 28px; height: 28px; padding: 0 !important; border-radius: 50% !important; background: rgba(255, 255, 255, 0.08) !important; color: inherit !important; border: 0 !important; box-shadow: none !important; font-size: 0.8rem; }
+
+/* 🍺 Skikkelig vanskelige oppgaver som gir pils */
+.task.task-beer { border: 2px solid #ffd34d !important; box-shadow: 0 0 22px rgba(255, 211, 77, 0.3); background: linear-gradient(160deg, rgba(255, 211, 77, 0.16), rgba(0, 0, 0, 0)) , var(--card); }
+.task-reward.beer { background: linear-gradient(90deg, #fff3c4, #ffd34d, #fff3c4) !important; background-size: 200% auto !important; animation: cel-shine 1.8s linear infinite; color: #2a1500 !important; font-weight: 900; }
+.task-hard { display: inline-block; margin: 2px 0 4px; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase; color: #ff8a3d; }
+.check-row { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }

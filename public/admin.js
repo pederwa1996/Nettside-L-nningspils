@@ -106,10 +106,10 @@ async function load() {
     const box = document.createElement('div');
     box.className = 'review-box';
     const h = document.createElement('p');
-    h.innerHTML = '<strong></strong> leverte <strong></strong> (🎰 <span></span> spinn)';
+    h.innerHTML = '<strong></strong> leverte <strong></strong> (<span></span>)';
     h.querySelectorAll('strong')[0].textContent = a.name;
     h.querySelectorAll('strong')[1].textContent = t.title;
-    h.querySelector('span').textContent = t.reward;
+    h.querySelector('span').textContent = t.beer ? '🍺 1 pils' : `🎰 ${t.reward} spinn`;
     box.appendChild(h);
     if (a.url) {
       const img = document.createElement('img');
@@ -151,7 +151,7 @@ async function load() {
     const span = document.createElement('span');
     const last = t.attempts[t.attempts.length - 1];
     const status = t.status === 'done' ? `✅ ${last.name}` : t.status === 'pending' ? `⏳ ${last.name}` : '🟢 ledig';
-    span.textContent = `${t.title} · 🎰 ${t.reward} · ${status}`;
+    span.textContent = `${t.title} · ${t.beer ? '🍺 1 pils' : `🎰 ${t.reward}`} · ${status}`;
     const del = document.createElement('button');
     del.className = 'secondary small-btn';
     del.textContent = 'Slett';
@@ -298,6 +298,7 @@ $('new-task-btn').addEventListener('click', async () => {
       desc: $('new-task-desc').value,
       reward: Number($('new-task-reward').value),
       proof: $('new-task-proof').value,
+      beer: $('new-task-beer').checked ? 1 : 0,
     });
     $('new-task-title').value = '';
     $('new-task-desc').value = '';

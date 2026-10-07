@@ -225,7 +225,7 @@
     title.textContent = `${t.name}: ${t.title}`;
     const meta = document.createElement('span');
     meta.className = 'muted';
-    meta.textContent = `🎰 ${t.reward} spinn + 💰 ${t.cash} cash · ${ago(t.at)}`;
+    meta.textContent = `${t.beer ? '🍺 1 PILS (vanskelig, koster budsjett)' : `🎰 ${t.reward} spinn + 💰 ${t.cash} cash`} · ${ago(t.at)}`;
     info.append(title, meta);
     head.append(avatar(t.avatar, t.name), info);
     box.appendChild(head);

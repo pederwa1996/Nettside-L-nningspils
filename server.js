@@ -66,12 +66,15 @@ function taskCash(t) {
   return t.reward * TASK_CASH_PER_SPIN;
 }
 
-function newTask({ title, desc, reward, proof }) {
+function newTask({ title, desc, reward, proof, beer }) {
+  const givesBeer = Number(beer) > 0;
   return {
     id: crypto.randomBytes(6).toString('hex'),
     title: String(title).slice(0, 80),
     desc: String(desc || '').slice(0, 400),
-    reward: Math.max(1, Math.min(10, Math.round(Number(reward) || 1))),
+    // Pils-oppgaver gir én pils til gode i stedet for spinn
+    beer: givesBeer ? 1 : 0,
+    reward: givesBeer ? 0 : Math.max(1, Math.min(10, Math.round(Number(reward) || 1))),
     proof: proof === 'text' ? 'text' : 'photo',
     status: 'open', // open | pending | done
     attempts: [], // { name, status: pending|approved|rejected, text, url, reason, at }
@@ -96,6 +99,14 @@ function normalizeState(s) {
     removedTasks++;
     return false;
   });
+  // Nye standardoppgaver legges til i eksisterende data (én gang, så slettede ikke kommer tilbake)
+  const added = new Set(out.defaultTasksAdded || [...out.tasks.map((t) => t.title), ...DEFAULT_TASKS.slice(0, 5).map((t) => t.title)]);
+  DEFAULT_TASKS.forEach((t) => {
+    if (added.has(t.title)) return;
+    if (!out.tasks.some((x) => x.title === t.title)) out.tasks.push(newTask(t));
+    added.add(t.title);
+  });
+  out.defaultTasksAdded = [...added];
   out.participants.forEach((p) => {
     if (p.flus === undefined) p.flus = START_FLUS;
   });
@@ -496,6 +507,7 @@ function beersWon(p) {
     wheel: wheelWins(p),
     tickets: p.tickets.filter((t) => winning.has(t)).length,
     slot: p.slotBeers || 0,
+    task: p.taskBeers || 0,
   };
 }
 
@@ -505,7 +517,7 @@ function beersOwed(p) {
   const used = state.orders
     .filter((o) => o.name === p.name && o.pay === 'credit' && o.status !== 'cancelled')
     .reduce((sum, o) => sum + o.qty, 0);
-  return Math.max(0, w.wheel + w.tickets + w.slot - used);
+  return Math.max(0, w.wheel + w.tickets + w.slot + w.task - used);
 }
 
 // Budsjett: brukt = leverte pils (kroner lagres på bestillingen når den leveres).
@@ -658,7 +670,7 @@ function currentAttempt(t) {
 // Offentlig visning: bevis (bilde/tekst) vises bare for den som leverte
 function taskView(t, viewer) {
   const cur = currentAttempt(t);
-  const v = { id: t.id, title: t.title, desc: t.desc, reward: t.reward, cash: taskCash(t), proof: t.proof, status: t.status };
+  const v = { id: t.id, title: t.title, desc: t.desc, reward: t.reward, cash: taskCash(t), beer: t.beer || 0, proof: t.proof, status: t.status };
   if (t.status === 'pending') v.claimedBy = cur.name;
   if (t.status === 'done') v.completedBy = cur.name;
   if (viewer) {
@@ -818,7 +830,7 @@ function profileStats(p) {
     return { won, lost };
   };
   return {
-    beersWon: w.wheel + w.tickets + w.slot,
+    beersWon: w.wheel + w.tickets + w.slot + w.task,
     beersOwed: beersOwed(p),
     spinsLeft: spinsLeft(p),
     flus: p.flus || 0,
@@ -869,10 +881,11 @@ function standings() {
       const w = beersWon(p);
       return {
         name: p.name,
-        beers: w.wheel + w.tickets + w.slot,
+        beers: w.wheel + w.tickets + w.slot + w.task,
         wheelBeers: w.wheel,
         ticketBeers: w.tickets,
         slotBeers: w.slot,
+        taskBeers: w.task,
         spinsLeft: spinsLeft(p),
         flus: p.flus || 0,
       };
@@ -1641,12 +1654,19 @@ const routes = {
       cur.status = 'approved';
       t.status = 'done';
       const p = findParticipant(cur.name);
-      if (p) {
-        addSpins(p, t.reward);
-        addFlus(p, taskCash(t));
+      if (t.beer) {
+        if (p) p.taskBeers = (p.taskBeers || 0) + t.beer;
+        addActivity(cur.name, '🍺', `klarte den vanskelige oppgaven «${t.title}» og vant en pils! 🍺`, { url: cur.url });
+        notify(cur.name, '🍺', `Spillmesteren godkjente «${t.title}»! Du vant en pils til gode. Løs den inn i baren 🍻`, { url: '/kasino.html#baren' });
+        announceBeer(cur.name, `🍺 ${cur.name} vant en pils på oppgaven «${t.title}»!`);
+      } else {
+        if (p) {
+          addSpins(p, t.reward);
+          addFlus(p, taskCash(t));
+        }
+        addActivity(cur.name, '🎯', `fullførte «${t.title}» og fikk ${t.reward} spinn og ${taskCash(t)} cash`, { url: cur.url });
+        notify(cur.name, '✅', `Spillmesteren godkjente «${t.title}»! Du fikk ${t.reward} spinn 🎰 og ${taskCash(t)} cash 💰`, { url: '/oppgaver.html' });
       }
-      addActivity(cur.name, '🎯', `fullførte «${t.title}» og fikk ${t.reward} spinn og ${taskCash(t)} cash`, { url: cur.url });
-      notify(cur.name, '✅', `Spillmesteren godkjente «${t.title}»! Du fikk ${t.reward} spinn 🎰 og ${taskCash(t)} cash 💰`, { url: '/oppgaver.html' });
     } else {
       // Avvist: oppgaven blir åpen for alle igjen
       cur.status = 'rejected';
@@ -1669,7 +1689,7 @@ const routes = {
       .map((t) => {
         const a = currentAttempt(t);
         const p = findParticipant(a.name);
-        return { id: t.id, title: t.title, reward: t.reward, cash: taskCash(t), name: a.name, avatar: (p && p.avatar) || null, text: a.text, url: a.url, at: a.at };
+        return { id: t.id, title: t.title, reward: t.reward, cash: taskCash(t), beer: t.beer || 0, name: a.name, avatar: (p && p.avatar) || null, text: a.text, url: a.url, at: a.at };
       })
       .sort((a, b) => a.at - b.at);
     sendJson(res, 200, { pending });

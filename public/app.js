@@ -114,7 +114,7 @@ function renderStandings(list, me) {
     const beers = document.createElement('td');
     beers.className = 'num beers';
     beers.textContent = e.beers;
-    beers.title = `${e.wheelBeers} fra lykkehjulet, ${e.ticketBeers} fra loddtrekningen, ${e.slotBeers} fra automaten`;
+    beers.title = `${e.wheelBeers} fra lykkehjulet, ${e.ticketBeers} fra loddtrekningen, ${e.slotBeers} fra automaten, ${e.taskBeers || 0} fra oppgaver`;
     const spins = document.createElement('td');
     spins.className = 'num';
     spins.textContent = e.spinsLeft;
