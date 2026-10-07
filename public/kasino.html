@@ -26,7 +26,7 @@
     <div id="casino" class="hidden">
       <section class="card wallet">
         <div class="wallet-item"><span class="wallet-num" id="my-spins">0</span><span class="wallet-label">🎡 spinn</span></div>
-        <div class="wallet-item"><span class="wallet-num" id="my-flus">0</span><span class="wallet-label">💰 flus</span></div>
+        <div class="wallet-item"><span class="wallet-num" id="my-flus">0</span><span class="wallet-label">💰 cash</span></div>
         <button type="button" class="wallet-item wallet-link" id="wallet-beers" title="Gå til baren"><span class="wallet-num" id="my-beers">0</span><span class="wallet-label">🍺 til gode ›</span></button>
       </section>
 
@@ -39,9 +39,9 @@
         <button type="button" class="tab" data-tab="bar">🍻 Baren</button>
       </div>
 
-      <!-- Innsats i flus (roulette og blackjack) -->
+      <!-- Innsats i cash (roulette og blackjack) -->
       <section id="bet-card" class="card hidden">
-        <p class="field-label">Innsats: <strong id="bet">10</strong> flus</p>
+        <p class="field-label">Innsats: <strong id="bet">10</strong> cash</p>
         <div class="step-chips" id="bet-chips"></div>
       </section>
 
@@ -56,7 +56,7 @@
         <p id="spin-result" class="result"></p>
         <div class="spin-buttons">
           <button id="spin-btn" class="big">Spinn! 🎡</button>
-          <button id="spin-flus-btn" class="big secondary">Spinn for <span class="spin-price">50</span> flus 💰</button>
+          <button id="spin-flus-btn" class="big secondary">Spinn for <span class="spin-price">50</span> cash 💰</button>
         </div>
         <p id="spin-total" class="note center"></p>
       </section>
@@ -74,7 +74,7 @@
         <p id="slot-result" class="result"></p>
         <div class="spin-buttons">
           <button id="slot-pull" class="big">Trekk i spaken (1 spinn) 🎰</button>
-          <button id="slot-pull-flus" class="big secondary">Trekk for <span class="spin-price">50</span> flus 💰</button>
+          <button id="slot-pull-flus" class="big secondary">Trekk for <span class="spin-price">50</span> cash 💰</button>
         </div>
         <details class="tips">
           <summary>Gevinster</summary>
@@ -146,16 +146,16 @@
           </div>
         </div>
         <div id="pk-buyin" class="pk-buyin hidden">
-          <p>Sett deg på plass <strong id="pk-buyin-seat">1</strong>. Hvor mye flus vil du ta med til bordet?</p>
+          <p>Sett deg på plass <strong id="pk-buyin-seat">1</strong>. Hvor mye cash vil du ta med til bordet?</p>
           <input type="range" id="pk-buyin-range" step="10">
           <div class="pk-buttons">
             <button type="button" class="secondary" id="pk-buyin-cancel">Avbryt</button>
-            <button type="button" id="pk-buyin-ok">Sett deg med <span id="pk-buyin-amount">200</span> flus</button>
+            <button type="button" id="pk-buyin-ok">Sett deg med <span id="pk-buyin-amount">200</span> cash</button>
           </div>
         </div>
         <p id="pk-msg" class="result"></p>
         <p id="pk-info" class="note center"></p>
-        <button type="button" id="pk-leave" class="secondary small-btn hidden">Reis deg fra bordet (sjetongene går tilbake til flus)</button>
+        <button type="button" id="pk-leave" class="secondary small-btn hidden">Reis deg fra bordet (sjetongene går tilbake til cash)</button>
       </section>
 
       <!-- Baren -->
@@ -190,7 +190,7 @@
           <div class="bar-buttons">
             <button id="order-credit" class="big">🍺 Bruk pils til gode</button>
           </div>
-          <p class="note">Pils vinner du på lykkehjulet, automaten og i loddtrekningen. De kan ikke kjøpes for flus.</p>
+          <p class="note">Pils vinner du på lykkehjulet, automaten og i loddtrekningen. De kan ikke kjøpes for cash.</p>
           <p id="msg" class="result"></p>
           <h3>Dine bestillinger</h3>
           <ul id="orders" class="order-list"></ul>
@@ -208,6 +208,7 @@
 
   <script src="/media.js"></script>
   <script src="/beerwins.js"></script>
+  <script src="/guide.js"></script>
   <script src="/kasino.js"></script>
   <script src="/baren.js"></script>
   <script src="/pokerbord.js"></script>

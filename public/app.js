@@ -392,7 +392,7 @@ function renderTaskPreview(list) {
     const li = el('li');
     const a = el('a', 'tp-task');
     a.href = '/oppgaver.html';
-    a.append(el('span', 'tp-title', t.title), el('span', 'tp-reward', `🎰 ${t.reward} spinn`));
+    a.append(el('span', 'tp-title', t.title), el('span', 'tp-reward', `🎰 ${t.reward} spinn + 💰 ${t.cash}`));
     li.appendChild(a);
     ul.appendChild(li);
   });

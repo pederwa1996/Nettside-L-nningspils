@@ -14,7 +14,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'pils123';
 const TOTAL_TICKETS = Number(process.env.TOTAL_TICKETS) || 100;
 const TICKETS_PER_PERSON = Number(process.env.TICKETS_PER_PERSON) || 5;
 const WINNING_TICKETS = Number(process.env.WINNING_TICKETS) || 10;
-const SPINS_PER_PERSON = Number(process.env.SPINS_PER_PERSON) || 3;
+const SPINS_PER_PERSON = Number(process.env.SPINS_PER_PERSON) || 10;
 // "all" = trekk blant alle lodd (også de som ikke er delt ut), "assigned" = kun utdelte lodd
 const DRAW_FROM = process.env.DRAW_FROM === 'assigned' ? 'assigned' : 'all';
 const SPIN_WIN_CHANCE = process.env.SPIN_WIN_CHANCE !== undefined ? Number(process.env.SPIN_WIN_CHANCE) : 0.15;
@@ -32,7 +32,7 @@ const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_STORIES_PER_PERSON = 20;
 const CHAT_HISTORY = 300;
 // Kasinoet bruker flus (penger). Alle starter med START_FLUS.
-const START_FLUS = process.env.START_FLUS !== undefined ? Number(process.env.START_FLUS) : 100;
+const START_FLUS = process.env.START_FLUS !== undefined ? Number(process.env.START_FLUS) : 500; // «cash» i appen
 const CASINO_MIN_BET = 10;
 const CASINO_MAX_BET = Number(process.env.CASINO_MAX_BET) || 200;
 // Pris i flus for ett spinn på lykkehjulet eller automaten. Holdes over det et spinn er verdt
@@ -46,7 +46,7 @@ const MAX_PENDING_ORDERS = 3;
 
 // ---- Lagring ----
 function freshState() {
-  return { participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, poker: freshPoker() };
+  return { startFlusGiven: START_FLUS, participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, poker: freshPoker() };
 }
 
 function freshPoker() {
@@ -55,6 +55,12 @@ function freshPoker() {
 
 function defaultTasks() {
   return DEFAULT_TASKS.map((t) => newTask(t));
+}
+
+// Oppgaver gir litt cash i tillegg til spinnene: TASK_CASH_PER_SPIN per spinn i belønning
+const TASK_CASH_PER_SPIN = Number(process.env.TASK_CASH_PER_SPIN) || 30;
+function taskCash(t) {
+  return t.reward * TASK_CASH_PER_SPIN;
 }
 
 function newTask({ title, desc, reward, proof }) {
@@ -90,6 +96,11 @@ function normalizeState(s) {
   out.participants.forEach((p) => {
     if (p.flus === undefined) p.flus = START_FLUS;
   });
+  // Økes startbeløpet, får de som allerede er med mellomlegget (én gang). Spinn regnes ut
+  // fra SPINS_PER_PERSON, så de gjelder automatisk for alle.
+  const given = (s && s.startFlusGiven) ?? 100; // lagret før dette fantes = 100
+  if (START_FLUS > given) out.participants.forEach((p) => (p.flus = (p.flus || 0) + START_FLUS - given));
+  out.startFlusGiven = Math.max(given, START_FLUS);
   out.casinoLog = out.casinoLog.filter((e) => e.won !== undefined); // gamle oppføringer hadde annet format
   if (!s.activity) out.activity = backfillActivity(out);
   // Blackjack-hender fra før kasinoet gikk over til flus ble spilt med spinn: gi innsatsen tilbake
@@ -418,9 +429,9 @@ function addFlus(p, n) {
 
 function parseBet(p, amount) {
   const bet = Math.floor(Number(amount));
-  if (!Number.isFinite(bet) || bet < CASINO_MIN_BET) throw new Error(`Minste innsats er ${CASINO_MIN_BET} flus.`);
-  if (bet > CASINO_MAX_BET) throw new Error(`Maks innsats er ${CASINO_MAX_BET} flus.`);
-  if (bet > (p.flus || 0)) throw new Error(`Du har bare ${p.flus || 0} flus.`);
+  if (!Number.isFinite(bet) || bet < CASINO_MIN_BET) throw new Error(`Minste innsats er ${CASINO_MIN_BET} cash.`);
+  if (bet > CASINO_MAX_BET) throw new Error(`Maks innsats er ${CASINO_MAX_BET} cash.`);
+  if (bet > (p.flus || 0)) throw new Error(`Du har bare ${p.flus || 0} cash.`);
   return bet;
 }
 
@@ -462,11 +473,11 @@ function wheelWins(p) {
 // Betal for ett trekk med spinn eller flus. Kaster feil hvis man ikke har nok.
 function payForSpin(p, pay, { wheel = false } = {}) {
   if (pay === 'flus') {
-    if ((p.flus || 0) < SPIN_PRICE) throw new Error(`Det koster ${SPIN_PRICE} flus, men du har bare ${p.flus || 0}.`);
+    if ((p.flus || 0) < SPIN_PRICE) throw new Error(`Det koster ${SPIN_PRICE} cash, men du har bare ${p.flus || 0}.`);
     addFlus(p, -SPIN_PRICE);
     return;
   }
-  if (spinsLeft(p) < 1) throw new Error(`Du har ingen spinn igjen. Betal med flus (${SPIN_PRICE} per spinn), eller tjen flere med oppgaver, Flappy Sjef eller dueller!`);
+  if (spinsLeft(p) < 1) throw new Error(`Du har ingen spinn igjen. Betal med cash (${SPIN_PRICE} per spinn), eller tjen flere med oppgaver, Flappy Sjef eller dueller!`);
   if (!wheel) addSpins(p, -1); // lykkehjulet teller brukte spinn selv i p.spins
 }
 
@@ -508,7 +519,7 @@ function logCasino(p, game, { won = 0, beer = 0, net = 0, detail = '' }) {
     addActivity(p.name, '🎰', `fikk 🍺🍺🍺 på automaten og vant en pils!`);
     announceBeer(p.name, `🍺 ${p.name} vant en pils på automaten!`, 3500);
   }
-  else if (won >= 100) addActivity(p.name, '🎰', `vant ${won} flus på ${GAME_NAMES[game]}`);
+  else if (won >= 100) addActivity(p.name, '🎰', `vant ${won} cash på ${GAME_NAMES[game]}`);
 }
 
 // Grønn tekst øverst til høyre for alle når noen vinner en pils. Venter til
@@ -615,7 +626,7 @@ function currentAttempt(t) {
 // Offentlig visning: bevis (bilde/tekst) vises bare for den som leverte
 function taskView(t, viewer) {
   const cur = currentAttempt(t);
-  const v = { id: t.id, title: t.title, desc: t.desc, reward: t.reward, proof: t.proof, status: t.status };
+  const v = { id: t.id, title: t.title, desc: t.desc, reward: t.reward, cash: taskCash(t), proof: t.proof, status: t.status };
   if (t.status === 'pending') v.claimedBy = cur.name;
   if (t.status === 'done') v.completedBy = cur.name;
   if (viewer) {
@@ -876,6 +887,8 @@ function settings() {
     spinWinChance: SPIN_WIN_CHANCE,
     gameFirstMilestone: GAME_FIRST_MILESTONE,
     spinPrice: SPIN_PRICE,
+    startCash: START_FLUS,
+    taskCashPerSpin: TASK_CASH_PER_SPIN,
   };
 }
 
@@ -1007,7 +1020,7 @@ const routes = {
       incomingMoggs: me ? state.moggs.filter((m) => m.status === 'pending' && m.opponent === me.name).length : 0,
       // Til veggen på forsiden
       chatPreview: me ? state.chat.slice(-3).map(chatView) : [],
-      taskPreview: me ? state.tasks.filter((t) => t.status === 'open').sort((a, b) => b.reward - a.reward).slice(0, 3).map((t) => ({ id: t.id, title: t.title, reward: t.reward })) : [],
+      taskPreview: me ? state.tasks.filter((t) => t.status === 'open').sort((a, b) => b.reward - a.reward).slice(0, 3).map((t) => ({ id: t.id, title: t.title, reward: t.reward, cash: taskCash(t) })) : [],
     });
   },
 
@@ -1592,9 +1605,12 @@ const routes = {
       cur.status = 'approved';
       t.status = 'done';
       const p = findParticipant(cur.name);
-      if (p) addSpins(p, t.reward);
-      addActivity(cur.name, '🎯', `fullførte «${t.title}» og fikk ${t.reward} spinn`, { url: cur.url });
-      notify(cur.name, '✅', `Spillmesteren godkjente «${t.title}»! Du fikk ${t.reward} spinn 🎰`, { url: '/oppgaver.html' });
+      if (p) {
+        addSpins(p, t.reward);
+        addFlus(p, taskCash(t));
+      }
+      addActivity(cur.name, '🎯', `fullførte «${t.title}» og fikk ${t.reward} spinn og ${taskCash(t)} cash`, { url: cur.url });
+      notify(cur.name, '✅', `Spillmesteren godkjente «${t.title}»! Du fikk ${t.reward} spinn 🎰 og ${taskCash(t)} cash 💰`, { url: '/oppgaver.html' });
     } else {
       // Avvist: oppgaven blir åpen for alle igjen
       cur.status = 'rejected';
@@ -1617,7 +1633,7 @@ const routes = {
       .map((t) => {
         const a = currentAttempt(t);
         const p = findParticipant(a.name);
-        return { id: t.id, title: t.title, reward: t.reward, name: a.name, avatar: (p && p.avatar) || null, text: a.text, url: a.url, at: a.at };
+        return { id: t.id, title: t.title, reward: t.reward, cash: taskCash(t), name: a.name, avatar: (p && p.avatar) || null, text: a.text, url: a.url, at: a.at };
       })
       .sort((a, b) => a.at - b.at);
     sendJson(res, 200, { pending });
@@ -1738,7 +1754,7 @@ const routes = {
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
     const h = activeHand(p);
     if (h.player.length !== 2 || h.doubled) return sendJson(res, 400, { error: 'Du kan bare doble på de to første kortene.' });
-    if ((p.flus || 0) < h.bet) return sendJson(res, 400, { error: `Du trenger ${h.bet} flus til for å doble.` });
+    if ((p.flus || 0) < h.bet) return sendJson(res, 400, { error: `Du trenger ${h.bet} cash til for å doble.` });
     addFlus(p, -h.bet);
     h.bet *= 2;
     h.doubled = true;
@@ -1826,7 +1842,7 @@ const routes = {
     const pending = state.orders.filter((o) => o.name === p.name && o.status === 'pending').length;
     if (pending >= MAX_PENDING_ORDERS) return sendJson(res, 400, { error: 'Du har allerede bestillinger som venter. Vent til spillmesteren har levert!' });
     // Pils kan bare tas ut som gevinst (til gode), ikke kjøpes for flus
-    if (body.pay === 'flus') return sendJson(res, 400, { error: 'Pils kan ikke kjøpes for flus. Vinn dem på lykkehjulet eller automaten!' });
+    if (body.pay === 'flus') return sendJson(res, 400, { error: 'Pils kan ikke kjøpes for cash. Vinn dem på lykkehjulet eller automaten!' });
     const pay = 'credit';
     const cost = 0;
     if (beersOwed(p) < qty) return sendJson(res, 400, { error: qty === 1 ? 'Du har ingen pils til gode.' : `Du har bare ${beersOwed(p)} pils til gode.` });
@@ -1880,7 +1896,7 @@ const routes = {
       o.status = 'cancelled';
       const p = findParticipant(o.name);
       if (p && o.pay === 'flus') addFlus(p, o.cost); // pengene tilbake
-      notify(o.name, '🚫', `Spillmesteren avbrøt bestillingen din${o.pay === 'flus' ? ` (${o.cost} flus er betalt tilbake)` : ' (pilsen er fortsatt til gode)'}`, { url: '/kasino.html#baren' });
+      notify(o.name, '🚫', `Spillmesteren avbrøt bestillingen din${o.pay === 'flus' ? ` (${o.cost} cash er betalt tilbake)` : ' (pilsen er fortsatt til gode)'}`, { url: '/kasino.html#baren' });
     } else return sendJson(res, 400, { error: 'Ukjent status.' });
     o.doneAt = Date.now();
     saveState();

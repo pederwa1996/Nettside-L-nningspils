@@ -74,7 +74,7 @@
       ['⚔️', wl(s.duels), 'dueller V–T'],
       ['🗿', wl(s.moggs), 'mogg-offs V–T'],
       ['🎯', s.tasksDone, 'oppgaver løst'],
-      ['🎲', (s.casinoNet > 0 ? '+' : '') + s.casinoNet, 'flus i kasino'],
+      ['🎲', (s.casinoNet > 0 ? '+' : '') + s.casinoNet, 'cash i kasino'],
       ['💬', s.chatMessages, 'chatmeldinger'],
     ];
     const grid = $('stats');

@@ -56,7 +56,7 @@
       const main = document.createElement('div');
       main.className = 'order-main';
       const title = document.createElement('strong');
-      title.textContent = `${o.qty} × 🍺 ${o.pay === 'flus' ? `(${o.cost} flus)` : '(til gode)'}`;
+      title.textContent = `${o.qty} × 🍺 ${o.pay === 'flus' ? `(${o.cost} cash)` : '(til gode)'}`;
       const meta = document.createElement('span');
       meta.className = 'muted';
       meta.textContent = `${timeOfDay(o.at)}${o.note ? ` · ${o.note}` : ''}`;

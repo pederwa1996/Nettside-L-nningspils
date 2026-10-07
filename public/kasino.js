@@ -19,7 +19,7 @@
     return json;
   }
 
-  const flusWord = (n) => `${Math.abs(n)} flus`;
+  const flusWord = (n) => `${Math.abs(n)} cash`;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   function setWallet(me) {
@@ -146,7 +146,7 @@
       const sym = o.id === 'cherry2' ? '🍒🍒 (to kirsebær)' : o.symbol.repeat(3);
       li.innerHTML = '<span class="pt-sym"></span><span class="pt-win"></span>';
       li.querySelector('.pt-sym').textContent = sym;
-      li.querySelector('.pt-win').textContent = o.beer ? '1 pils 🍺' : `${o.flus} flus`;
+      li.querySelector('.pt-win').textContent = o.beer ? '1 pils 🍺' : `${o.flus} cash`;
       ul.appendChild(li);
     });
   }

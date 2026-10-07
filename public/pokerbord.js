@@ -146,7 +146,7 @@
 
     // Info for tilskuere
     const free = t.seats.filter((s) => !s).length;
-    let info = `Blinds ${t.blinds.small}/${t.blinds.big} · Innkjøp ${t.minBuyIn}–${t.maxBuyIn} flus`;
+    let info = `Blinds ${t.blinds.small}/${t.blinds.big} · Innkjøp ${t.minBuyIn}–${t.maxBuyIn} cash`;
     if (t.mySeat < 0) {
       if (!me) info = 'Registrer deg for å spille. Du kan se på.';
       else if (!free) info = '👀 Bordet er fullt. Du ser på, og kan sette deg når en plass blir ledig.';
@@ -167,7 +167,7 @@
   function openBuyIn(seat) {
     buyInSeat = seat;
     const max = Math.min(t.maxBuyIn, me.flus);
-    if (max < t.minBuyIn) return msg(`Du trenger minst ${t.minBuyIn} flus for å sette deg. Du har ${me.flus}.`, 'lose');
+    if (max < t.minBuyIn) return msg(`Du trenger minst ${t.minBuyIn} cash for å sette deg. Du har ${me.flus}.`, 'lose');
     const r = $('pk-buyin-range');
     r.min = t.minBuyIn;
     r.max = max;
@@ -181,7 +181,7 @@
   $('pk-buyin-cancel').addEventListener('click', () => $('pk-buyin').classList.add('hidden'));
   $('pk-buyin-ok').addEventListener('click', () => send('/api/poker/sit', { seat: buyInSeat, buyIn: Number($('pk-buyin-range').value) }, () => $('pk-buyin').classList.add('hidden')));
   $('pk-leave').addEventListener('click', () => {
-    if (confirm('Reise deg fra bordet? Sjetongene går tilbake som flus. Er du med i en hånd, kaster du den.')) send('/api/poker/leave', {});
+    if (confirm('Reise deg fra bordet? Sjetongene går tilbake som cash. Er du med i en hånd, kaster du den.')) send('/api/poker/leave', {});
   });
 
   // ---------- Handlinger ----------

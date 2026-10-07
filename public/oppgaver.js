@@ -41,7 +41,7 @@
     const me = data.me;
     const card = el('section', `card task task-${t.status}`);
     const head = el('div', 'task-head');
-    head.append(el('h3', 'task-title', t.title), el('span', 'task-reward', `🎰 ${spinsWord(t.reward)}`));
+    head.append(el('h3', 'task-title', t.title), el('span', 'task-reward', `🎰 ${spinsWord(t.reward)} + 💰 ${t.cash} cash`));
     card.append(head, el('p', 'task-desc', t.desc));
     card.append(el('p', 'note', t.proof === 'photo' ? '📸 Bevis: bilde' : '✍️ Bevis: skriv hva du gjorde (bilde valgfritt)'));
 
@@ -51,7 +51,7 @@
 
     if (t.status === 'done') {
       const mine = me && t.completedBy === me.name;
-      card.append(el('p', 'task-status done', mine ? `✅ Du løste denne og fikk ${spinsWord(t.reward)}!` : `✅ Løst av ${t.completedBy}`));
+      card.append(el('p', 'task-status done', mine ? `✅ Du løste denne og fikk ${spinsWord(t.reward)} og ${t.cash} cash!` : `✅ Løst av ${t.completedBy}`));
       return card;
     }
     if (t.status === 'pending') {

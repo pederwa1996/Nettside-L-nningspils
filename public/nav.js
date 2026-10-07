@@ -36,6 +36,8 @@
   } catch { /* ignorer */ }
   function showHint() {
     if (seenHint || document.body.classList.contains('logged-out')) return;
+    // Velkomstvinduet (guide.js) først, så menyhintet
+    if (document.querySelector('.guide-welcome')) return setTimeout(showHint, 1000);
     seenHint = true;
     const hint = document.createElement('div');
     hint.className = 'nav-hint';

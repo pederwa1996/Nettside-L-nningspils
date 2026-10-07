@@ -95,7 +95,7 @@
     title.textContent = `${o.name}: ${o.qty} × 🍺`;
     const meta = document.createElement('span');
     meta.className = 'muted';
-    meta.textContent = `${o.pay === 'flus' ? `${o.cost} flus` : 'til gode'} · ${ago(o.at)}`;
+    meta.textContent = `${o.pay === 'flus' ? `${o.cost} cash` : 'til gode'} · ${ago(o.at)}`;
     info.append(title, meta);
     if (o.note) {
       const note = document.createElement('span');
@@ -114,7 +114,7 @@
       no.type = 'button';
       no.className = 'secondary small-btn';
       no.textContent = '❌';
-      no.title = 'Avbryt (flus betales tilbake)';
+      no.title = 'Avbryt (cash betales tilbake)';
       no.addEventListener('click', () => {
         if (confirm(`Avbryte bestillingen til ${o.name}?`)) setStatus(o, 'cancelled');
       });
@@ -218,7 +218,7 @@
     title.textContent = `${t.name}: ${t.title}`;
     const meta = document.createElement('span');
     meta.className = 'muted';
-    meta.textContent = `🎰 ${t.reward} spinn · ${ago(t.at)}`;
+    meta.textContent = `🎰 ${t.reward} spinn + 💰 ${t.cash} cash · ${ago(t.at)}`;
     info.append(title, meta);
     head.append(avatar(t.avatar, t.name), info);
     box.appendChild(head);

@@ -367,9 +367,9 @@ function createPoker(ctx) {
     if (hand() && hand().players[seatIdx]) throw new Error('Plassen blir ledig etter denne hånden.');
     const amount = Math.floor(Number(buyIn));
     if (!Number.isFinite(amount) || amount < ctx.minBuyIn || amount > ctx.maxBuyIn) {
-      throw new Error(`Innkjøp må være mellom ${ctx.minBuyIn} og ${ctx.maxBuyIn} flus.`);
+      throw new Error(`Innkjøp må være mellom ${ctx.minBuyIn} og ${ctx.maxBuyIn} cash.`);
     }
-    if ((p.flus || 0) < amount) throw new Error(`Du har bare ${p.flus || 0} flus.`);
+    if ((p.flus || 0) < amount) throw new Error(`Du har bare ${p.flus || 0} cash.`);
     ctx.addFlus(p, -amount);
     seats()[seatIdx] = { name: p.name, chips: amount, strikes: 0 };
     if (!hand()) scheduleNextHand();
