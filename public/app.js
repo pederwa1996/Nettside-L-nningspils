@@ -455,6 +455,7 @@ async function loadPoker() {
   } catch { /* ignorer */ }
 }
 
+// Pokerbordet som en liten stripe: små avatarer ved bordet + én linje status
 function renderPoker() {
   const t = pokerTable;
   if (!t) return;
@@ -462,39 +463,165 @@ function renderPoker() {
   box.innerHTML = '';
   const seated = t.seats.map((s, i) => (s ? { ...s, seat: i } : null)).filter(Boolean);
   const watching = (pokerRooms['kasino-poker'] || []).filter((x) => !seated.some((s) => s.name === x.name));
-  const winners = t.result ? new Set(t.result.winners.map((w) => w.seat)) : new Set();
-  if (!seated.length) {
-    box.appendChild(el('p', 'muted', watching.length ? `${watching.length} ser på bordet, men ingen har satt seg ennå.` : 'Ingen ved bordet akkurat nå. Bli den første! ♠️'));
-  } else {
-    const row = el('div', 'pl-players');
-    seated.forEach((s) => {
-      const p = el('a', 'pl-player');
-      p.href = '/kasino.html#poker';
-      if (s.seat === t.toAct) p.classList.add('turn');
-      if (s.folded) p.classList.add('folded');
-      if (winners.has(s.seat)) p.classList.add('won');
-      p.append(avatarEl(s.avatar, s.name, 38), el('span', 'pl-name', s.name.split(' ')[0]), el('span', 'pl-chips', `🪙 ${s.chips}`));
-      if (s.seat === t.toAct) p.appendChild(el('span', 'pl-tag', 'sin tur'));
-      else if (winners.has(s.seat)) p.appendChild(el('span', 'pl-tag won', 'vant!'));
-      else if (s.folded) p.appendChild(el('span', 'pl-tag', 'kastet'));
-      row.appendChild(p);
-    });
-    box.appendChild(row);
-    let status = `${seated.length} spiller${seated.length > 1 ? 'e' : ''}`;
-    if (t.phase === 'result' && t.result) status = t.result.winners.map((w) => `🏆 ${w.name.split(' ')[0]} vant ${w.amount}${w.hand ? ` med ${w.hand.toLowerCase()}` : ''}`).join(' · ');
-    else if (t.phase !== 'waiting') status += ` · pott ${t.pot}`;
-    else status += ' · venter på neste hånd';
-    box.appendChild(el('p', 'pl-status', status));
+  if (seated.length) {
+    const stack = el('span', 'ps-stack');
+    seated.slice(0, 5).forEach((s) => stack.appendChild(avatarEl(s.avatar, s.name, 22)));
+    box.appendChild(stack);
   }
-  if (watching.length) {
-    const w = el('div', 'pl-watch');
-    watching.slice(0, 6).forEach((x) => w.appendChild(avatarEl(x.avatar, x.name, 22)));
-    w.appendChild(document.createTextNode(` 👀 ${watching.length} ser på`));
-    box.appendChild(w);
-  }
+  let status;
+  if (!seated.length) status = watching.length ? `Poker · ${watching.length} ser på` : 'Poker · ledig bord';
+  else if (t.phase === 'result' && t.result) status = `🏆 ${t.result.winners.map((w) => w.name.split(' ')[0]).join(' & ')} vant ${t.result.winners[0].amount}`;
+  else status = `${seated.length} spiller${t.phase !== 'waiting' ? ` · pott ${t.pot}` : ''}${watching.length ? ` · 👀 ${watching.length}` : ''}`;
+  box.appendChild(el('span', 'ps-text', status));
   const mine = myName() && t.seats.some((s) => s && s.name === myName());
   $('poker-live-link').textContent = mine ? 'Til bordet ›' : seated.length < 9 ? 'Sett deg ›' : 'Se på ›';
 }
+
+// ---------- Hva skjer: faner ----------
+let hsTab = 'now';
+document.querySelectorAll('.hs-tab').forEach((b) => b.addEventListener('click', () => {
+  hsTab = b.dataset.hs;
+  document.querySelectorAll('.hs-tab').forEach((x) => x.classList.toggle('active', x === b));
+  ['now', 'wall', 'events'].forEach((k) => $(`hs-${k}`).classList.toggle('hidden', k !== hsTab));
+  if (hsTab === 'wall') loadWallPosts();
+}));
+
+// ---------- 🟢 Akkurat nå: hvem er inne og hva de holder på med ----------
+// [ikon, status, hva de gjør]. Profil: «Stalker» når man ser på en annens profil.
+const NOW_STATUS = {
+  hjem: ['😎', 'Chilleren', 'Slapper av på forsiden'],
+  'kasino-wheel': ['🎡', 'Lykkejegeren', 'Spinner lykkehjulet'],
+  'kasino-slot': ['🎰', 'Spakedrageren', 'Drar i spaken på automaten'],
+  'kasino-roulette': ['🔴', 'Alt på rødt', 'Sitter ved rouletten'],
+  'kasino-blackjack': ['🃏', 'Korttelleren', 'Ved blackjack-bordet'],
+  'kasino-poker': ['♠️', 'Pokerfjeset', 'Ved pokerbordet'],
+  'kasino-bar': ['🍻', 'Stamgjesten', 'Henger i baren'],
+  baren: ['🍻', 'Stamgjesten', 'Henger i baren'],
+  pvp: ['⚔️', 'Bråkmakeren', 'Ser etter noen å utfordre'],
+  arena: ['🏟️', 'Gladiatoren', 'Kjemper i arenaen'],
+  duell: ['✊', 'Duellanten', 'Stein, saks, papir'],
+  mogg: ['🗿', 'Moggeren', 'Øver på chad-ansiktet'],
+  oppgaver: ['🎯', 'Oppdragstakeren', 'Leter etter oppgaver'],
+  flappy: ['🕊️', 'Flapperen', 'Spiller Flappy Sjef'],
+  chat: ['💬', 'Sladrebasen', 'Sitter i chatten'],
+};
+
+function nowStatus(room, x) {
+  if (room === 'profil') {
+    if (!x.target || x.target === x.name) return ['🪞', 'Narsissisten', 'Beundrer sin egen profil'];
+    return ['🕵️', 'Stalker', `Snoker på profilen til ${x.target}`];
+  }
+  return NOW_STATUS[room] || ['👻', 'Spøkelset', 'Vandrer rundt'];
+}
+
+function renderNow() {
+  const box = $('now-list');
+  if (!box) return;
+  const seen = new Set();
+  const people = [];
+  Object.entries(homeRooms).forEach(([room, list]) => list.forEach((x) => {
+    if (seen.has(x.name)) return;
+    seen.add(x.name);
+    people.push({ ...x, room });
+  }));
+  // Meg først, så den som har vært lengst på samme sted
+  const me = myName();
+  people.sort((a, b) => (b.name === me) - (a.name === me) || a.since - b.since);
+  $('now-count').textContent = people.length || '';
+  box.innerHTML = '';
+  if (!people.length) {
+    box.appendChild(el('p', 'muted center', 'Ingen er inne akkurat nå 😴'));
+    return;
+  }
+  people.forEach((x) => {
+    const [icon, title, sub] = nowStatus(x.room, x);
+    const row = el('a', `now-row room-${x.room.split('-')[0]}`);
+    row.href = `/profil.html?navn=${encodeURIComponent(x.name)}`;
+    const av = el('span', 'now-av');
+    av.append(avatarEl(x.avatar, x.name, 42), el('i', 'now-dot'));
+    const text = el('span', 'now-text');
+    text.append(el('b', '', x.name === me ? `${x.name} (deg)` : x.name), el('small', '', sub));
+    const badge = el('span', 'now-status', `${icon} ${title}`);
+    row.append(av, text, badge);
+    box.appendChild(row);
+  });
+}
+document.addEventListener('presence', renderNow);
+
+// ---------- 🧱 Veggen ----------
+let wallLoaded = false;
+async function loadWallPosts() {
+  wallLoaded = true;
+  try {
+    const { posts } = await api('/api/wallposts');
+    const box = $('wallposts');
+    box.innerHTML = '';
+    if (!posts.length) box.appendChild(el('p', 'muted center', 'Veggen er tom. Skriv det første innlegget! ✍️'));
+    posts.forEach((p) => {
+      const row = el('div', 'wp-row');
+      const link = el('a', 'wp-av');
+      link.href = `/profil.html?navn=${encodeURIComponent(p.name)}`;
+      link.appendChild(avatarEl(p.avatar, p.name, 34));
+      const body = el('div', 'wp-body');
+      const head = el('div', 'wp-head');
+      head.append(el('b', '', p.name), el('small', '', timeAgo(p.at)));
+      body.append(head, el('p', 'wp-text', p.text));
+      row.append(link, body);
+      if (p.name === myName() || (data && data.me && data.me.isAdmin)) {
+        const del = el('button', 'wp-del', '✕');
+        del.type = 'button';
+        del.title = 'Slett';
+        del.addEventListener('click', async () => {
+          if (!confirm('Slette innlegget?')) return;
+          try {
+            await api('/api/wallposts/delete', { id: p.id });
+          } catch (err) {
+            alert(err.message);
+          }
+          loadWallPosts();
+        });
+        row.appendChild(del);
+      }
+      box.appendChild(row);
+    });
+  } catch { /* ignorer */ }
+}
+$('wallpost-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = $('wallpost-text');
+  if (!input.value.trim()) return;
+  try {
+    await api('/api/wallposts', { text: input.value });
+    input.value = '';
+    loadWallPosts();
+  } catch (err) {
+    alert(err.message);
+  }
+});
+onLive('wallposts', () => wallLoaded && loadWallPosts());
+
+// ---------- 💡 Forslag til admin ----------
+$('suggest-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const msg = $('suggest-msg');
+  const btn = $('suggest-send');
+  btn.disabled = true;
+  try {
+    const kind = (document.querySelector('input[name="suggest-kind"]:checked') || {}).value;
+    const r = await api('/api/suggestions', { kind, text: $('suggest-text').value });
+    $('suggest-text').value = '';
+    msg.textContent = r.rewarded ? `Takk! 💡 Forslaget er sendt, og du fikk ${r.spins} spinn og ${r.cash} cash 🎉` : 'Takk! 💡 Forslaget er sendt til spillmesteren.';
+    msg.className = 'result win';
+    if (r.me) {
+      data.me = r.me;
+      render();
+    }
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.className = 'result lose';
+  }
+  btn.disabled = false;
+});
 const myName = () => (data && data.me ? data.me.name : null);
 
 onLive('poker', () => data && data.me && loadPoker());

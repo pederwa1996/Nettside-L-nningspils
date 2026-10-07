@@ -62,10 +62,66 @@ $('budget-form').addEventListener('submit', async (e) => {
   }
 });
 
+// ---- 💡 Forslag (egen mappe) ----
+let suggFilter = 'new';
+let suggList = [];
+function renderSuggestions(list) {
+  suggList = list;
+  const unread = list.filter((x) => !x.read).length;
+  $('sugg-count').textContent = unread;
+  const box = $('admin-suggestions');
+  box.innerHTML = '';
+  const shown = suggFilter === 'new' ? list.filter((x) => !x.read) : list;
+  if (!shown.length) box.innerHTML = `<p class="muted">${suggFilter === 'new' ? 'Ingen nye forslag.' : 'Ingen forslag ennå.'}</p>`;
+  shown.forEach((x) => {
+    const card = document.createElement('div');
+    card.className = `sugg-item${x.read ? ' read' : ''}`;
+    const head = document.createElement('p');
+    head.className = 'sugg-head';
+    const who = document.createElement('strong');
+    who.textContent = x.name;
+    const meta = document.createElement('span');
+    meta.className = 'muted';
+    meta.textContent = ` · ${x.kindLabel} · ${new Date(x.at).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' })}`;
+    head.append(who, meta);
+    const text = document.createElement('p');
+    text.className = 'sugg-text';
+    text.textContent = x.text;
+    const btns = document.createElement('div');
+    btns.className = 'task-admin-btns';
+    const read = document.createElement('button');
+    read.className = 'small-btn';
+    read.textContent = x.read ? '↺ Ulest' : '✓ Lest';
+    read.addEventListener('click', () => suggAction(x.id, x.read ? 'unread' : 'read'));
+    const del = document.createElement('button');
+    del.className = 'secondary small-btn';
+    del.textContent = 'Slett';
+    del.addEventListener('click', () => confirm('Slette forslaget?') && suggAction(x.id, 'delete'));
+    btns.append(read, del);
+    card.append(head, text, btns);
+    box.appendChild(card);
+  });
+}
+async function suggAction(id, action) {
+  try {
+    await post('/api/admin/suggestion', { id, action });
+    await load();
+  } catch (err) {
+    showMsg(err.message);
+  }
+}
+document.querySelectorAll('.sugg-f').forEach((b) => b.addEventListener('click', () => {
+  suggFilter = b.dataset.f;
+  document.querySelectorAll('.sugg-f').forEach((x) => x.classList.toggle('secondary', x !== b));
+  renderSuggestions(suggList);
+}));
+if (location.hash === '#forslag') document.getElementById('forslag').open = true;
+
 async function load() {
   post('/api/admin/budget').then((r) => renderBudget(r.budget)).catch(() => {});
   const data = await post('/api/admin/login');
   $('panel').classList.remove('hidden');
+  renderSuggestions(data.suggestions || []);
   $('count').textContent = data.participants.length;
   $('rows').innerHTML = '';
   data.participants.forEach((p) => {

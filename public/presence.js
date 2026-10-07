@@ -113,7 +113,8 @@
       const res = await fetch('/api/presence', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ room }),
+        // På en profil: hvem man ser på (statusen «Stalker» på forsiden)
+        body: JSON.stringify({ room, target: room === 'profil' ? new URLSearchParams(location.search).get('navn') : null }),
       });
       const json = await res.json();
       rooms = json.rooms || {};

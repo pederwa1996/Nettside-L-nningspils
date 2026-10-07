@@ -59,7 +59,7 @@ const MAX_PENDING_ORDERS = 3;
 
 // ---- Lagring ----
 function freshState() {
-  return { startFlusGiven: START_FLUS, budget: { total: BUDGET_KR, price: BEER_PRICE_KR }, participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, arena: [], poker: freshPoker() };
+  return { wallPosts: [], suggestions: [], startFlusGiven: START_FLUS, budget: { total: BUDGET_KR, price: BEER_PRICE_KR }, participants: [], draw: null, duels: [], chat: [], stories: [], moggs: [], moggBest: {}, tasks: defaultTasks(), blackjack: {}, casinoLog: [], spinLog: [], orders: [], activity: [], reactions: {}, arena: [], poker: freshPoker() };
 }
 
 function freshPoker() {
@@ -309,7 +309,7 @@ function renameEverywhere(oldName, newName) {
     swap(a, 'name');
     if (a.with) a.with = a.with.map((n) => (n === oldName ? newName : n));
   }));
-  [state.stories, state.chat, state.activity, state.orders, state.casinoLog, state.spinLog].forEach((list) => list.forEach((x) => swap(x, 'name')));
+  [state.stories, state.chat, state.activity, state.orders, state.casinoLog, state.spinLog, state.wallPosts, state.suggestions].forEach((list) => list.forEach((x) => swap(x, 'name')));
   Object.values(state.reactions).forEach((r) => {
     r.likes = r.likes.map((n) => (n === oldName ? newName : n));
     r.comments.forEach((c) => swap(c, 'name'));
@@ -645,6 +645,18 @@ function announceBeer(name, text, delayMs = 0) {
 // ---- Oppgaver ----
 const MAX_PENDING_TASKS = 2;
 
+// 💡 Forslag til admin: belønning for de første forslagene fra hver person
+const SUGGESTION_SPINS = 1;
+const SUGGESTION_CASH = 50;
+const SUGGESTION_REWARD_MAX = 3;
+const SUGGESTION_KINDS = { better: '🛠️ Kan bli bedre', task: '🎯 Ny oppgave', game: '🎮 Nytt spill', other: '💬 Annet' };
+const lastPostAt = new Map(); // navn -> tid, enkel sperre mot spam på veggen og forslag
+
+function wallPostView(x) {
+  const p = findParticipant(x.name);
+  return { id: x.id, name: x.name, avatar: (p && p.avatar) || null, text: x.text, at: x.at };
+}
+
 function currentAttempt(t) {
   return t.attempts[t.attempts.length - 1] || null;
 }
@@ -845,7 +857,7 @@ function presenceView() {
     const p = state.participants.find((x) => x.token === token);
     if (!p || seen.has(`${v.room}|${p.name}`)) continue; // samme person på flere enheter
     seen.add(`${v.room}|${p.name}`);
-    (rooms[v.room] = rooms[v.room] || []).push({ name: p.name, avatar: p.avatar || null, since: v.since });
+    (rooms[v.room] = rooms[v.room] || []).push({ name: p.name, avatar: p.avatar || null, since: v.since, target: v.target || null });
   }
   Object.values(rooms).forEach((list) => list.sort((a, b) => a.since - b.since));
   return rooms;
@@ -1089,6 +1101,7 @@ function settings() {
     gameFirstMilestone: GAME_FIRST_MILESTONE,
     spinPrice: SPIN_PRICE,
     spinPacks: SPIN_PACKS,
+    suggestionReward: { spins: SUGGESTION_SPINS, cash: SUGGESTION_CASH, max: SUGGESTION_REWARD_MAX },
     startCash: START_FLUS,
     taskCashPerSpin: TASK_CASH_PER_SPIN,
   };
@@ -1286,9 +1299,76 @@ const routes = {
     if (!room) return sendJson(res, 400, { error: 'Ukjent side.' });
     const prev = presence.get(p.token);
     const now = Date.now();
-    presence.set(p.token, { room, at: now, since: prev && prev.room === room ? prev.since : now });
-    if (!prev || prev.room !== room) presenceChanged();
+    // På en profil: hvem man ser på (til statusen «Stalker» på forsiden)
+    const seen = room === 'profil' ? (findParticipant(String(body.target || '')) || p).name : null;
+    const same = prev && prev.room === room && prev.target === seen;
+    presence.set(p.token, { room, target: seen, at: now, since: same ? prev.since : now });
+    if (!same) presenceChanged();
     sendJson(res, 200, { rooms: presenceView() });
+  },
+
+  // ---------- 🧱 Veggen: folk skriver hva de vil ----------
+  'GET /api/wallposts': (req, res) => {
+    sendJson(res, 200, { posts: state.wallPosts.slice(-60).reverse().map(wallPostView) });
+  },
+
+  'POST /api/wallposts': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const text = String(body.text || '').replace(/\s+/g, ' ').trim().slice(0, 280);
+    if (!text) return sendJson(res, 400, { error: 'Skriv noe først ✍️' });
+    const last = lastPostAt.get(`wall|${p.name}`) || 0;
+    if (Date.now() - last < 8000) return sendJson(res, 400, { error: 'Rolig nå! Vent noen sekunder før du skriver igjen.' });
+    lastPostAt.set(`wall|${p.name}`, Date.now());
+    const post = { id: crypto.randomBytes(6).toString('hex'), name: p.name, text, at: Date.now() };
+    state.wallPosts.push(post);
+    if (state.wallPosts.length > 300) state.wallPosts = state.wallPosts.slice(-300);
+    saveState();
+    broadcast('wallposts', {});
+    sendJson(res, 200, { post: wallPostView(post) });
+  },
+
+  'POST /api/wallposts/delete': (req, res, body) => {
+    const p = currentParticipant(req);
+    const post = state.wallPosts.find((x) => x.id === body.id);
+    if (!post) return sendJson(res, 404, { error: 'Fant ikke innlegget.' });
+    if (!checkAdmin(body, req) && (!p || p.name !== post.name)) return sendJson(res, 403, { error: 'Du kan bare slette dine egne innlegg.' });
+    state.wallPosts = state.wallPosts.filter((x) => x !== post);
+    saveState();
+    broadcast('wallposts', {});
+    sendJson(res, 200, { ok: true });
+  },
+
+  // ---------- 💡 Forslag til admin ----------
+  'POST /api/suggestions': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const kind = SUGGESTION_KINDS[body.kind] ? body.kind : 'other';
+    const text = String(body.text || '').trim().slice(0, 1000);
+    if (text.length < 10) return sendJson(res, 400, { error: 'Skriv litt mer, minst 10 tegn 🙂' });
+    const last = lastPostAt.get(`sugg|${p.name}`) || 0;
+    if (Date.now() - last < 30000) return sendJson(res, 400, { error: 'Takk! Vent litt før du sender et nytt forslag.' });
+    lastPostAt.set(`sugg|${p.name}`, Date.now());
+    // Belønning for de første forslagene, så ingen kan sende tull for å tjene spinn
+    const rewarded = state.suggestions.filter((x) => x.name === p.name && x.rewarded).length < SUGGESTION_REWARD_MAX;
+    state.suggestions.push({ id: crypto.randomBytes(6).toString('hex'), name: p.name, kind, text, at: Date.now(), read: false, rewarded });
+    if (rewarded) {
+      addSpins(p, SUGGESTION_SPINS);
+      addFlus(p, SUGGESTION_CASH);
+    }
+    adminNames().forEach((n) => n !== p.name && notify(n, '💡', `${p.name} sendte et forslag: ${SUGGESTION_KINDS[kind]}`, { url: '/admin.html#forslag', from: p.name }));
+    saveState();
+    sendJson(res, 200, { rewarded, spins: rewarded ? SUGGESTION_SPINS : 0, cash: rewarded ? SUGGESTION_CASH : 0, me: meView(p) });
+  },
+
+  'POST /api/admin/suggestion': (req, res, body) => {
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const x = state.suggestions.find((y) => y.id === body.id);
+    if (!x) return sendJson(res, 404, { error: 'Fant ikke forslaget.' });
+    if (body.action === 'delete') state.suggestions = state.suggestions.filter((y) => y !== x);
+    else x.read = body.action !== 'unread';
+    saveState();
+    sendJson(res, 200, { ok: true });
   },
 
   'POST /api/presence/leave': (req, res) => {
@@ -2486,6 +2566,7 @@ const routes = {
       moggPodium: moggPodium(),
       tasks: state.tasks.map(adminTaskView),
       taskQueue: taskQueue(),
+      suggestions: state.suggestions.slice().reverse().map((x) => ({ ...x, kindLabel: SUGGESTION_KINDS[x.kind] || x.kind })),
     });
   },
 

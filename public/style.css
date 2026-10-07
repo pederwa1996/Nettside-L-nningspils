@@ -2018,7 +2018,7 @@ body.minimal a { color: var(--gold); }
 body.minimal input, body.minimal textarea, body.minimal select {
   background: #111114 !important; color: var(--text) !important; border: 1px solid var(--line) !important; border-radius: 10px !important; box-shadow: none !important;
 }
-body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.ag):not(.sg) {
+body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.ag):not(.sg) {
   background: var(--gold) !important; color: #141414 !important; border: 0 !important; box-shadow: none !important; text-shadow: none !important; border-radius: 10px !important; font-family: inherit !important;
 }
 body.minimal button.secondary { background: #24242a !important; color: var(--text) !important; border: 1px solid var(--line) !important; box-shadow: none !important; }
@@ -2133,7 +2133,7 @@ body.minimal {
 }
 body.minimal .card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important; }
 body.minimal input, body.minimal textarea, body.minimal select { background: #fff !important; }
-body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.ag):not(.sg) {
+body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.hs-tab):not(.wp-del):not(.ag):not(.sg) {
   background: #f5b301 !important; color: #1d1c1a !important;
 }
 body.minimal button.secondary { background: var(--soft) !important; color: var(--text) !important; border-color: var(--line) !important; }
@@ -2703,3 +2703,82 @@ body.minimal.home .home-hero h1 { margin: 2px 0 0; font-size: 1.6rem !important;
 .me-who-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .me-hi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-who-text small { font-size: 0.68rem; font-weight: 700; color: #b07800; }
+
+/* ♠️ Pokerbordet: bare en liten stripe */
+.poker-strip {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 6px 10px; border-radius: 999px;
+  background: linear-gradient(90deg, #0f5a35, #146b40); color: #e8ffe9 !important; text-decoration: none !important;
+  font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+.ps-icon { flex: none; font-size: 1rem; }
+.ps-body { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; overflow: hidden; white-space: nowrap; }
+.ps-text { overflow: hidden; text-overflow: ellipsis; }
+.ps-stack { display: inline-flex; flex: none; }
+.ps-stack .avatar { border: 1.5px solid #146b40; }
+.ps-stack .avatar + .avatar { margin-left: -7px; }
+.ps-go { flex: none; padding: 2px 9px; border-radius: 999px; background: #ffd34d; color: #2a1500; font-size: 0.72rem; font-weight: 900; }
+
+/* 📡 Hva skjer: faner */
+.hs-tabs { display: flex; gap: 4px; margin: 2px 0 12px; }
+body.minimal button.hs-tab {
+  flex: 1 1 0; min-width: 0; margin: 0; padding: 8px 3px !important; letter-spacing: -0.2px; border-radius: 12px !important; white-space: nowrap;
+  background: #f3ecdf !important; color: #3a2a12 !important; border: 1px solid #d9cdb8 !important; box-shadow: none !important;
+  font: 800 0.74rem/1.1 system-ui, sans-serif !important;
+}
+body.minimal button.hs-tab.active { background: #1d1c1a !important; color: #fff !important; border-color: #1d1c1a !important; }
+.hs-count { display: inline-block; min-width: 18px; margin-left: 2px; padding: 1px 5px; border-radius: 999px; background: #1f9d55; color: #fff; font-size: 0.7rem; }
+.hs-count:empty { display: none; }
+
+/* 🟢 Akkurat nå */
+.now-list { display: flex; flex-direction: column; gap: 6px; }
+.now-row { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 14px; background: #faf6ee; border: 1px solid #ece3d3; color: var(--text) !important; text-decoration: none !important; }
+.now-av { position: relative; flex: none; display: inline-flex; }
+.now-dot { position: absolute; right: 0; bottom: 0; width: 11px; height: 11px; border-radius: 50%; background: #2ecc71; border: 2px solid #fff; animation: now-blink 2s ease-in-out infinite; }
+@keyframes now-blink { 50% { box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.3); } }
+.now-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+.now-text b { font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.now-text small { font-size: 0.74rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.now-status { flex: none; padding: 4px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 900; background: #fff3cf; color: #7a4f00; }
+.room-kasino .now-status { background: #ffe1e4; color: #a8152f; }
+.room-profil .now-status { background: #e9e4ff; color: #4a2fb0; }
+.room-pvp .now-status, .room-arena .now-status, .room-duell .now-status, .room-mogg .now-status, .room-flappy .now-status { background: #e4e8ff; color: #2a2fa8; }
+.room-oppgaver .now-status { background: #efe4ff; color: #5631c4; }
+.room-baren .now-status { background: #fff0c7; color: #8a4b00; }
+.room-hjem .now-status { background: #dff7ea; color: #0e6b3a; }
+
+/* 🧱 Veggen */
+.wallpost-form { display: flex; gap: 6px; margin: 0 0 10px; }
+.wallpost-form input { flex: 1; min-width: 0; margin: 0; }
+body.minimal button.wallpost-send { flex: none; margin: 0; padding: 8px 14px !important; }
+.wallposts { display: flex; flex-direction: column; gap: 8px; }
+.wp-row { position: relative; display: flex; gap: 8px; align-items: flex-start; }
+.wp-av { flex: none; }
+.wp-body { flex: 1; min-width: 0; padding: 7px 10px; border-radius: 4px 14px 14px 14px; background: #faf6ee; border: 1px solid #ece3d3; }
+.wp-head { display: flex; justify-content: space-between; gap: 8px; font-size: 0.8rem; padding-right: 18px; }
+.wp-head small { color: var(--muted); }
+.wp-text { margin: 2px 0 0; font-size: 0.9rem; overflow-wrap: anywhere; }
+body.minimal button.wp-del { position: absolute; top: 4px; right: 6px; margin: 0; padding: 0 !important; width: 22px; height: 22px; border-radius: 50% !important; background: transparent !important; color: var(--muted) !important; border: 0 !important; box-shadow: none !important; font-size: 0.75rem; }
+
+/* 💡 Forslag: liten nedtrekksmeny nederst på forsiden */
+.suggest-box { margin: 4px 0 18px; border-radius: 16px; background: #fff; border: 1px dashed #c9b48a; }
+.suggest-box summary { position: relative; cursor: pointer; padding: 12px 36px 12px 14px; font-weight: 800; list-style: none; }
+.suggest-box summary::-webkit-details-marker { display: none; }
+.suggest-box summary::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1.1rem; }
+.suggest-box[open] summary::after { content: '▴'; }
+.suggest-box summary small { display: block; font-weight: 600; font-size: 0.74rem; color: #1f9d55; }
+.suggest-form { display: flex; flex-direction: column; gap: 8px; padding: 0 14px 14px; }
+.suggest-form .note { margin: 0; }
+.suggest-kinds { display: flex; flex-wrap: wrap; gap: 6px; }
+.suggest-kinds label { display: inline-flex; align-items: center; gap: 4px; padding: 5px 9px; border-radius: 999px; background: #f3ecdf; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+.suggest-kinds label:has(input:checked) { background: #1d1c1a; color: #fff; }
+.suggest-kinds input { display: none; }
+.suggest-form textarea { min-height: 80px; margin: 0; }
+.suggest-form .result:empty { display: none; }
+
+/* Admin: forslagsmappen */
+.suggest-folder summary { font-weight: 800; }
+.sugg-filter { display: flex; gap: 6px; margin: 8px 0; }
+.sugg-item { padding: 10px 12px; margin-bottom: 8px; border-radius: 12px; background: rgba(245, 179, 1, 0.08); border: 1px solid rgba(245, 179, 1, 0.35); }
+.sugg-item.read { opacity: 0.6; }
+.sugg-head { margin: 0 0 4px; }
+.sugg-text { margin: 0 0 8px; white-space: pre-wrap; }

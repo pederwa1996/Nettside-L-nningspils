@@ -41,6 +41,15 @@
       <button id="draw-btn" class="big">🎲 Kjør loddtrekning</button>
       <div id="draw-result"></div>
 
+      <details class="tips suggest-folder" id="forslag">
+        <summary>📁 💡 Forslag fra deltakerne (<span id="sugg-count">0</span> nye)</summary>
+        <div class="sugg-filter">
+          <button type="button" class="small-btn sugg-f active" data-f="new">Nye</button>
+          <button type="button" class="small-btn secondary sugg-f" data-f="all">Alle</button>
+        </div>
+        <div id="admin-suggestions"></div>
+      </details>
+
       <h2>🎯 Til godkjenning (<span id="review-count">0</span>)</h2>
       <div id="admin-review"></div>
 

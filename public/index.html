@@ -125,19 +125,38 @@
         </div>
       </section>
 
-      <!-- Pokerbordet live -->
-      <section id="poker-live" class="card poker-live">
-        <div class="wall-head">
-          <h2>♠️ Pokerbordet <small class="h-sub">Hvem spiller nå</small></h2>
-          <span class="live-dot">LIVE</span>
-          <a href="/kasino.html#poker" class="wall-more" id="poker-live-link">Se på ›</a>
-        </div>
-        <div id="poker-live-body" class="pl-body"></div>
-      </section>
+      <!-- Pokerbordet live: bare en liten stripe -->
+      <a id="poker-live" class="poker-strip" href="/kasino.html#poker">
+        <span class="ps-icon">♠️</span>
+        <span id="poker-live-body" class="ps-body">Pokerbordet</span>
+        <span class="ps-go" id="poker-live-link">Se på ›</span>
+      </a>
 
-      <!-- Hva skjer -->
+      <!-- Hva skjer: Akkurat nå (hovedsak), Veggen og Hendelser -->
       <section class="card wall-card feed-card">
-        <div class="wall-head"><h2>📰 Hva skjer <small class="h-sub">Alt som skjer på lønningspilsen</small></h2><span class="live-dot">LIVE</span></div>
+        <div class="wall-head"><h2>📡 Hva skjer</h2><span class="live-dot">LIVE</span></div>
+        <div class="hs-tabs" role="tablist">
+          <button type="button" class="hs-tab active" data-hs="now">🟢 Akkurat nå <b id="now-count" class="hs-count"></b></button>
+          <button type="button" class="hs-tab" data-hs="wall">🧱 Veggen</button>
+          <button type="button" class="hs-tab" data-hs="events">📰 Hendelser</button>
+        </div>
+
+        <!-- Akkurat nå: hvem er inne, og hva holder de på med -->
+        <div id="hs-now" class="hs-panel">
+          <div id="now-list" class="now-list"></div>
+        </div>
+
+        <!-- Veggen: skriv hva du vil -->
+        <div id="hs-wall" class="hs-panel hidden">
+          <form id="wallpost-form" class="wallpost-form">
+            <input id="wallpost-text" type="text" maxlength="280" placeholder="Skriv noe på veggen …" autocomplete="off">
+            <button type="submit" class="wallpost-send">Post</button>
+          </form>
+          <div id="wallposts" class="wallposts"></div>
+        </div>
+
+        <!-- Hendelser: alt som skjer (pils, kasino, PvP, oppgaver) -->
+        <div id="hs-events" class="hs-panel hidden">
         <div id="feed-filters" class="feed-filters">
           <button type="button" class="ff active" data-cat="all">Alt</button>
           <button type="button" class="ff" data-cat="beer">🍺 Pils</button>
@@ -150,6 +169,7 @@
         <div class="feed-more-row">
           <button type="button" id="feed-more" class="secondary small-btn hidden">Vis mer ↓</button>
           <button type="button" id="feed-less" class="secondary small-btn hidden">Vis mindre ↑</button>
+        </div>
         </div>
       </section>
 
@@ -178,6 +198,23 @@
           <ul id="participants" class="participants"></ul>
         </details>
       </section>
+
+      <!-- 💡 Forslag til admin: en liten meny man drar ned -->
+      <details id="suggest-box" class="suggest-box">
+        <summary>💡 Har du noen forslag? <small id="suggest-reward">Send et forslag og få 1 spinn og 50 cash</small></summary>
+        <form id="suggest-form" class="suggest-form">
+          <p class="note">Hva kan bli bedre? Har du en idé til en oppgave eller et spill? Forslaget går rett til spillmesteren.</p>
+          <div class="suggest-kinds">
+            <label><input type="radio" name="suggest-kind" value="better" checked> 🛠️ Kan bli bedre</label>
+            <label><input type="radio" name="suggest-kind" value="task"> 🎯 Ny oppgave</label>
+            <label><input type="radio" name="suggest-kind" value="game"> 🎮 Nytt spill</label>
+            <label><input type="radio" name="suggest-kind" value="other"> 💬 Annet</label>
+          </div>
+          <textarea id="suggest-text" maxlength="1000" placeholder="Skriv forslaget ditt her …"></textarea>
+          <button type="submit" id="suggest-send">Send forslag 💡</button>
+          <p id="suggest-msg" class="result"></p>
+        </form>
+      </details>
     </div>
   </main>
 
