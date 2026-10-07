@@ -828,13 +828,13 @@ body.cantina h3 {
 }
 
 /* Knapper i ølfarge med varm glød */
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn):not(.wi-like),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab),
 body.cantina .button {
   background: linear-gradient(180deg, #ffcf5a, #f2a516);
   color: #2a1608;
   box-shadow: 0 3px 0 #a86a0b, 0 0 16px rgba(255, 180, 60, 0.3);
 }
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn):not(.wi-like):hover:not(:disabled),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab):hover:not(:disabled),
 body.cantina .button:hover {
   background: linear-gradient(180deg, #ffd977, #f7b02a);
 }
@@ -1688,3 +1688,12 @@ a.nt-item:active { background: rgba(255, 255, 255, 0.08); }
 /* Kasinoet: seks faner i to rader */
 .casino-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .casino-tabs .tab { margin: 0; }
+
+/* Ny her / Logg inn */
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; padding: 4px; border-radius: 14px; background: rgba(0, 0, 0, 0.3); }
+.auth-tab { margin: 0; padding: 10px 6px !important; border-radius: 10px !important; background: transparent !important; color: #e8d6c0 !important; box-shadow: none !important; border: 0 !important; font-weight: 800; }
+.auth-tab.active { background: linear-gradient(180deg, #ffd977, #f5a301) !important; color: #2a1500 !important; }
+.set-password { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; padding: 12px; border-radius: 12px; background: rgba(245, 179, 1, 0.12); border: 1px solid rgba(245, 179, 1, 0.5); }
+.set-password p { margin: 0; }
+.goto-login { margin-left: 4px; }
+.set-password input, .set-password button { flex: none; margin: 0; }

@@ -5,7 +5,7 @@ Nettside for lønningspils med lodd, loddtrekning og lykkehjul.
 ## Slik fungerer det
 
 - **Lodd:** Deltakere åpner linken, tar et profilbilde med mobilen og skriver navnet sitt. De får da 5 tilfeldige lodd av totalt 100.
-- **Én per person:** Samme navn kan ikke brukes to ganger, og hver enhet (cookie) og IP-adresse kan bare registrere én person.
+- **Passord på profilen:** Man registrerer seg med navn, profilbilde og passord, og kan logge inn med navn + passord fra hvilken som helst mobil eller PC (fanen «Logg inn» på forsiden). Navnet er unikt (store/små bokstaver spiller ingen rolle). Det er ingen sperre per nettverk, så alle kan registrere seg på samme wifi. Passordene lagres bare som scrypt-hash med salt, og etter 10 feil forsøk fra samme IP må man vente 10 minutter. Man kan bytte passord og logge ut på forsiden. Profiler som ble laget før passord fantes, blir bedt om å velge et. Glemt passord: spillmesteren setter et nytt under «Deltakere» i admin (🔑).
 - **Innlogging kreves:** Før man har registrert seg (eller logget inn med kode) ser man bare registreringen på forsiden. Menyen og storyen er skjult, og alle andre sider (kasino, chat, oppgaver, profil osv.) sender en tilbake til forsiden. Bare `/admin.html` og `/admin-spinn.html` er åpne, fordi de har eget passord.
 - **Alltid åpent for nye:** Man kan registrere seg også etter loddtrekningen, og når alle loddene er delt ut. Da får man bare ingen lodd, men spinn, flus og alt annet som vanlig.
 - **Flere enheter:** Er man registrert på mobilen, kan man bruke samme profil på PC-en: trykk «💻 Bruk på en annen enhet» på forsiden, og skriv inn koden (eller åpne lenken) på den andre enheten under «Logg inn med kode». Koden virker én gang og går ut etter 10 minutter.
@@ -64,7 +64,6 @@ ADMIN_PASSWORD=hemmelig npm start
 | `SPIN_PRICE` | `50` | Pris i flus for ett spinn på lykkehjulet eller automaten |
 | `GAME_FIRST_MILESTONE` | `50` | Poeng for første ekstra spinn i Flappy Sjef (dobles for hver neste) |
 | `DRAW_FROM` | `all` | `all` = trekk blant alle 100 lodd, `assigned` = kun blant utdelte lodd |
-| `ONE_PER_IP` | `true` | Én registrering per IP-adresse |
 | `TRUST_PROXY` | `false` | Sett til `true` bak en proxy (Render, Railway, Fly osv.) så riktig IP brukes |
 | `DATA_FILE` | `./data.json` | Hvor data lagres |
 | `MEDIA_DIR` | `./media` | Hvor bilder (profilbilder og story) lagres |
@@ -89,7 +88,6 @@ Når serveren starter, hentes lagrede data fra Supabase. Klarer den ikke koble t
 
 ### Merk om IP-sperren
 
-Hvis alle sitter på samme wifi (f.eks. på puben), har de samme offentlige IP-adresse, og bare én person vil da få registrert seg. Ber du folk bruke mobildata, fungerer det. Ellers kan du sette `ONE_PER_IP=false`. Da gjelder fortsatt sperren per navn og per nettleser.
 
 ### Merk om loddtrekningen
 

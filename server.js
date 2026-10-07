@@ -21,8 +21,6 @@ const SPIN_WIN_CHANCE = process.env.SPIN_WIN_CHANCE !== undefined ? Number(proce
 // Flappy-spillet: første milepæl og hvor ofte et rør dukker opp (brukes til juksesjekk)
 const GAME_FIRST_MILESTONE = Number(process.env.GAME_FIRST_MILESTONE) || 50;
 const GAME_PIPE_INTERVAL_MS = 1500;
-// Én registrering per IP-adresse. Sett ONE_PER_IP=false hvis alle sitter på samme wifi.
-const ONE_PER_IP = process.env.ONE_PER_IP !== 'false';
 // Sett TRUST_PROXY=true når appen kjører bak en proxy (Render, Railway, Fly, nginx osv.)
 const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
@@ -176,6 +174,45 @@ function parseCookies(req) {
     if (i > 0) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
   });
   return out;
+}
+
+// ---- Passord på profilen ----
+// Lagres som scrypt-hash med eget salt, aldri i klartekst.
+const MIN_PASSWORD = 4;
+
+function hashPassword(pw) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(pw, salt, 32).toString('hex');
+  return { salt, hash };
+}
+
+function verifyPassword(p, pw) {
+  if (!p.pass) return false;
+  const given = crypto.scryptSync(String(pw), p.pass.salt, 32);
+  return crypto.timingSafeEqual(given, Buffer.from(p.pass.hash, 'hex'));
+}
+
+function parseNewPassword(pw) {
+  const s = String(pw || '');
+  if (s.length < MIN_PASSWORD) throw new Error(`Passordet må ha minst ${MIN_PASSWORD} tegn.`);
+  if (s.length > 100) throw new Error('Passordet er for langt.');
+  return s;
+}
+
+// Begrens innloggingsforsøk: maks 10 feil per IP per 10 minutter
+const loginFails = new Map();
+const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+
+function tooManyFails(ip) {
+  const f = loginFails.get(ip);
+  if (!f || f.until < Date.now()) return false;
+  return f.count >= 10;
+}
+
+function registerFail(ip) {
+  const f = loginFails.get(ip);
+  if (!f || f.until < Date.now()) loginFails.set(ip, { count: 1, until: Date.now() + LOGIN_WINDOW_MS });
+  else f.count++;
 }
 
 function sessionCookie(token) {
@@ -803,6 +840,7 @@ function meView(p) {
     name: p.name,
     avatar: p.avatar || null,
     isAdmin: !!p.isAdmin,
+    hasPassword: !!p.pass,
     tickets: p.tickets,
     spinsLeft: spinsAllowed(p) - p.spins.length,
     bonusSpins: p.bonusSpins || 0,
@@ -977,13 +1015,9 @@ const routes = {
     if (name.length < 2 || name.length > 40) return sendJson(res, 400, { error: 'Navnet må være mellom 2 og 40 tegn.' });
     const key = normalizeName(name);
     if (state.participants.some((p) => normalizeName(p.name) === key)) {
-      return sendJson(res, 409, { error: 'Det navnet er allerede tatt. Én registrering per person!' });
+      return sendJson(res, 409, { error: 'Det navnet er allerede tatt. Er det deg? Trykk «Logg inn» og bruk passordet ditt.' });
     }
-
-    const ip = clientIp(req);
-    if (ONE_PER_IP && state.participants.some((p) => p.ip === ip)) {
-      return sendJson(res, 409, { error: 'Det er allerede registrert noen fra dette nettverket. Har du registrert deg på en annen enhet (f.eks. mobilen)? Bruk «Logg inn med kode» under.' });
-    }
+    const password = parseNewPassword(body.password);
 
     if (!body.avatar) return sendJson(res, 400, { error: 'Du må ta et profilbilde 📸' });
 
@@ -995,7 +1029,7 @@ const routes = {
     const participant = {
       name,
       token: crypto.randomBytes(24).toString('hex'),
-      ip,
+      pass: hashPassword(password),
       avatar: saveImage(body.avatar, 'avatars'),
       tickets: pickRandom(free, Math.min(TICKETS_PER_PERSON, free.length)).sort((a, b) => a - b),
       spins: [],
@@ -1056,6 +1090,48 @@ const routes = {
     const code = newDeviceCode();
     deviceCodes.set(code, { token: p.token, expires: now + DEVICE_CODE_TTL_MS });
     sendJson(res, 200, { code, expiresInMinutes: DEVICE_CODE_TTL_MS / 60000 });
+  },
+
+  // Logg inn med navn og passord (virker på alle enheter og nettverk)
+  'POST /api/login': (req, res, body) => {
+    const ip = clientIp(req);
+    if (tooManyFails(ip)) return sendJson(res, 429, { error: 'For mange feil forsøk. Vent litt og prøv igjen.' });
+    const key = normalizeName(String(body.name || ''));
+    const p = state.participants.find((x) => normalizeName(x.name) === key);
+    if (p && !p.pass) {
+      return sendJson(res, 400, { error: 'Denne profilen har ikke passord ennå. Logg inn med kode fra enheten du registrerte deg på, eller be spillmesteren sette et passord for deg.' });
+    }
+    if (!p || !verifyPassword(p, body.password)) {
+      registerFail(ip);
+      // Litt forsinkelse gjør det upraktisk å gjette passord
+      return setTimeout(() => sendJson(res, 400, { error: 'Feil navn eller passord.' }), 600);
+    }
+    loginFails.delete(ip);
+    sendJson(res, 200, { me: meView(p) }, { 'Set-Cookie': sessionCookie(p.token) });
+  },
+
+  'POST /api/logout': (req, res) => {
+    sendJson(res, 200, { ok: true }, { 'Set-Cookie': 'pils_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0' });
+  },
+
+  // Sett eller bytt passord. Har man passord fra før, må man oppgi det.
+  'POST /api/password': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må være logget inn.' });
+    if (p.pass && !verifyPassword(p, body.current)) return sendJson(res, 400, { error: 'Det nåværende passordet er feil.' });
+    p.pass = hashPassword(parseNewPassword(body.password));
+    saveState();
+    sendJson(res, 200, { me: meView(p) });
+  },
+
+  'POST /api/admin/set-password': (req, res, body) => {
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const p = findParticipant(String(body.name || ''));
+    if (!p) return sendJson(res, 404, { error: 'Fant ikke deltakeren.' });
+    p.pass = hashPassword(parseNewPassword(body.newPassword));
+    saveState();
+    notify(p.name, '🔑', 'Spillmesteren har satt et nytt passord på profilen din.', { url: '/' });
+    sendJson(res, 200, { ok: true, name: p.name });
   },
 
   'POST /api/device-login': (req, res, body) => {
@@ -1906,6 +1982,7 @@ const routes = {
         flus: p.flus || 0,
         spinWins: wheelWins(p),
         avatar: p.avatar || null,
+        hasPassword: !!p.pass,
       })),
       stories: (pruneStories(), state.stories.map((x) => ({ id: x.id, name: x.name, url: x.url, caption: x.caption, at: x.at }))),
       chat: state.chat.slice(-50).reverse(),

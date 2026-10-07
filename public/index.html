@@ -21,31 +21,49 @@
     <!-- Story -->
     <div id="stories-bar" class="stories-bar"></div>
 
-    <!-- Registrering -->
+    <!-- Registrering / innlogging -->
     <section id="join-section" class="card hidden">
-      <h2>Bli med</h2>
-      <p id="join-lead">Skriv inn navnet ditt og ta et profilbilde, så får du <strong id="tpp">5</strong> lodd i trekningen og <strong id="spp">3</strong> spinn på lykkehjulet.</p>
-      <p id="join-lead-late" class="hidden">Skriv inn navnet ditt og ta et profilbilde, så får du spinn på lykkehjulet og kan være med på alt. Loddene er allerede delt ut.</p>
-      <form id="join-form" class="join-form">
-        <label class="avatar-picker" id="avatar-picker">
-          <input id="avatar-input" type="file" accept="image/*" capture="user" hidden>
-          <img id="avatar-preview" class="hidden" alt="Profilbildet ditt">
-          <span id="avatar-placeholder">📸<br>Ta profilbilde</span>
-        </label>
-        <input id="name" type="text" placeholder="Navnet ditt" maxlength="40" autocomplete="name" required>
-        <button type="submit" id="join-btn">Hent lodd 🎟️</button>
-      </form>
-      <p class="note">Én registrering per person. Det er ikke lov å lage flere navn.</p>
-      <p id="join-error" class="error"></p>
-      <details class="tips device-login" id="device-login">
-        <summary>💻 Allerede registrert på en annen enhet? Logg inn med kode</summary>
-        <p class="note">Åpne siden på enheten der du er registrert, trykk «Bruk på en annen enhet» og skriv inn koden du får her.</p>
-        <form id="code-form" class="code-form">
-          <input id="code-input" type="text" maxlength="7" placeholder="ABC123" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false">
-          <button type="submit">Logg inn</button>
+      <div class="auth-tabs" role="tablist">
+        <button type="button" class="auth-tab active" data-auth="join">✨ Ny her</button>
+        <button type="button" class="auth-tab" data-auth="login">🔑 Logg inn</button>
+      </div>
+
+      <div id="auth-join">
+        <h2>Bli med</h2>
+        <p id="join-lead">Ta et profilbilde, skriv navnet ditt og velg et passord, så får du <strong id="tpp">5</strong> lodd i trekningen og <strong id="spp">3</strong> spinn på lykkehjulet.</p>
+        <p id="join-lead-late" class="hidden">Ta et profilbilde, skriv navnet ditt og velg et passord, så får du spinn på lykkehjulet og kan være med på alt. Loddene er allerede delt ut.</p>
+        <form id="join-form" class="join-form">
+          <label class="avatar-picker" id="avatar-picker">
+            <input id="avatar-input" type="file" accept="image/*" capture="user" hidden>
+            <img id="avatar-preview" class="hidden" alt="Profilbildet ditt">
+            <span id="avatar-placeholder">📸<br>Ta profilbilde</span>
+          </label>
+          <input id="name" type="text" placeholder="Navnet ditt" maxlength="40" autocomplete="username" required>
+          <input id="join-password" type="password" placeholder="Velg et passord (minst 4 tegn)" minlength="4" maxlength="100" autocomplete="new-password" required>
+          <button type="submit" id="join-btn">Bli med 🎟️</button>
         </form>
-        <p id="code-error" class="error"></p>
-      </details>
+        <p class="note">Med passordet kan du logge inn på profilen din fra hvilken som helst mobil eller PC. Én profil per person.</p>
+        <p id="join-error" class="error"></p>
+      </div>
+
+      <div id="auth-login" class="hidden">
+        <h2>Logg inn</h2>
+        <form id="login-form" class="join-form">
+          <input id="login-name" type="text" placeholder="Navnet ditt" maxlength="40" autocomplete="username" required>
+          <input id="login-password" type="password" placeholder="Passord" maxlength="100" autocomplete="current-password" required>
+          <button type="submit" id="login-btn">Logg inn 🔑</button>
+        </form>
+        <p id="login-error" class="error"></p>
+        <details class="tips device-login" id="device-login">
+          <summary>📱 Har du ikke passord? Logg inn med kode</summary>
+          <p class="note">Åpne siden på enheten der du er registrert, trykk «Bruk på annen enhet» og skriv inn koden du får her. Eller be spillmesteren sette et passord for deg.</p>
+          <form id="code-form" class="code-form">
+            <input id="code-input" type="text" maxlength="7" placeholder="ABC123" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false">
+            <button type="submit">Logg inn</button>
+          </form>
+          <p id="code-error" class="error"></p>
+        </details>
+      </div>
     </section>
 
     <!-- ===================== VEGGEN ===================== -->
@@ -61,6 +79,13 @@
           </div>
           <h2>Hei, <span id="me-name"></span>! 👋 <button type="button" id="rename-btn" class="rename-btn" title="Endre navn">✏️</button></h2>
         </div>
+        <!-- Profiler laget før passord fantes: be om å velge et -->
+        <form id="set-password" class="set-password hidden">
+          <p><strong>🔑 Velg et passord</strong><br><small>Da kan du logge inn på profilen din fra hvilken som helst mobil eller PC.</small></p>
+          <input id="new-password" type="password" placeholder="Nytt passord (minst 4 tegn)" minlength="4" maxlength="100" autocomplete="new-password" required>
+          <button type="submit">Lagre passord</button>
+          <p id="set-password-error" class="error"></p>
+        </form>
         <p id="avatar-missing" class="duel-alert hidden">📸 Trykk på det lille kameraet for å legge inn et profilbilde!</p>
         <div class="home-wallet">
           <a class="wallet-link" href="/kasino.html#hjul" title="Spinn på lykkehjulet"><span id="home-spins">0</span><small>🎡 spinn ›</small></a>
@@ -82,6 +107,8 @@
         <div class="me-links">
           <a id="admin-btn" class="button small-btn hidden" href="/admin.html">🔐 Admin</a>
           <button type="button" id="device-btn" class="secondary small-btn">💻 Bruk på annen enhet</button>
+          <button type="button" id="change-password-btn" class="secondary small-btn">🔑 Bytt passord</button>
+          <button type="button" id="logout-btn" class="secondary small-btn">🚪 Logg ut</button>
         </div>
         <div id="device-code-box" class="device-code-box hidden">
           <p>Skriv inn denne koden på den andre enheten (under «Logg inn med kode»):</p>

@@ -40,6 +40,25 @@ async function load() {
       td.textContent = v;
       tr.appendChild(td);
     });
+    const pw = document.createElement('td');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'small-btn' + (p.hasPassword ? ' secondary' : '');
+    btn.textContent = p.hasPassword ? '🔑 Nytt' : '🔑 Sett';
+    btn.title = p.hasPassword ? 'Har passord. Trykk for å sette et nytt.' : 'Har ikke passord';
+    btn.addEventListener('click', async () => {
+      const newPassword = prompt(`Nytt passord for ${p.name} (minst 4 tegn):`);
+      if (!newPassword) return;
+      try {
+        await post('/api/admin/set-password', { name: p.name, newPassword });
+        showMsg(`Passordet til ${p.name} er satt. Fortell det til dem!`, true);
+        await load();
+      } catch (err) {
+        showMsg(err.message);
+      }
+    });
+    pw.appendChild(btn);
+    tr.appendChild(pw);
     $('rows').appendChild(tr);
   });
 

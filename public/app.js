@@ -30,6 +30,8 @@ function render() {
   // Før man er logget inn er resten av siden (meny, story, veggen) skjult
   document.body.classList.toggle('logged-out', !me);
   $('wall').classList.toggle('hidden', !me);
+  $('set-password').classList.toggle('hidden', !me || me.hasPassword);
+  $('change-password-btn').classList.toggle('hidden', !me || !me.hasPassword);
   $('open-tasks').textContent = data.openTasks ? `${data.openTasks} ledige` : 'Alle er tatt!';
 
   const alerts = [];
@@ -190,11 +192,18 @@ $('join-form').addEventListener('submit', async (e) => {
   }
   $('join-btn').disabled = true;
   try {
-    await api('/api/join', { name: $('name').value, avatar: avatarData });
-    await refresh();
-    if (window.reloadStories) window.reloadStories();
+    await api('/api/join', { name: $('name').value, password: $('join-password').value, avatar: avatarData });
+    location.reload(); // last alt på nytt som innlogget (meny, varsler osv.)
+    return;
   } catch (err) {
     $('join-error').textContent = err.message;
+    if (err.message.includes('Logg inn')) {
+      const a = document.createElement('button');
+      a.type = 'button';
+      a.className = 'secondary small-btn goto-login';
+      a.textContent = '🔑 Logg inn som denne';
+      $('join-error').append(' ', a);
+    }
   }
   $('join-btn').disabled = false;
 });
@@ -213,6 +222,69 @@ document.addEventListener('presence', (e) => {
 
 // Gamle lenker: #spill går til PvP-siden
 if (location.hash === '#spill') location.replace('/pvp.html');
+
+// ---------- Ny her / Logg inn ----------
+function showAuth(which) {
+  document.querySelectorAll('.auth-tab').forEach((t) => t.classList.toggle('active', t.dataset.auth === which));
+  $('auth-join').classList.toggle('hidden', which !== 'join');
+  $('auth-login').classList.toggle('hidden', which !== 'login');
+}
+document.querySelectorAll('.auth-tab').forEach((t) => t.addEventListener('click', () => showAuth(t.dataset.auth)));
+// Navnet er tatt: gå rett til innlogging med navnet fylt inn
+$('join-error').addEventListener('click', (e) => {
+  if (!e.target.closest('.goto-login')) return;
+  $('login-name').value = $('name').value;
+  showAuth('login');
+  $('login-password').focus();
+});
+
+$('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('login-error').textContent = '';
+  $('login-btn').disabled = true;
+  try {
+    await api('/api/login', { name: $('login-name').value, password: $('login-password').value });
+    location.reload();
+    return;
+  } catch (err) {
+    $('login-error').textContent = err.message;
+  }
+  $('login-btn').disabled = false;
+});
+
+$('logout-btn').addEventListener('click', async () => {
+  if (!confirm(data.me.hasPassword
+    ? 'Logge ut på denne enheten? Du kan logge inn igjen med navn og passord.'
+    : 'Du har ikke passord ennå, så du kommer ikke inn igjen uten kode. Velg et passord først! Logge ut likevel?')) return;
+  await api('/api/logout', {}).catch(() => {});
+  location.replace('/');
+});
+
+$('set-password').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('set-password-error').textContent = '';
+  try {
+    await api('/api/password', { password: $('new-password').value });
+    $('new-password').value = '';
+    await refresh();
+    alert('Passordet er lagret 🔑 Nå kan du logge inn med navnet ditt og passordet på alle enheter.');
+  } catch (err) {
+    $('set-password-error').textContent = err.message;
+  }
+});
+
+$('change-password-btn').addEventListener('click', async () => {
+  const current = prompt('Skriv inn passordet du har nå:');
+  if (current === null) return;
+  const password = prompt('Skriv inn det nye passordet (minst 4 tegn):');
+  if (password === null) return;
+  try {
+    await api('/api/password', { current, password });
+    alert('Passordet er byttet 🔑');
+  } catch (err) {
+    alert(err.message);
+  }
+});
 
 // ---------- Endre navn ----------
 $('rename-btn').addEventListener('click', async () => {
@@ -245,9 +317,8 @@ async function loginWithCode(code) {
   $('code-error').textContent = '';
   try {
     await api('/api/device-login', { code });
-    history.replaceState(null, '', '/');
-    await refresh();
-    if (window.reloadStories) window.reloadStories();
+    location.replace('/');
+    return;
   } catch (err) {
     $('device-login').open = true;
     $('code-error').textContent = err.message;
