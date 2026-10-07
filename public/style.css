@@ -3113,3 +3113,38 @@ body.kasino #tab-bar.card { background: #fffaf2 !important; border-color: #ead9b
 .social-card .mc-stats { flex: none; margin: 0; padding: 0 0 0 10px; border-top: 0; border-left: 1px solid #ead9b5; gap: 2px; }
 .social-card .mc-stats a { min-width: 42px; padding: 4px 2px; }
 .social-card .mc-stats b { font-size: 0.95rem; }
+
+/* Kasino: samme fonter på alle faner (overskriften og knappene flytter seg ikke lenger) */
+body.kasino .marquee h1 { font-family: 'Cinzel Decorative', Georgia, serif !important; font-style: normal !important; font-weight: 900 !important; }
+body.kasino .casino-tagline { font-family: 'Cinzel', Georgia, serif !important; }
+body.kasino .wallet-num, body.kasino .wallet-label { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif !important; font-style: normal !important; }
+body.kasino .casino-menu-label { font-family: 'Cinzel Decorative', Georgia, serif !important; font-style: normal !important; }
+body.kasino .casino-menu .tab, body.kasino .casino-menu .tab * { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif !important; font-style: normal !important; }
+
+/* Kasino: spillknappene i fargene til temaet du er i */
+body.kasino { --cg-a: #8c1020; --cg-b: #3a0509; --cg-edge: #d4a530; --cg-text: #f9e29c; }
+body.kasino[data-tab="roulette"] { --cg-a: #0f5a3d; --cg-b: #03251a; --cg-edge: #d4a530; --cg-text: #f9e29c; }
+body.kasino[data-tab="poker"] { --cg-a: #4a2c14; --cg-b: #1a0d06; --cg-edge: #8a5a2b; --cg-text: #e0a96d; }
+body.kasino[data-tab="bar"] { --cg-a: #7a4316; --cg-b: #3d2009; --cg-edge: #c9932e; --cg-text: #ffd27a; }
+body.kasino .casino-games .tab.cg,
+body.kasino[data-tab] .casino-games .tab.cg {
+  background: radial-gradient(circle at 50% 25%, var(--cg-a), var(--cg-b) 85%) !important;
+  border-color: var(--cg-edge) !important; color: var(--cg-text) !important;
+}
+body.kasino .casino-games .cg b, body.kasino .casino-games .cg-slot b { color: var(--cg-text) !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+body.kasino .casino-games .cg-badge { background: var(--cg-edge); color: var(--cg-b); }
+body.kasino .casino-games .cg-slot .cg-badge { background: var(--cg-edge); color: var(--cg-b); }
+body.kasino .casino-games .tab.cg.active { box-shadow: 0 0 0 2px var(--cg-text), 0 0 16px var(--cg-edge), 0 6px 14px rgba(0, 0, 0, 0.45) !important; }
+body.kasino .casino-games .tab.cg.active::after { background: var(--cg-text); }
+/* Lommeboken øverst har samme størrelse på alle faner */
+body.kasino .wallet.card { border-width: 2px !important; border-top-width: 2px !important; }
+body.kasino .wallet-label { white-space: nowrap; font-size: 0.85rem !important; letter-spacing: 0 !important; }
+
+/* Story-raden: status under navnet, og de som er inne uten story */
+.stories-bar { scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+.social-card .stories-bar { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; }
+.story-bubble { scroll-snap-align: start; text-decoration: none !important; width: 74px; }
+.story-ring.none { padding: 3px; border-radius: 50%; background: #e9dcc6; display: inline-flex; }
+.story-bubble.online .story-ring { position: relative; }
+.story-bubble.online .story-ring::after { content: ''; position: absolute; right: 2px; bottom: 2px; width: 13px; height: 13px; border-radius: 50%; background: #2ecc71; border: 2px solid #fff; }
+.story-status { display: block; max-width: 74px; margin-top: -3px; padding: 1px 5px; border-radius: 999px; background: #fff3cf; color: #7a4f00; font-size: 0.6rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

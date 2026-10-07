@@ -477,11 +477,11 @@ function renderPoker() {
   box.append(el('span', 'gp-suit', '♠️'), stack, el('span', 'gp-text', text));
 }
 // ---------- Hva skjer: faner ----------
-let hsTab = 'now';
+let hsTab = 'events';
 document.querySelectorAll('.hs-tab').forEach((b) => b.addEventListener('click', () => {
   hsTab = b.dataset.hs;
   document.querySelectorAll('.hs-tab').forEach((x) => x.classList.toggle('active', x === b));
-  ['now', 'wall', 'events'].forEach((k) => $(`hs-${k}`).classList.toggle('hidden', k !== hsTab));
+  ['wall', 'events'].forEach((k) => $(`hs-${k}`).classList.toggle('hidden', k !== hsTab));
   if (hsTab === 'wall') loadWallPosts();
 }));
 

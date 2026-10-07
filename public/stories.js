@@ -10,6 +10,29 @@
   let groups = [];
   let me = null;
   let viewer = null; // { gi, ii, timer }
+  let rooms = {}; // hvem er hvor akkurat nå (presence.js)
+
+  // Hvor er denne personen nå? -> [ikon, status] (statusene ligger i app.js)
+  function statusOf(name) {
+    for (const [room, list] of Object.entries(rooms)) {
+      const x = list.find((y) => y.name === name);
+      if (x && window.nowStatus) {
+        const [icon, title, sub] = window.nowStatus(room, x);
+        return { icon, title, sub };
+      }
+    }
+    return null;
+  }
+  function addStatus(el, name) {
+    const st = statusOf(name);
+    if (!st) return;
+    el.classList.add('online');
+    const s = document.createElement('small');
+    s.className = 'story-status';
+    s.textContent = `${st.icon} ${st.title}`;
+    el.title = st.sub;
+    el.appendChild(s);
+  }
 
   async function api(path, body) {
     const res = await fetch(path, body
@@ -48,6 +71,7 @@
       label.className = 'story-name';
       label.textContent = 'Din story';
       add.append(ring, label);
+      addStatus(add, me.name);
       add.addEventListener('click', () => fileInput.click());
       bar.appendChild(add);
     }
@@ -62,16 +86,44 @@
       label.className = 'story-name';
       label.textContent = me && g.name === me.name ? 'Deg' : g.name.split(' ')[0];
       b.append(ring, label);
+      addStatus(b, g.name);
       b.addEventListener('click', () => {
         const firstUnseen = g.items.findIndex((it) => !isSeen(it));
         openViewer(gi, firstUnseen >= 0 ? firstUnseen : 0);
       });
       bar.appendChild(b);
     });
+    // De som er inne nå uten story: bilde + status, trykk for profilen
+    const shown = new Set([me && me.name, ...groups.map((g) => g.name)]);
+    const online = [];
+    Object.values(rooms).forEach((list) => list.forEach((x) => {
+      if (shown.has(x.name)) return;
+      shown.add(x.name);
+      online.push(x);
+    }));
+    online.sort((a, b) => a.since - b.since).forEach((x) => {
+      const a = document.createElement('a');
+      a.className = 'story-bubble no-story';
+      a.href = `/profil.html?navn=${encodeURIComponent(x.name)}`;
+      const ring = document.createElement('span');
+      ring.className = 'story-ring none';
+      ring.appendChild(avatarEl(x.avatar, x.name, 56));
+      const label = document.createElement('span');
+      label.className = 'story-name';
+      label.textContent = x.name.split(' ')[0];
+      a.append(ring, label);
+      addStatus(a, x.name);
+      bar.appendChild(a);
+    });
     if (!me && !groups.length) {
       bar.innerHTML = '<p class="muted story-empty">Ingen story ennå.</p>';
     }
   }
+
+  document.addEventListener('presence', (e) => {
+    rooms = e.detail.rooms || {};
+    if (!viewer) renderBar();
+  });
 
   async function load() {
     try {

@@ -138,14 +138,8 @@
 
         <div class="social-sep"><span>📡 Hva skjer</span></div>
         <div class="hs-tabs" role="tablist">
-          <button type="button" class="hs-tab active" data-hs="now">🟢 Akkurat nå <b id="now-count" class="hs-count"></b></button>
+          <button type="button" class="hs-tab active" data-hs="events">🔴 Live feed</button>
           <button type="button" class="hs-tab" data-hs="wall">🧱 Veggen</button>
-          <button type="button" class="hs-tab" data-hs="events">📰 Hendelser</button>
-        </div>
-
-        <!-- Akkurat nå: hvem er inne, og hva holder de på med -->
-        <div id="hs-now" class="hs-panel">
-          <div id="now-list" class="now-list"></div>
         </div>
 
         <!-- Veggen: skriv hva du vil -->
@@ -158,7 +152,7 @@
         </div>
 
         <!-- Hendelser: alt som skjer (pils, kasino, PvP, oppgaver) -->
-        <div id="hs-events" class="hs-panel hidden">
+        <div id="hs-events" class="hs-panel">
         <div id="feed-filters" class="feed-filters">
           <button type="button" class="ff active" data-cat="all">Alt</button>
           <button type="button" class="ff" data-cat="beer">🍺 Pils</button>
