@@ -19,8 +19,8 @@ const SPINS_PER_PERSON = Number(process.env.SPINS_PER_PERSON) || 10;
 // "all" = trekk blant alle lodd (også de som ikke er delt ut), "assigned" = kun utdelte lodd
 const DRAW_FROM = process.env.DRAW_FROM === 'assigned' ? 'assigned' : 'all';
 // Sjanse for å treffe «−1 spinn»-feltet på lykkehjulet
-const SPIN_LOSE_CHANCE = process.env.SPIN_LOSE_CHANCE !== undefined ? Number(process.env.SPIN_LOSE_CHANCE) : 0.05;
-const SPIN_WIN_CHANCE = process.env.SPIN_WIN_CHANCE !== undefined ? Number(process.env.SPIN_WIN_CHANCE) : 0.15;
+const SPIN_LOSE_CHANCE = process.env.SPIN_LOSE_CHANCE !== undefined ? Number(process.env.SPIN_LOSE_CHANCE) : 0.14;
+const SPIN_WIN_CHANCE = process.env.SPIN_WIN_CHANCE !== undefined ? Number(process.env.SPIN_WIN_CHANCE) : 0.06;
 // Lykkehjulet har ingen «bom»: resten av feltene gir cash (snitt ca. 59 cash, under prisen på et spinn)
 const SPIN_BONUS_CHANCE = process.env.SPIN_BONUS_CHANCE !== undefined ? Number(process.env.SPIN_BONUS_CHANCE) : 0.10;
 const WHEEL_CASH = [
@@ -487,7 +487,7 @@ function parseBet(p, amount) {
 // regelen som passer. Sannsynlighetene regnes ut nøyaktig ved oppstart og vises i appen.
 // 🎡 gir spinn til lykkehjulet (to på linjen = 1 spinn, tre = 3). Bare tre 🍺 gir pils.
 // Snitt per trekk: ca. 15 cash + ca. 0,17 spinn + ca. 1,2 % sjanse for en pils.
-const SLOT_WEIGHTS = { '🍒': 18, '🍋': 14, '🍊': 12, '🔔': 10, '⭐': 8, '7️⃣': 6, '💎': 4, '🍺': 16, '🎡': 14 };
+const SLOT_WEIGHTS = { '🍒': 18, '🍋': 14, '🍊': 12, '🔔': 10, '⭐': 8, '7️⃣': 6, '💎': 4, '🍺': 10, '🎡': 14 };
 const SLOT_SYMBOLS = Object.keys(SLOT_WEIGHTS);
 const FRUIT = new Set(['🍒', '🍋', '🍊']);
 const LUCKY = new Set(['7️⃣', '💎', '⭐']);

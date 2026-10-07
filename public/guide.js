@@ -208,7 +208,7 @@
     const s = d.settings || {};
     S.spins = s.spinsPerPerson ?? S.spins;
     S.cash = s.startCash ?? S.cash;
-    S.chance = Math.round((s.spinWinChance ?? 0.15) * 100);
+    S.chance = Math.round((s.spinWinChance ?? 0.06) * 100);
     S.price = s.spinPrice ?? S.price;
     S.flappy = s.gameFirstMilestone ?? S.flappy;
     S.taskCash = s.taskCashPerSpin ?? S.taskCash;
