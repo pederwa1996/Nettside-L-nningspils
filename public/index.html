@@ -20,6 +20,11 @@
       <a class="mb-chip" href="/kasino.html" title="Cash"><span id="home-flus">0</span> 💰</a>
       <a class="mb-chip beer-link" href="/kasino.html#baren" title="Pils til gode – løs inn i baren"><span id="home-beers">0</span> 🍺</a>
     </div>
+    <a id="bar-btn" class="bar-btn hidden" href="/kasino.html#baren">
+      <span class="bar-btn-icon">🍻</span>
+      <span class="bar-btn-text"><b>Baren</b><small id="bar-btn-sub">Løs inn pils til gode</small></span>
+      <span class="bar-btn-count" id="bar-btn-count">0 🍺</span>
+    </a>
     <div id="stories-bar" class="stories-bar"></div>
 
     <!-- Registrering / innlogging -->
@@ -88,7 +93,10 @@
           <button type="button" class="ff" data-cat="photos">📸 Bilder</button>
         </div>
         <div id="feed" class="wall-feed"></div>
-        <button type="button" id="feed-more" class="secondary small-btn hidden">Vis eldre</button>
+        <div class="feed-more-row">
+          <button type="button" id="feed-more" class="secondary small-btn hidden">Vis mer ↓</button>
+          <button type="button" id="feed-less" class="secondary small-btn hidden">Vis mindre ↑</button>
+        </div>
       </section>
 
       <!-- Stilling -->

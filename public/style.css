@@ -2269,3 +2269,26 @@ body.minimal .avatar-picker { border-color: #f5b301; color: #8a5d00; }
 body.minimal .nt-item { color: var(--text) !important; }
 body.minimal .nt-item.unread { background: #fff6dc; }
 body.minimal .presence-stack { background: #fff !important; }
+
+/* Forsiden: knapp til baren og kortere «Hva skjer» */
+.bar-btn { display: flex; align-items: center; gap: 12px; margin: 0 0 10px; padding: 10px 14px; border-radius: 14px; text-decoration: none; background: var(--card); border: 1px solid var(--line, #26262d); color: var(--text) !important; }
+.bar-btn-icon { font-size: 1.6rem; }
+.bar-btn-text { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.bar-btn-text b { font-size: 1rem; }
+.bar-btn-text small { font-size: 0.78rem; color: var(--muted); }
+.bar-btn-count { flex: none; padding: 4px 10px; border-radius: 999px; font-weight: 800; font-size: 0.85rem; background: var(--soft, #222228); }
+.bar-btn.has-beer { background: #fff3cf; border-color: #f5b301; }
+.bar-btn.has-beer .bar-btn-count { background: #f5b301; color: #1d1c1a; }
+.bar-btn.has-beer small { color: #8a5d00; }
+.feed-more-row { display: flex; gap: 8px; justify-content: center; margin: 8px 0 6px; }
+.feed-more-row .small-btn { margin: 0; }
+#feed-more { flex: 1; max-width: 260px; }
+/* Mindre bilder i feeden på forsiden */
+.wall-feed .wi-img img { max-height: 180px; }
+/* Kompakte innslag i «Hva skjer» */
+body.minimal .wall-item { padding: 9px 0; gap: 10px; }
+body.minimal .wall-item .wi-badge, body.minimal .wall-item .wi-badge .avatar { width: 38px !important; height: 38px !important; }
+body.minimal .wi-emoji { width: 20px; height: 20px; font-size: 0.75rem; right: -6px; bottom: -4px; }
+body.minimal .wall-item .wi-text { font-size: 0.93rem; margin: 1px 0; }
+body.minimal .wi-actions { margin-top: 2px; gap: 2px; }
+body.minimal .wi-like, body.minimal .wi-comments { padding: 2px 6px !important; font-size: 0.8rem !important; }

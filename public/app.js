@@ -31,6 +31,7 @@ function render() {
   document.body.classList.toggle('logged-out', !me);
   $('wall').classList.toggle('hidden', !me);
   $('me-bar').classList.toggle('hidden', !me);
+  $('bar-btn').classList.toggle('hidden', !me);
   $('set-password-nudge').classList.toggle('hidden', !me || me.hasPassword);
 
   const alerts = [];
@@ -48,6 +49,12 @@ function render() {
     $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 30));
     $('avatar-missing').classList.toggle('hidden', !!me.avatar);
     $('home-beers').closest('a').classList.toggle('has-beer', me.beersOwed > 0);
+    // Egen knapp til baren rett under «Hei»-linjen
+    $('bar-btn').classList.toggle('has-beer', me.beersOwed > 0);
+    $('bar-btn-count').textContent = `${me.beersOwed} 🍺`;
+    $('bar-btn-sub').textContent = me.beersOwed
+      ? `Du har ${me.beersOwed} pils til gode – trykk for å løse inn`
+      : 'Ingen pils til gode ennå – vinn på hjulet eller oppgaver';
     $('home-beers').closest('a').title = me.beersOwed ? `${me.beersOwed} pils til gode – trykk for å løse inn i baren` : 'Ingen pils til gode ennå';
     // Bare si ifra om vinnerlodd; resten av loddene ligger i inventaret på profilen
     const won = draw ? me.winningTickets.length : 0;
@@ -274,18 +281,36 @@ async function loadFeed() {
   } catch { /* ignorer */ }
 }
 
+// «Hva skjer» er kort til å begynne med; «Vis mer» viser flere og henter eldre ved behov
+const FEED_START = 4;
+const FEED_STEP = 8;
+let feedLimit = FEED_START;
+
 $('feed-more').addEventListener('click', async () => {
-  const last = feedItems[feedItems.length - 1];
-  if (!last) return;
-  try {
-    const r = await api(`/api/feed?before=${last.at}`);
-    feedItems = feedItems.concat(r.items);
-    feedMore = r.more;
-    renderFeed();
-  } catch (err) {
-    alert(err.message);
+  feedLimit += FEED_STEP;
+  // Har vi ikke nok lokalt, hent eldre hendelser fra serveren
+  if (feedVisible().length < feedLimit && feedMore) {
+    const last = feedItems[feedItems.length - 1];
+    try {
+      const r = await api(`/api/feed?before=${last.at}`);
+      feedItems = feedItems.concat(r.items);
+      feedMore = r.more;
+    } catch (err) {
+      alert(err.message);
+    }
   }
+  renderFeed();
 });
+
+$('feed-less').addEventListener('click', () => {
+  feedLimit = FEED_START;
+  renderFeed();
+  $('feed').closest('section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+function feedVisible() {
+  return feedItems.filter((a) => feedFilter === 'all' || (feedFilter === 'photos' ? !!a.url : feedCat(a) === feedFilter));
+}
 
 // Kategori ut fra ikonet, så feeden kan fargelegges og filtreres
 function feedCat(a) {
@@ -310,7 +335,8 @@ document.querySelectorAll('#feed-filters .ff').forEach((b) => b.addEventListener
 function renderFeed() {
   const box = $('feed');
   box.innerHTML = '';
-  const list = feedItems.filter((a) => feedFilter === 'all' || (feedFilter === 'photos' ? !!a.url : feedCat(a) === feedFilter));
+  const all = feedVisible();
+  const list = all.slice(0, feedLimit);
   if (!list.length) box.appendChild(el('p', 'muted center', feedFilter === 'all' ? 'Ingenting har skjedd ennå. Bli den første! 🎉' : 'Ingenting her ennå.'));
   list.forEach((a) => {
     const fresh = !feedFirst && !seenFeed.has(a.id);
@@ -318,7 +344,10 @@ function renderFeed() {
   });
   feedItems.forEach((a) => seenFeed.add(a.id));
   feedFirst = false;
-  $('feed-more').classList.toggle('hidden', !feedMore);
+  const more = all.length > feedLimit || feedMore;
+  $('feed-more').classList.toggle('hidden', !more);
+  $('feed-more').textContent = `Vis mer ↓${all.length > feedLimit ? ` (${Math.min(FEED_STEP, all.length - feedLimit)}${feedMore || all.length - feedLimit > FEED_STEP ? '+' : ''})` : ''}`;
+  $('feed-less').classList.toggle('hidden', feedLimit <= FEED_START);
 }
 
 function feedItem(a, fresh = false) {
