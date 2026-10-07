@@ -29,9 +29,9 @@
     $('tw-spins').textContent = `${me.spinsLeft} spinn`;
     if (!wheelSpinning) {
       $('spin-btn').disabled = me.spinsLeft <= 0;
-      $('spin-flus-btn').disabled = me.flus < data.spinPrice;
-      $('spin-btn').textContent = me.spinsLeft > 0 ? `Spinn! 🎡 (${me.spinsLeft} igjen)` : 'Ingen spinn igjen';
+      $('spin-btn').textContent = me.spinsLeft > 0 ? `Spinn! 🎡 (${me.spinsLeft} igjen)` : 'Tom for spinn · kjøp flere under 👇';
     }
+    renderPacks();
     $('spin-total').textContent = me.spinWins ? `Du har vunnet ${me.spinWins} øl på hjulet totalt 🍺` : '';
   }
   // Bordene (blackjack, roulette, poker) oppdaterer lommeboken øverst
@@ -296,15 +296,53 @@
     return sleep(5200);
   }
 
-  async function onWheelSpin(pay) {
+  // ---------- Kjøp spinn ----------
+  let buying = false;
+  function renderPacks() {
+    const wrap = $('spin-packs');
+    const packs = data.spinPacks || [];
+    if (!packs.length) return;
+    const base = packs[0].price / packs[0].n;
+    wrap.innerHTML = '';
+    packs.forEach((pk) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'spin-pack';
+      const save = Math.round((1 - pk.price / (base * pk.n)) * 100);
+      b.innerHTML = `<b>${pk.n} spinn</b><span>${pk.price} cash</span>${save > 0 ? `<em>−${save} %</em>` : `<small>${pk.price} per spinn</small>`}`;
+      b.disabled = buying || !data.me || data.me.flus < pk.price;
+      b.addEventListener('click', () => buyPack(pk));
+      wrap.appendChild(b);
+    });
+    // Tom for spinn: vis butikken med en gang
+    if (data.me && data.me.spinsLeft <= 0) $('spin-shop').open = true;
+  }
+
+  async function buyPack(pk) {
+    if (buying) return;
+    buying = true;
+    try {
+      const r = await api('/api/spins/buy', { n: pk.n });
+      $('shop-msg').textContent = `✅ Du kjøpte ${r.bought} spinn for ${pk.price} cash. Lykke til! 🍀`;
+      $('shop-msg').className = 'result win';
+      buying = false;
+      setWallet(r.me);
+    } catch (err) {
+      $('shop-msg').textContent = err.message;
+      $('shop-msg').className = 'result lose';
+      buying = false;
+      setWallet(data.me);
+    }
+  }
+
+  async function onWheelSpin() {
     if (wheelSpinning) return;
     wheelSpinning = true;
     $('spin-btn').disabled = true;
-    $('spin-flus-btn').disabled = true;
     $('spin-result').textContent = '';
     $('spin-result').className = 'result';
     try {
-      const result = await api('/api/spin', { pay });
+      const result = await api('/api/spin', {});
       const fortune = $('fortune');
       fortune.classList.remove('won', 'lost');
       fortune.classList.add('spinning');
@@ -329,8 +367,7 @@
       setWallet(data.me);
     }
   }
-  $('spin-btn').addEventListener('click', () => onWheelSpin('spin'));
-  $('spin-flus-btn').addEventListener('click', () => onWheelSpin('flus'));
+  $('spin-btn').addEventListener('click', onWheelSpin);
 
   // ---------- Felles ----------
   const TAB_HASH = { wheel: 'hjul', slot: 'automat', roulette: 'roulette', blackjack: 'blackjack', poker: 'poker', bar: 'baren' };

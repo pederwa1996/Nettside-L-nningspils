@@ -43,7 +43,14 @@ const CASINO_MIN_BET = 10;
 const CASINO_MAX_BET = Number(process.env.CASINO_MAX_BET) || 200;
 // Pris i cash for ett spinn på lykkehjulet eller automaten. Holdes over det et trekk på
 // automaten gir i snitt (ca. 42 cash + 2 % pils), så cash ikke blir en pengemaskin.
-const SPIN_PRICE = Number(process.env.SPIN_PRICE) || 50;
+const SPIN_PRICE = Number(process.env.SPIN_PRICE) || 50; // ett trekk på automaten
+// Spinn til lykkehjulet kjøpes med cash. Jo flere samtidig, jo billigere per spinn.
+const SPIN_PACKS = [
+  { n: 1, price: 100 },
+  { n: 3, price: 270 },
+  { n: 5, price: 400 },
+  { n: 10, price: 700 },
+];
 const MAX_PILS_PER_ORDER = 5;
 const POKER_BLINDS = { small: Number(process.env.POKER_SMALL_BLIND) || 5, big: Number(process.env.POKER_BIG_BLIND) || 10 };
 const POKER_MIN_BUYIN = Number(process.env.POKER_MIN_BUYIN) || 100;
@@ -532,7 +539,7 @@ function payForSpin(p, pay, { wheel = false } = {}) {
     addFlus(p, -SPIN_PRICE);
     return;
   }
-  if (spinsLeft(p) < 1) throw new Error(`Du har ingen spinn igjen. Betal med cash (${SPIN_PRICE} per spinn), eller tjen flere med oppgaver, Flappy Sjef eller dueller!`);
+  if (spinsLeft(p) < 1) throw new Error(`Du har ingen spinn igjen. Kjøp spinn under lykkehjulet, eller tjen flere med oppgaver, Flappy Sjef eller dueller!`);
   if (!wheel) addSpins(p, -1); // lykkehjulet teller brukte spinn selv i p.spins
 }
 
@@ -1022,6 +1029,7 @@ function settings() {
     spinWinChance: SPIN_WIN_CHANCE,
     gameFirstMilestone: GAME_FIRST_MILESTONE,
     spinPrice: SPIN_PRICE,
+    spinPacks: SPIN_PACKS,
     startCash: START_FLUS,
     taskCashPerSpin: TASK_CASH_PER_SPIN,
   };
@@ -1319,17 +1327,13 @@ const routes = {
   'POST /api/spin': (req, res, body) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    const pay = body.pay === 'flus' ? 'flus' : 'spin';
-    payForSpin(p, pay, { wheel: true });
+    payForSpin(p, 'spin', { wheel: true });
 
     const roll = crypto.randomInt(1_000_000);
     const win = roll < SPIN_WIN_CHANCE * 1_000_000;
     // Lite felt som tar et ekstra spinn (bare hvis man har et å miste)
     const lose = !win && roll < (SPIN_WIN_CHANCE + SPIN_LOSE_CHANCE) * 1_000_000;
-    if (pay === 'flus') {
-      p.paidWheelSpins = (p.paidWheelSpins || 0) + 1;
-      if (win) p.paidWheelWins = (p.paidWheelWins || 0) + 1;
-    } else p.spins.push(win);
+    p.spins.push(win);
     if (win) {
       addActivity(p.name, '🎡', 'vant en pils på lykkehjulet! 🍺');
       announceBeer(p.name, `🍺 ${p.name} vant en pils på lykkehjulet!`, 5500);
@@ -1338,6 +1342,20 @@ const routes = {
     if (lostSpin) addSpins(p, -1);
     saveState();
     sendJson(res, 200, { win, lose, lostSpin, me: meView(p) });
+  },
+
+  // Kjøp en pakke med spinn til lykkehjulet
+  'POST /api/spins/buy': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const pack = SPIN_PACKS.find((x) => x.n === Number(body.n));
+    if (!pack) throw new Error('Ukjent pakke.');
+    if ((p.flus || 0) < pack.price) throw new Error(`${pack.n} spinn koster ${pack.price} cash, men du har bare ${p.flus || 0}.`);
+    addFlus(p, -pack.price);
+    addSpins(p, pack.n);
+    p.boughtSpins = (p.boughtSpins || 0) + pack.n;
+    saveState();
+    sendJson(res, 200, { bought: pack.n, me: meView(p) });
   },
 
   'POST /api/game/start': (req, res) => {
@@ -1963,6 +1981,7 @@ const routes = {
       maxBet: CASINO_MAX_BET,
       minBet: CASINO_MIN_BET,
       spinPrice: SPIN_PRICE,
+      spinPacks: SPIN_PACKS,
       wheelChance: SPIN_WIN_CHANCE,
       wheelLoseChance: SPIN_LOSE_CHANCE,
       slotTable: SLOT_RULES.map((r) => ({ id: r.id, combo: r.combo, label: r.label, flus: r.flus, beer: r.beer || 0, pLine: SLOT_ODDS.rules[r.id].line, pPull: SLOT_ODDS.rules[r.id].pull })),

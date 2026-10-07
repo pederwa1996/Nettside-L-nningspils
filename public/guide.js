@@ -5,13 +5,14 @@
 // - På hver side: en liten «Slik funker det»-boks. Første gang er den åpen, etterpå
 //   ligger den sammenfoldet øverst og kan åpnes igjen.
 (function () {
-  const S = { spins: 10, cash: 500, chance: 15, price: 50, flappy: 50, taskCash: 30 };
+  const S = { spins: 10, cash: 500, chance: 15, price: 50, flappy: 50, taskCash: 30, packs: [{ n: 1, price: 100 }] };
+  const packText = () => S.packs.map((p) => `${p.n} for ${p.price}`).join(', ');
 
   const PAGES = {
     home: {
       title: 'Slik funker lønningspilsen',
       lines: () => [
-        '🍺 <b>Målet er å vinne pils til gode, altså ekte pils.</b> Du løser dem inn i <b>Kasino → 🍻 Baren</b>, og spillmesteren kommer med pilsen til bordet ditt.',
+        '🍺 <b>Målet er å vinne pils til gode, altså ekte pils.</b> Du løser dem inn i <b>🍻 Baren</b>, og spillmesteren kommer med pilsen til bordet ditt.',
         `🎡 Du starter med <b>${S.spins} spinn</b> og <b>${S.cash} cash</b>. Spinnene bruker du på lykkehjulet; resten av kasinoet spiller du med cash.`,
         '🎯 Tjen flere spinn og cash med <b>oppgaver</b>, og vinn spinn fra de andre i <b>PvP</b>.',
         '💬 Chatten er boblen nede til venstre, og 🔔 viser varslene dine.',
@@ -24,7 +25,7 @@
         `🎰 <b>Automat:</b> ${S.price} cash per trekk, 3 linjer som betaler hver for seg. Tre 🍺 på en linje gir en pils. Se sannsynlighetene under automaten.`,
         '🃏 <b>Blackjack</b> og ♠️ <b>Poker</b> er felles bord: sett deg på en ledig plass for å spille, ellers ser du på.',
         '🔴 <b>Roulette</b> er ett hjul for alle: første innsats starter nedtellingen, og hjulet spinner for alle samtidig.',
-        `🎡 Spinn kan bare brukes på lykkehjulet. Tom for spinn? Spinn hjulet for ${S.price} cash.`,
+        `🛒 Spinn kan bare brukes på lykkehjulet. Tom for spinn? Kjøp flere under hjulet: ${packText()}.`,
         '🍻 <b>Baren:</b> har du pils til gode, trykk «Bruk pils til gode», så kommer spillmesteren med den til bordet.',
       ],
     },
@@ -170,10 +171,10 @@
   function showWelcome() {
     if (document.querySelector('.guide-welcome')) return;
     const steps = [
-      ['🍺', 'Vinn ekte pils!', 'Hovedpoenget er å vinne <b>pils til gode</b>, og hver av dem er <b>en ekte pils</b> du får servert her i kveld. Du løser dem inn i <b>Baren</b> i kasinoet, og spillmesteren kommer med pilsen til bordet ditt.'],
-      ['🎡', `${S.spins} spinn og ${S.cash} cash`, `Det er det du starter med. Spinnene bruker du på <b>lykkehjulet</b> (${S.chance} % sjanse for pils). Med cash spiller du automat, roulette, blackjack og poker, og ${S.price} cash gir et ekstra spinn på hjulet.`],
+      ['🍺', 'Vinn ekte pils!', 'Hovedpoenget er å vinne <b>pils til gode</b>, og hver av dem er <b>en ekte pils</b> du får servert her i kveld. Du løser dem inn i <b>Baren</b>, og spillmesteren kommer med pilsen til bordet ditt.'],
+      ['🎡', `${S.spins} spinn og ${S.cash} cash`, `Det er det du starter med. Spinnene bruker du på <b>lykkehjulet</b> (${S.chance} % sjanse for pils). Med cash spiller du automat, roulette, blackjack og poker, og du kan kjøpe flere spinn under hjulet (${S.packs[0].price} cash for ett, billigere i pakker).`],
       ['🎯', 'Tjen mer', 'Løs <b>oppgaver</b> for spinn og cash, og utfordre kollegaene i <b>PvP</b> for å vinne spinnene deres.'],
-      ['🍻', 'Slik løser du inn', 'Gå til <b>Kasino → 🍻 Baren</b>, trykk «Bruk pils til gode» og skriv gjerne hvor du sitter. <b>Spillmesteren</b> kommer med pilsen til bordet ditt. Skål!'],
+      ['🍻', 'Slik løser du inn', 'Trykk på <b>🍻 Baren</b> på forsiden, trykk «Bruk pils til gode» og skriv gjerne hvor du sitter. <b>Spillmesteren</b> kommer med pilsen til bordet ditt. Skål!'],
     ];
     const overlay = el('div', 'guide-welcome');
     const box = el('div', 'guide-box');
@@ -185,7 +186,7 @@
       list.appendChild(li);
     });
     box.appendChild(list);
-    box.appendChild(el('p', 'note', 'Menyen nederst tar deg til Kasino, PvP, Oppgaver og Profil. 💬 er chatten og 🔔 er varslene dine.'));
+    box.appendChild(el('p', 'note', 'Forsiden er navet: de fire store knappene tar deg til Kasino, Baren, PvP og Oppgaver, og 🏠 Hjem øverst tar deg tilbake. 💬 er chatten og 🔔 er varslene dine.'));
     const go = el('button', 'big guide-go', 'Kjør på! 🍻');
     go.type = 'button';
     const close = () => {
@@ -206,6 +207,7 @@
     S.cash = s.startCash ?? S.cash;
     S.chance = Math.round((s.spinWinChance ?? 0.15) * 100);
     S.price = s.spinPrice ?? S.price;
+    if (s.spinPacks && s.spinPacks.length) S.packs = s.spinPacks;
     S.flappy = s.gameFirstMilestone ?? S.flappy;
     S.taskCash = s.taskCashPerSpin ?? S.taskCash;
     if (!d.me) {
