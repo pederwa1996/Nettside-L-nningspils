@@ -8,15 +8,26 @@
 </head>
 <body class="minimal home">
   <header class="hero home-hero">
+    <!-- Røa Elektriske-logoen (SVG-replika, kan byttes ut) -->
+    <div class="brand-logo" role="img" aria-label="Røa Elektriske">
+      <svg viewBox="0 0 320 64" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="32" cy="32" r="28" fill="#1d1c1a"/>
+        <path d="M36 9 L19 36 H30 L26 55 L45 26 H33 Z" fill="#f5b301"/>
+        <text x="72" y="30" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="25" font-weight="900" letter-spacing="3" fill="#1d1c1a">RØA</text>
+        <text x="72" y="54" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="20" font-weight="700" letter-spacing="4.2" fill="#1d1c1a">ELEKTRISKE</text>
+      </svg>
+    </div>
     <h1>Lønningspils 🍺</h1>
-    <p class="sub">Vinn ekte pils i kveld – spill, løs oppgaver og utfordre kollegaene</p>
   </header>
 
   <main>
     <!-- Story -->
     <!-- Liten «meg»-linje: trykk på bildet for profilen -->
     <div id="me-bar" class="me-bar hidden">
-      <a href="/profil.html" class="me-bar-who" title="Din profil"><span id="me-avatar"></span><span>Hei, <b id="me-name"></b></span></a>
+      <a href="/profil.html" class="me-bar-who" title="Gå til profilen din">
+        <span class="me-av-wrap"><span id="me-avatar"></span><i class="me-av-go" aria-hidden="true">›</i></span>
+        <span class="me-who-text"><span class="me-hi">Hei, <b id="me-name"></b></span><small>Din profil ›</small></span>
+      </a>
       <a class="mb-chip" href="/kasino.html#hjul" title="Spinn"><span id="home-spins">0</span> 🎡</a>
       <a class="mb-chip" href="/kasino.html" title="Cash"><span id="home-flus">0</span> 💰</a>
       <a class="mb-chip beer-link" href="/baren.html" title="Pils til gode – løs inn i baren"><span id="home-beers">0</span> 🍺</a>

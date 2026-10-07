@@ -1015,21 +1015,23 @@ a.profile-link:hover span { text-decoration: underline; }
 /* =========================================================
    Forsiden: meny nederst og fliser
    ========================================================= */
-/* 🏠 Hjem-knappen (nav.js) øverst til venstre på undersidene; ❓ ligger rett ved siden av */
+/* 🏠 Hjem-knappen (nav.js) nederst på midten av undersidene, mellom 🔔/💬 og admin-boblene */
 .home-btn {
-  position: fixed; top: calc(10px + env(safe-area-inset-top)); left: 10px; z-index: 88;
-  display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px 0 10px; border-radius: 999px;
+  position: fixed; left: max(50%, 200px); bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 89;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 54px; padding: 0 20px; border-radius: 999px;
   background: linear-gradient(180deg, #ffd977, #f5a301); color: #2a1500 !important; text-decoration: none !important;
-  font: 800 0.95rem/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
-  border: 2px solid #fff3c4; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(122, 84, 16, 0.5);
+  font: 900 1rem/1 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  border: 3px solid #fff3c4; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(122, 84, 16, 0.5);
   transition: transform 0.15s;
 }
-.home-btn:active { transform: scale(0.94); }
-.home-btn-icon { font-size: 1.15rem; }
-body.has-home .guide-icon { left: 104px; top: calc(11px + env(safe-area-inset-top)); }
-body.has-home .guide-pop { left: 10px; }
-body.has-home .hero, body.minimal.has-home .hero { padding-top: 58px; padding-left: 16px; }
-body.has-home:not(:has(.hero)) main { padding-top: 50px; }
+.home-btn:active { transform: translateX(-50%) scale(0.94); }
+.home-btn-icon { font-size: 1.35rem; }
+@media (max-width: 400px) { .home-btn { padding: 0 15px; } }
+
+/* ❓ bare på forsiden, øverst til høyre (de som er her nå flytter litt til venstre) */
+body.home .guide-icon { left: auto; right: 10px; }
+body.home .guide-pop { left: auto; right: 10px; }
+body.home .presence { right: 54px; }
 /* Plass nederst så 🔔/💬-boblene ikke dekker det siste på siden */
 body:has(.chat-bubble) { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
 
@@ -2072,7 +2074,6 @@ body.minimal .people-strip { padding-top: 4px; }
 body.minimal .string-lights, body.minimal .bulb-sign::before, body.minimal .bulb-sign::after { display: none !important; }
 body.minimal footer { padding: 16px; }
 /* ❓-ikonet skal ikke dekke titlene */
-body.minimal .hero { padding-left: 54px; }
 body.minimal .people-strip { padding-left: 44px; }
 body.minimal .guide-icon { background: var(--card) !important; border: 1px solid var(--line) !important; box-shadow: none !important; color: var(--muted) !important; }
 /* Rolige bobler */
@@ -2684,3 +2685,22 @@ button.partner-chip.on::after { content: '✓'; font-weight: 900; }
 /* Lang belønning («… cash hver») bryter til ny linje i stedet for å gå utenfor kortet */
 .task-head { flex-wrap: wrap; row-gap: 6px; }
 .task-head .task-title { flex: 1 1 140px; }
+
+/* Forsiden: logoen øverst, «Lønningspils» sentrert under */
+body.minimal.home .home-hero { text-align: center; padding: 14px 16px 8px !important; }
+.brand-logo { width: min(240px, 66vw); margin: 4px auto 4px; }
+.brand-logo svg, .brand-logo img { display: block; width: 100%; height: auto; }
+body.minimal.home .home-hero h1 { margin: 2px 0 0; font-size: 1.6rem !important; letter-spacing: 0.3px; }
+
+/* Tydeligere at avataren tar deg til profilen */
+.me-av-wrap { position: relative; flex: none; display: inline-flex; }
+.me-av-wrap .avatar { border: 2px solid #f5b301 !important; box-shadow: 0 0 0 3px rgba(245, 179, 1, 0.25); animation: me-av-ring 2.4s ease-in-out infinite; }
+@keyframes me-av-ring { 50% { box-shadow: 0 0 0 5px rgba(245, 179, 1, 0.12); } }
+.me-av-go {
+  position: absolute; right: -4px; bottom: -3px; width: 15px; height: 15px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 900; font-size: 0.75rem; line-height: 1;
+  background: #1d1c1a; color: #fff; border: 1.5px solid #fff;
+}
+.me-who-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.me-hi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-who-text small { font-size: 0.68rem; font-weight: 700; color: #b07800; }

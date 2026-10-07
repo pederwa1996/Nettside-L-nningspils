@@ -127,7 +127,7 @@
   // ---------- «Slik funker det» på hver side ----------
   function pageCard() {
     const page = PAGES[key];
-    // Et lite ❓-ikon øverst til venstre; forklaringen vises bare når man trykker
+    // Et lite ❓-ikon øverst til høyre på forsiden; forklaringen vises bare når man trykker
     const btn = el('button', 'guide-icon', '?');
     btn.type = 'button';
     btn.title = page.title;
@@ -187,7 +187,7 @@
       list.appendChild(li);
     });
     box.appendChild(list);
-    box.appendChild(el('p', 'note', 'Forsiden er navet: de fire store knappene tar deg til Kasino, Baren, PvP og Oppgaver, og 🏠 Hjem øverst tar deg tilbake. 💬 er chatten og 🔔 er varslene dine.'));
+    box.appendChild(el('p', 'note', 'Forsiden er navet: de fire store knappene tar deg til Kasino, Baren, PvP og Oppgaver, og 🏠 Hjem nederst på de andre sidene tar deg tilbake. 💬 er chatten og 🔔 er varslene dine.'));
     const go = el('button', 'big guide-go', 'Kjør på! 🍻');
     go.type = 'button';
     const close = () => {
@@ -215,7 +215,8 @@
       // Ikke logget inn ennå: vis velkomsten rett etter registreringen (siden lastes på nytt da)
       return;
     }
-    pageCard();
+    // ❓ finnes bare på forsiden
+    if (key === 'home') pageCard();
     if (key === 'home' && store.get('guide:welcome') !== 'seen') showWelcome();
   }).catch(() => {});
 })();
