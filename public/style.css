@@ -618,7 +618,7 @@ body.kasino .wallet-item {
 body.kasino .wallet-label { color: var(--gold-1); opacity: 0.8; }
 
 /* Gullknapper */
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble),
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.wallet-link),
 body.kasino .button {
   background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 50%, #b88a1e 51%, var(--gold-2) 100%);
   color: #3a0006;
@@ -626,7 +626,7 @@ body.kasino .button {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
   box-shadow: 0 3px 0 var(--gold-3), 0 6px 14px rgba(0, 0, 0, 0.5);
 }
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):hover:not(:disabled) {
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.wallet-link):hover:not(:disabled) {
   filter: brightness(1.08);
 }
 body.kasino button.secondary {
@@ -1045,8 +1045,11 @@ body:has(.bottom-nav) .admin-bubble { bottom: 84px; }
 body:has(.bottom-nav) .admin-orders { bottom: 156px; }
 
 .home-wallet { display: flex; gap: 8px; margin: 10px 0; }
-.home-wallet div { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
+.home-wallet div, .home-wallet a { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
 .home-wallet span { font-size: 1.4rem; font-weight: 900; color: var(--gold); }
+/* «Pils til gode» er en lenke til baren */
+.wallet-link { cursor: pointer; text-decoration: none; color: inherit; font: inherit; transition: transform 0.15s; }
+.wallet-link:active { transform: scale(0.95); }
 .home-wallet small { font-size: 0.75rem; color: var(--muted); }
 #home-alerts a { color: inherit; }
 .me-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
@@ -1093,7 +1096,7 @@ body.cantina .tile::before {
     conic-gradient(from 45deg, var(--talavera) 25%, var(--cream) 0 50%, var(--talavera) 0 75%, var(--cream) 0) 0 0 / 8px 8px;
 }
 body.cantina .tile strong { font-family: 'Bungee', Impact, sans-serif; font-weight: 400; color: var(--warm); }
-body.cantina .home-wallet div { background: rgba(255, 220, 170, 0.07); border: 1px dashed rgba(255, 200, 130, 0.25); }
+body.cantina .home-wallet div, body.cantina .home-wallet a { background: rgba(255, 220, 170, 0.07); border: 1px dashed rgba(255, 200, 130, 0.25); }
 
 /* Bakgrunnsbilde fra baren på forsiden. Ligger i et eget fast lag, fordi
    background-attachment: fixed ikke virker på iPhone. Mørkt lag over for lesbarhet. */
@@ -1157,7 +1160,7 @@ body.kasino[data-tab="slot"] .wallet-num {
 }
 body.kasino[data-tab="slot"] .tab { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
 body.kasino[data-tab="slot"] .tab.active { background: #ff2ec4; color: #fff; box-shadow: 0 0 16px #ff2ec4; }
-body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble) {
+body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.wallet-link) {
   background: linear-gradient(180deg, #00f0ff, #00a8c6);
   color: #08010f;
   border-color: #00e5ff;
@@ -1525,3 +1528,7 @@ body.kasino[data-tab="roulette"] .tab.active { background: linear-gradient(180de
 /* Ikke logget inn: bare registreringen synes */
 body.logged-out .bottom-nav,
 body.logged-out #stories-bar { display: none !important; }
+
+/* Lommebok-knappen («pils til gode») skal se ut som de andre feltene */
+button.wallet-item { background: none; border: 0; padding: 0; color: inherit; font: inherit; border-radius: 0; box-shadow: none; }
+button.wallet-item:hover:not(:disabled) { background: none; filter: brightness(1.15); }

@@ -332,6 +332,8 @@
     if (name !== 'bar') api('/api/casino').then((d) => d.me && setWallet(d.me)).catch(() => {});
   }
   document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => showTab(t.dataset.tab)));
+  // «Pils til gode» i lommeboken tar deg rett til baren
+  $('wallet-beers').addEventListener('click', () => { showTab('bar'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
   // ---------- Live gevinster ----------
   const GAME_ICON = { roulette: '🎡', blackjack: '🃏', slot: '🎰', poker: '♠️' };
