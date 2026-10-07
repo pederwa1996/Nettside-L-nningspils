@@ -395,6 +395,15 @@
   // «Pils til gode» i lommeboken tar deg rett til baren
   $('wallet-beers').addEventListener('click', () => { showTab('bar'); window.scrollTo({ top: 0, behavior: 'smooth' }); });
 
+  // Hvor mange som spiller hvert spill akkurat nå (fra presence.js)
+  document.addEventListener('presence', (e) => {
+    const rooms = e.detail.rooms || {};
+    document.querySelectorAll('.cg-live').forEach((x) => {
+      const n = (rooms[x.dataset.room] || []).length;
+      x.textContent = n ? `🟢 ${n} spiller` : '';
+    });
+  });
+
   // ---------- Live gevinster ----------
   const GAME_ICON = { roulette: '🔴', blackjack: '🃏', slot: '🎰', poker: '♠️' };
   const GAME_NAME = { roulette: 'roulette', blackjack: 'blackjack', slot: 'automaten', poker: 'pokerbordet' };

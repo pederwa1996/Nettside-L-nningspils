@@ -2777,9 +2777,6 @@ body.minimal button.wp-del { position: absolute; top: 4px; right: 6px; margin: 0
 .sugg-head { margin: 0 0 4px; }
 .sugg-text { margin: 0 0 8px; white-space: pre-wrap; }
 
-/* Kasino: den store hjul-knappen trengs ikke når man allerede er på hjulet */
-body.kasino[data-tab="wheel"] .casino-menu .tab-wheel { display: none !important; }
-body.kasino[data-tab="wheel"] .casino-menu-label { margin-top: 0; }
 /* Lykkehjul-boksen i samme blå tema som knappen, med det snurrende hjulet i tittelen */
 body.kasino #tab-wheel.card {
   background: radial-gradient(120% 70% at 50% 0%, #3d84f0 0%, #1a47a3 45%, #0e2a66 100%) !important;
@@ -2804,3 +2801,57 @@ body.kasino #tab-wheel .spin-shop { background: rgba(0, 20, 60, 0.35); }
 /* Litt luft rundt hjulet så det ikke dekker tekst og ikoner */
 .go-hub .go-grid .go-tile:nth-child(odd) { padding-right: 34px; }
 .go-hub .go-grid .go-tile:nth-child(even) { padding-left: 36px; }
+
+/* Kasino: spillene som fristende «reklameplakater». Spillet du er på, er skjult. */
+.casino-menu-label { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 2px 0 8px !important; font-family: 'Cinzel Decorative', Georgia, serif; font-size: 0.95rem !important; letter-spacing: 1.5px !important; color: #ffe08a !important; opacity: 1 !important; text-shadow: 0 0 10px rgba(255, 170, 0, 0.6); }
+.cm-fire { display: inline-block; animation: cm-flame 0.9s ease-in-out infinite alternate; }
+@keyframes cm-flame { to { transform: scale(1.25) rotate(-8deg); } }
+.casino-games { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.casino-games .tab.active { display: none !important; }
+body.kasino .casino-games .tab.cg {
+  position: relative; overflow: hidden; margin: 0; min-height: 128px; padding: 22px 10px 10px !important;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px; text-align: center;
+  border-radius: 16px !important; color: #fff !important; border: 2px solid #f2cf6b !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3), 0 6px 16px rgba(0, 0, 0, 0.45), inset 0 0 18px rgba(255, 255, 255, 0.08) !important;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif !important; transition: transform 0.15s;
+}
+body.kasino .casino-games .tab.cg:active { transform: scale(0.96); }
+/* Glans som sveiper over plakatene */
+.casino-games .cg::before {
+  content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  transform: skewX(-20deg); animation: cg-shine 4.5s ease-in-out infinite;
+}
+.casino-games .cg:nth-child(2)::before { animation-delay: 0.9s; }
+.casino-games .cg:nth-child(3)::before { animation-delay: 1.8s; }
+.casino-games .cg:nth-child(4)::before { animation-delay: 2.7s; }
+.casino-games .cg:nth-child(5)::before { animation-delay: 3.6s; }
+@keyframes cg-shine { 0%, 60% { left: -60%; } 85%, 100% { left: 130%; } }
+body.kasino .casino-games .cg-wheel { background: radial-gradient(circle at 50% 30%, #4f93ff, #1a47a3 60%, #0e2a66) !important; }
+body.kasino .casino-games .cg-slot { background: radial-gradient(circle at 50% 30%, #ffd65a, #c88a00 55%, #7a4f00) !important; }
+body.kasino .casino-games .cg-roulette { background: radial-gradient(circle at 50% 30%, #ff5468, #b0122c 55%, #5c0612) !important; }
+body.kasino .casino-games .cg-blackjack { background: radial-gradient(circle at 50% 30%, #2fbf74, #0f6b3c 55%, #06371e) !important; }
+body.kasino .casino-games .cg-poker { background: radial-gradient(circle at 50% 30%, #8a6bff, #3f1f9e 55%, #1c0c4f) !important; }
+.casino-games .cg b { font-size: 1.05rem; font-weight: 900; letter-spacing: 0.3px; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.45); font-family: 'Cinzel Decorative', Georgia, serif; }
+.casino-games .cg small { font-size: 0.72rem; font-weight: 700; opacity: 0.95; line-height: 1.25; }
+.casino-games .cg-slot b, .casino-games .cg-slot small { color: #2a1500; text-shadow: none; }
+.casino-games .cg .tc-icon { font-size: 2.1rem; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.45)); }
+.casino-games .cg .tw-icon { width: 40px; height: 40px; margin-bottom: 2px; }
+.casino-games .cg-slot .tc-icon { animation: tc-shake 1.6s ease-in-out infinite; }
+.casino-games .cg-roulette .tc-icon { animation: tw-spin 3s linear infinite; }
+.casino-games .cg-blackjack .tc-icon { animation: tc-flip 2.6s ease-in-out infinite; }
+.casino-games .cg-poker .tc-icon { animation: tc-pulse 1.4s ease-in-out infinite; }
+.cg-badge {
+  position: absolute; top: 13px; right: -34px; transform: rotate(35deg); width: 130px; padding: 2px 0 2px 6px; text-align: center;
+  font-style: normal; font-size: 0.58rem; font-weight: 900; letter-spacing: 0.5px;
+  background: #ffe14d; color: #6b0000; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); animation: cg-badge 1.2s ease-in-out infinite alternate;
+}
+.cg-slot .cg-badge { background: #e0283f; color: #fff; }
+@keyframes cg-badge { to { filter: brightness(1.25); } }
+.cg-foot { display: flex; gap: 4px; align-items: center; justify-content: center; flex-wrap: wrap; margin-top: auto; min-height: 18px; }
+.cg-chip { padding: 2px 8px; border-radius: 999px; background: #ffd34d; color: #2a1500; font-size: 0.68rem; font-weight: 900; }
+.cg-live { padding: 2px 7px; border-radius: 999px; background: rgba(0, 0, 0, 0.35); font-size: 0.64rem; font-weight: 800; }
+.cg-live:empty { display: none; }
+/* Sjanser og regler under hjulet */
+body.kasino #tab-wheel .wheel-rules { max-width: 380px; margin: 10px auto 0; background: rgba(0, 20, 60, 0.35); border-radius: 14px; padding: 4px 14px; }
+body.kasino #tab-wheel .wheel-rules p { color: #e8f0ff; font-size: 0.86rem; }

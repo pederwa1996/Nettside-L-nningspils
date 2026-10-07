@@ -29,19 +29,40 @@
         <button type="button" class="wallet-item wallet-link" id="wallet-beers" title="Gå til baren"><span class="wallet-num" id="my-beers">0</span><span class="wallet-label">🍺 til gode ›</span></button>
       </section>
 
-      <!-- Lykkehjulet (spinn) som stor knapp, så det man spiller med cash -->
+      <!-- Spillene: det du er på er skjult, de andre ligger klare. Live: hvor mange som spiller -->
       <div class="tabs casino-menu">
-        <button type="button" class="tab tab-wheel active" data-tab="wheel">
-          <span class="tw-icon" aria-hidden="true"><i class="mini-wheel"></i></span>
-          <span class="tw-text"><b>Lykkehjulet</b><small>Her bruker du spinnene dine · 15 % sjanse for pils</small></span>
-          <span class="tw-count" id="tw-spins">0 spinn</span>
-        </button>
-        <p class="casino-menu-label">💰 Spill om cash</p>
-        <div class="casino-cash-grid">
-          <button type="button" class="tab" data-tab="slot"><i class="tc-icon">🎰</i><span>Automat</span></button>
-          <button type="button" class="tab" data-tab="roulette"><i class="tc-icon">🔴</i><span>Roulette</span></button>
-          <button type="button" class="tab" data-tab="blackjack"><i class="tc-icon">🃏</i><span>Blackjack</span></button>
-          <button type="button" class="tab" data-tab="poker"><i class="tc-icon">♠️</i><span>Poker</span></button>
+        <p class="casino-menu-label"><span class="cm-fire">🔥</span> Velg ditt neste spill <span class="cm-fire">🔥</span></p>
+        <div class="casino-games">
+          <button type="button" class="tab cg cg-wheel active" data-tab="wheel">
+            <em class="cg-badge">VINN PILS</em>
+            <span class="tw-icon spin" aria-hidden="true"><i class="mini-wheel"></i></span>
+            <b>Lykkehjulet</b><small>15 % sjanse for ekte pils!</small>
+            <span class="cg-foot"><span class="cg-chip" id="tw-spins">0 spinn</span><span class="cg-live" data-room="kasino-wheel"></span></span>
+          </button>
+          <button type="button" class="tab cg cg-slot" data-tab="slot">
+            <em class="cg-badge">JACKPOT</em>
+            <i class="tc-icon">🎰</i>
+            <b>Gullautomaten</b><small>Tre 🍺 på rad = PILS!</small>
+            <span class="cg-foot"><span class="cg-live" data-room="kasino-slot"></span></span>
+          </button>
+          <button type="button" class="tab cg cg-roulette" data-tab="roulette">
+            <em class="cg-badge">2× CASH</em>
+            <i class="tc-icon">🔴</i>
+            <b>Roulette</b><small>Doble pengene på ett spinn</small>
+            <span class="cg-foot"><span class="cg-live" data-room="kasino-roulette"></span></span>
+          </button>
+          <button type="button" class="tab cg cg-blackjack" data-tab="blackjack">
+            <em class="cg-badge">21!</em>
+            <i class="tc-icon">🃏</i>
+            <b>Blackjack</b><small>Slå dealeren, ta pengene</small>
+            <span class="cg-foot"><span class="cg-live" data-room="kasino-blackjack"></span></span>
+          </button>
+          <button type="button" class="tab cg cg-poker" data-tab="poker">
+            <em class="cg-badge">● LIVE</em>
+            <i class="tc-icon">♠️</i>
+            <b>Poker</b><small>Bløff kollegaene rett i trynet</small>
+            <span class="cg-foot"><span class="cg-live" data-room="kasino-poker"></span></span>
+          </button>
         </div>
         <button type="button" class="tab tab-bar-link" data-tab="bar"><i class="tc-icon">🍻</i> Baren · løs inn pils til gode ›</button>
       </div>
@@ -49,7 +70,6 @@
       <!-- Lykkehjulet -->
       <section id="tab-wheel" class="card">
         <h2 class="wheel-title"><span class="tw-icon spin" aria-hidden="true"><i class="mini-wheel"></i></span>Lykkehjulet</h2>
-        <p>Hvert spinn har <strong id="chance">15 %</strong> sjanse for øl, men pass deg for <strong>💀 −1 SPINN</strong> (<span id="lose-chance">5 %</span>): da mister du et spinn til.</p>
         <div class="wheel-wrap fortune" id="fortune">
           <div class="wheel-lights" id="wheel-lights"></div>
           <div class="fortune-pointer"></div>
@@ -64,6 +84,12 @@
           <summary>🛒 Kjøp spinn <small>· jo flere, jo billigere</small></summary>
           <div class="spin-packs" id="spin-packs"></div>
           <p id="shop-msg" class="result"></p>
+        </details>
+        <details class="tips wheel-rules">
+          <summary>📊 Sjanser og regler</summary>
+          <p>Hvert spinn koster 1 spinn og har <strong id="chance">15 %</strong> sjanse for en ekte pils 🍺.</p>
+          <p>Pass deg for det svarte feltet <strong>💀 −1 SPINN</strong> (<span id="lose-chance">5 %</span>): da mister du et spinn til.</p>
+          <p>Resten av feltene gir ingenting. Resultatet avgjøres på serveren, så ingen kan jukse.</p>
         </details>
         <p id="spin-total" class="note center"></p>
       </section>
