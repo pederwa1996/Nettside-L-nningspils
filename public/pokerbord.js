@@ -79,7 +79,7 @@
       if (winners.has(i)) wrap.classList.add('winner');
       if (i === t.mySeat) wrap.classList.add('mine');
       const av = el('div', 'pk-avatar');
-      av.appendChild(avatarEl(s.avatar, s.name, 40));
+      av.appendChild(avatarEl(s.avatar, s.name, 32));
       if (i === t.button) av.appendChild(el('span', 'pk-dealer', 'D'));
       wrap.appendChild(av);
       if (i === t.toAct && t.deadline) {

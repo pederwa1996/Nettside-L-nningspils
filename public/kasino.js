@@ -348,9 +348,13 @@
   // ---------- Lykkehjulet ----------
   const SEGMENTS = 20;
   const BEER_SEGMENTS = [0, 7, 14]; // 3 av 20 = 15 %
+  const LOSE_SEGMENT = 10; // 1 av 20 = 5 %: mister et spinn
   const MISS_LABELS = ['Bom', 'Neste gang', 'Vann', 'Nope', 'Snart', 'Prøv igjen'];
-  const segments = Array.from({ length: SEGMENTS }, (_, i) =>
-    BEER_SEGMENTS.includes(i) ? { beer: true, label: '🍺 ØL!' } : { beer: false, label: MISS_LABELS[i % MISS_LABELS.length] });
+  const segments = Array.from({ length: SEGMENTS }, (_, i) => {
+    if (BEER_SEGMENTS.includes(i)) return { kind: 'beer', label: '🍺 ØL!' };
+    if (i === LOSE_SEGMENT) return { kind: 'lose', label: '💀 −1 SPINN' };
+    return { kind: 'miss', label: MISS_LABELS[i % MISS_LABELS.length] };
+  });
 
   function drawWheel() {
     const canvas = $('wheel');
@@ -364,7 +368,7 @@
       ctx.moveTo(r, r);
       ctx.arc(r, r, r - 6, start, start + seg);
       ctx.closePath();
-      ctx.fillStyle = s.beer ? '#f5b301' : i % 2 ? '#5a0a14' : '#7a0d1c';
+      ctx.fillStyle = s.kind === 'beer' ? '#f5b301' : s.kind === 'lose' ? '#111111' : i % 2 ? '#5a0a14' : '#7a0d1c';
       ctx.fill();
       ctx.strokeStyle = '#d4a530';
       ctx.lineWidth = 3;
@@ -374,8 +378,9 @@
       ctx.rotate(start + seg / 2);
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      ctx.fillStyle = s.beer ? '#2a1500' : '#fff3c4';
-      ctx.font = s.beer ? 'bold 30px system-ui, sans-serif' : '22px system-ui, sans-serif';
+      ctx.fillStyle = s.kind === 'beer' ? '#2a1500' : s.kind === 'lose' ? '#ff4d6d' : '#fff3c4';
+      ctx.font = s.kind === 'miss' ? '22px system-ui, sans-serif' : 'bold 24px system-ui, sans-serif';
+      if (s.kind === 'beer') ctx.font = 'bold 30px system-ui, sans-serif';
       ctx.fillText(s.label, r - 24, 0);
       ctx.restore();
     });
@@ -389,8 +394,8 @@
     ctx.fillText('🍺', r, r + 2);
   }
 
-  function wheelSpinTo(win) {
-    const candidates = segments.map((s, i) => (s.beer === win ? i : -1)).filter((i) => i >= 0);
+  function wheelSpinTo(kind) {
+    const candidates = segments.map((s, i) => (s.kind === kind ? i : -1)).filter((i) => i >= 0);
     const target = candidates[Math.floor(Math.random() * candidates.length)];
     const segDeg = 360 / SEGMENTS;
     const jitter = (Math.random() - 0.5) * segDeg * 0.7;
@@ -411,8 +416,12 @@
     $('spin-result').className = 'result';
     try {
       const result = await api('/api/spin', { pay });
-      await wheelSpinTo(result.win);
-      $('spin-result').textContent = result.win ? '🎉 Gratulerer! Du vant en øl! 🍺 Hent den i baren.' : '😢 Ingen øl denne gangen.';
+      await wheelSpinTo(result.win ? 'beer' : result.lose ? 'lose' : 'miss');
+      $('spin-result').textContent = result.win
+        ? '🎉 Gratulerer! Du vant en øl! 🍺 Hent den i baren.'
+        : result.lose
+          ? (result.lostSpin ? '💀 Au! Du traff −1 SPINN og mistet et spinn.' : '💀 Du traff −1 SPINN, men hadde ingen spinn å miste. Puh!')
+          : '😢 Ingen øl denne gangen.';
       $('spin-result').classList.add(result.win ? 'win' : 'lose');
       if (result.win) beerWin('Lykkehjulet ga deg en ekte pils!');
       else loseNudge($('spin-result'));
@@ -528,6 +537,7 @@
     drawRoulette();
     drawWheel();
     $('chance').textContent = `${Math.round(data.wheelChance * 100)} %`;
+    $('lose-chance').textContent = `${Math.round(data.wheelLoseChance * 100)} %`;
     document.querySelector('.bet-opt[data-type="red"]').classList.add('selected');
     const fromHash = Object.keys(TAB_HASH).find((t) => `#${TAB_HASH[t]}` === location.hash);
     if (data.blackjack) {

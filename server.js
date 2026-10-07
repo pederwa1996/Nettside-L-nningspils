@@ -17,6 +17,8 @@ const WINNING_TICKETS = Number(process.env.WINNING_TICKETS) || 10;
 const SPINS_PER_PERSON = Number(process.env.SPINS_PER_PERSON) || 10;
 // "all" = trekk blant alle lodd (også de som ikke er delt ut), "assigned" = kun utdelte lodd
 const DRAW_FROM = process.env.DRAW_FROM === 'assigned' ? 'assigned' : 'all';
+// Sjanse for å treffe «−1 spinn»-feltet på lykkehjulet
+const SPIN_LOSE_CHANCE = process.env.SPIN_LOSE_CHANCE !== undefined ? Number(process.env.SPIN_LOSE_CHANCE) : 0.05;
 const SPIN_WIN_CHANCE = process.env.SPIN_WIN_CHANCE !== undefined ? Number(process.env.SPIN_WIN_CHANCE) : 0.15;
 // Flappy-spillet: første milepæl og hvor ofte et rør dukker opp (brukes til juksesjekk)
 const GAME_FIRST_MILESTONE = Number(process.env.GAME_FIRST_MILESTONE) || 50;
@@ -38,8 +40,8 @@ const BEER_PRICE_KR = Number(process.env.BEER_PRICE_KR) || 59;
 const START_FLUS = process.env.START_FLUS !== undefined ? Number(process.env.START_FLUS) : 500; // «cash» i appen
 const CASINO_MIN_BET = 10;
 const CASINO_MAX_BET = Number(process.env.CASINO_MAX_BET) || 200;
-// Pris i flus for ett spinn på lykkehjulet eller automaten. Holdes over det et spinn er verdt
-// i snitt (ca. 37 flus på hjulet, 30 på automaten), så flus ikke blir en pengemaskin.
+// Pris i cash for ett spinn på lykkehjulet eller automaten. Holdes over det et trekk på
+// automaten gir i snitt (ca. 42 cash + 2 % pils), så cash ikke blir en pengemaskin.
 const SPIN_PRICE = Number(process.env.SPIN_PRICE) || 50;
 const MAX_PILS_PER_ORDER = 5;
 const POKER_BLINDS = { small: Number(process.env.POKER_SMALL_BLIND) || 5, big: Number(process.env.POKER_BIG_BLIND) || 10 };
@@ -460,13 +462,14 @@ function parseBet(p, amount) {
 const SLOT_SYMBOLS = ['🍒', '🍋', '🔔', '⭐', '7️⃣', '💎', '🍺'];
 const SLOT_TABLE = [
   { id: 'pils', weight: 20, symbol: '🍺', flus: 0, beer: 1 }, // 2 % sjanse for tre pils på rad
+  // Minste gevinst er halve innsatsen (25), nest minste lik innsatsen (50), og så oppover
   { id: 'diamond', weight: 10, symbol: '💎', flus: 500 },
-  { id: 'seven', weight: 20, symbol: '7️⃣', flus: 250 },
-  { id: 'star', weight: 40, symbol: '⭐', flus: 100 },
-  { id: 'bell', weight: 70, symbol: '🔔', flus: 50 },
-  { id: 'lemon', weight: 100, symbol: '🍋', flus: 30 },
-  { id: 'cherry3', weight: 120, symbol: '🍒', flus: 20 },
-  { id: 'cherry2', weight: 200, flus: 10 }, // to kirsebær
+  { id: 'seven', weight: 20, symbol: '7️⃣', flus: 300 },
+  { id: 'star', weight: 40, symbol: '⭐', flus: 150 },
+  { id: 'bell', weight: 70, symbol: '🔔', flus: 100 },
+  { id: 'lemon', weight: 100, symbol: '🍋', flus: 75 },
+  { id: 'cherry3', weight: 120, symbol: '🍒', flus: 50 },
+  { id: 'cherry2', weight: 200, flus: 25 }, // to kirsebær
   { id: 'none', weight: 420, flus: 0 },
 ];
 
@@ -1352,7 +1355,10 @@ const routes = {
     const pay = body.pay === 'flus' ? 'flus' : 'spin';
     payForSpin(p, pay, { wheel: true });
 
-    const win = crypto.randomInt(1_000_000) < SPIN_WIN_CHANCE * 1_000_000;
+    const roll = crypto.randomInt(1_000_000);
+    const win = roll < SPIN_WIN_CHANCE * 1_000_000;
+    // Lite felt som tar et ekstra spinn (bare hvis man har et å miste)
+    const lose = !win && roll < (SPIN_WIN_CHANCE + SPIN_LOSE_CHANCE) * 1_000_000;
     if (pay === 'flus') {
       p.paidWheelSpins = (p.paidWheelSpins || 0) + 1;
       if (win) p.paidWheelWins = (p.paidWheelWins || 0) + 1;
@@ -1361,8 +1367,10 @@ const routes = {
       addActivity(p.name, '🎡', 'vant en pils på lykkehjulet! 🍺');
       announceBeer(p.name, `🍺 ${p.name} vant en pils på lykkehjulet!`, 5500);
     }
+    const lostSpin = lose && spinsLeft(p) > 0;
+    if (lostSpin) addSpins(p, -1);
     saveState();
-    sendJson(res, 200, { win, me: meView(p) });
+    sendJson(res, 200, { win, lose, lostSpin, me: meView(p) });
   },
 
   'POST /api/game/start': (req, res) => {
@@ -1966,6 +1974,7 @@ const routes = {
       minBet: CASINO_MIN_BET,
       spinPrice: SPIN_PRICE,
       wheelChance: SPIN_WIN_CHANCE,
+      wheelLoseChance: SPIN_LOSE_CHANCE,
       slotTable: SLOT_TABLE.filter((o) => o.flus || o.beer).map((o) => ({ id: o.id, symbol: o.symbol || '🍒🍒', flus: o.flus, beer: o.beer || 0 })),
       blackjack: p ? bjView(state.blackjack[p.name]) : null,
       log: state.casinoLog.slice(-10).reverse(),

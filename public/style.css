@@ -2292,3 +2292,27 @@ body.minimal .wi-emoji { width: 20px; height: 20px; font-size: 0.75rem; right: -
 body.minimal .wall-item .wi-text { font-size: 0.93rem; margin: 1px 0; }
 body.minimal .wi-actions { margin-top: 2px; gap: 2px; }
 body.minimal .wi-like, body.minimal .wi-comments { padding: 2px 6px !important; font-size: 0.8rem !important; }
+
+/* Pokerbordet: mindre og lettere, så det får plass på skjermen */
+.poker-table { max-width: 370px; aspect-ratio: 1 / 1.08; margin-top: 4px; }
+.poker-felt { inset: 12% 11%; border-width: 7px; box-shadow: 0 0 0 2px #d4a530, inset 0 0 24px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.4); background: radial-gradient(ellipse at center, #2a9158 0%, #18603a 100%); }
+.poker-center { width: 74%; gap: 4px; }
+.pk-card { width: 26px; height: 36px; }
+.pk-card .pk-rank { font-size: 0.78rem; }
+.pk-card .pk-suit { font-size: 0.8rem; }
+.pk-card.big { width: 46px; height: 64px; }
+.pk-card.big .pk-rank { font-size: 1.15rem; }
+.pk-card.big .pk-suit { font-size: 1.2rem; }
+.pk-card.tiny { width: 17px; height: 24px; }
+.pk-seat { width: 62px; }
+.pk-avatar { border-width: 2px; }
+.pk-name { font-size: 0.65rem; max-width: 62px; }
+.pk-chips, .pk-last { font-size: 0.64rem; }
+.pk-seat.empty .pk-empty-dot { width: 28px; height: 28px; }
+.pk-sit { width: 32px; height: 32px; font-size: 1.1rem; }
+.pk-bet { min-width: 22px; height: 22px; font-size: 0.62rem; }
+.pk-status { font-size: 0.72rem; }
+.pk-mine { gap: 10px; margin-top: 0; }
+.pk-actions { margin-top: 8px; gap: 6px; }
+.pk-buttons button { padding: 10px 6px; font-size: 0.9rem; }
+body.kasino[data-tab="poker"] .poker-felt { border-width: 7px; box-shadow: 0 0 0 2px #8a5a2b, inset 0 0 24px rgba(0, 0, 0, 0.4), 0 6px 16px rgba(0, 0, 0, 0.45); }

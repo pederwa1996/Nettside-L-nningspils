@@ -20,8 +20,8 @@
     casino: {
       title: 'Slik funker kasinoet',
       lines: () => [
-        `🎡 <b>Lykkehjul:</b> 1 spinn per runde, ${S.chance} % sjanse for en pils.`,
-        '🎰 <b>Automat:</b> 1 spinn per trekk. Tre 🍺 på rad gir en pils, ellers kan du vinne cash.',
+        `🎡 <b>Lykkehjul:</b> 1 spinn per runde, ${S.chance} % sjanse for en pils. Et lite 💀-felt tar et ekstra spinn.`,
+        '🎰 <b>Automat:</b> 1 spinn (eller 50 cash) per trekk. Tre 🍺 gir en pils; cash-gevinster fra 25 og oppover.',
         '🔴 <b>Roulette</b>, 🃏 <b>Blackjack</b> og ♠️ <b>Poker:</b> spill om cash.',
         `💰 Tom for spinn? Kjøp et spinn for ${S.price} cash.`,
         '🍻 <b>Baren:</b> har du pils til gode, trykk «Bruk pils til gode», så kommer spillmesteren med den til bordet.',
