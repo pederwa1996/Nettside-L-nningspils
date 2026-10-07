@@ -76,10 +76,22 @@ function taskCash(t) {
   return t.reward * TASK_CASH_PER_SPIN;
 }
 
-function newTask({ title, desc, reward, proof, beer }) {
-  const givesBeer = Number(beer) > 0;
+// Oppgavekategorier:
+// - first:  ⚡ Førstemann til mølla – én person kan løse den, så er den tatt
+// - duo:    👯 Duo – løses sammen med én kollega; begge får belønningen. Alle par kan gjøre den
+// - mingle: 🤝 Mingle – alle kan gjøre den én gang hver
+// - gang:   🎉 Hele gjengen – minst `min` personer (deg inkludert); alle som er med får belønningen
+// Pils-belønning finnes bare på «Førstemann til mølla», så budsjettet ikke sprekker.
+const TASK_CATS = ['first', 'duo', 'mingle', 'gang'];
+
+function newTask({ title, desc, reward, proof, beer, cat, min }) {
+  cat = TASK_CATS.includes(cat) ? cat : 'first';
+  const givesBeer = cat === 'first' && Number(beer) > 0;
   return {
     id: crypto.randomBytes(6).toString('hex'),
+    cat,
+    // Hele gjengen: minst så mange personer på bildet/med i oppgaven (deg selv inkludert)
+    min: cat === 'gang' ? Math.max(3, Math.min(20, Math.round(Number(min) || 4))) : cat === 'duo' ? 2 : 1,
     title: String(title).slice(0, 80),
     desc: String(desc || '').slice(0, 400),
     // Pils-oppgaver gir én pils til gode i stedet for spinn
@@ -117,6 +129,11 @@ function normalizeState(s) {
     added.add(t.title);
   });
   out.defaultTasksAdded = [...added];
+  // Oppgaver fra før kategoriene fantes: førstemann til mølla
+  out.tasks.forEach((t) => {
+    if (!TASK_CATS.includes(t.cat)) t.cat = 'first';
+    if (!t.min) t.min = t.cat === 'gang' ? 4 : t.cat === 'duo' ? 2 : 1;
+  });
   out.participants.forEach((p) => {
     if (p.flus === undefined) p.flus = START_FLUS;
   });
@@ -288,7 +305,10 @@ function renameEverywhere(oldName, newName) {
   state.duels.forEach((d) => ['challenger', 'opponent', 'winner'].forEach((k) => swap(d, k)));
   state.arena.forEach((a) => ['challenger', 'opponent', 'winner'].forEach((k) => swap(a, k)));
   state.moggs.forEach((m) => ['challenger', 'opponent', 'winner'].forEach((k) => swap(m, k)));
-  state.tasks.forEach((t) => t.attempts.forEach((a) => swap(a, 'name')));
+  state.tasks.forEach((t) => t.attempts.forEach((a) => {
+    swap(a, 'name');
+    if (a.with) a.with = a.with.map((n) => (n === oldName ? newName : n));
+  }));
   [state.stories, state.chat, state.activity, state.orders, state.casinoLog, state.spinLog].forEach((list) => list.forEach((x) => swap(x, 'name')));
   Object.values(state.reactions).forEach((r) => {
     r.likes = r.likes.map((n) => (n === oldName ? newName : n));
@@ -629,25 +649,64 @@ function currentAttempt(t) {
   return t.attempts[t.attempts.length - 1] || null;
 }
 
+// Alle som er med på en innlevering (den som leverte + kollegaene i duo/gjengen)
+function taskPeople(a) {
+  return [a.name, ...(a.with || [])];
+}
+
+// Innleveringen (ventende eller godkjent) som denne personen er med på
+function activeAttemptFor(t, name) {
+  return t.attempts.find((a) => a.status !== 'rejected' && taskPeople(a).includes(name)) || null;
+}
+
+// Kan denne personen fortsatt gjøre oppgaven?
+function taskOpenFor(t, name) {
+  if (t.cat === 'first' || !t.cat) return t.status === 'open';
+  return !name || !activeAttemptFor(t, name);
+}
+
 // Offentlig visning: bevis (bilde/tekst) vises bare for den som leverte
 function taskView(t, viewer) {
-  const cur = currentAttempt(t);
-  const v = { id: t.id, title: t.title, desc: t.desc, reward: t.reward, cash: taskCash(t), beer: t.beer || 0, proof: t.proof, status: t.status };
-  if (t.status === 'pending') v.claimedBy = cur.name;
-  if (t.status === 'done') v.completedBy = cur.name;
+  const v = { id: t.id, cat: t.cat || 'first', min: t.min || 1, title: t.title, desc: t.desc, reward: t.reward, cash: taskCash(t), beer: t.beer || 0, proof: t.proof, status: t.status };
+  if (v.cat === 'first') {
+    const cur = currentAttempt(t);
+    if (t.status === 'pending') v.claimedBy = cur.name;
+    if (t.status === 'done') v.completedBy = cur.name;
+  } else {
+    // Alle kan gjøre den: vis hvem som har klart den
+    const done = t.attempts.filter((a) => a.status === 'approved');
+    v.doneCount = done.length;
+    v.doneBy = done.slice(-8).reverse().map((a) => taskPeople(a));
+    v.status = 'open';
+  }
   if (viewer) {
-    const mine = t.attempts.filter((a) => a.name === viewer.name);
+    const mine = t.attempts.filter((a) => taskPeople(a).includes(viewer.name));
     if (mine.length) {
       const last = mine[mine.length - 1];
-      v.myAttempt = { status: last.status, reason: last.reason || '', at: last.at };
+      v.myAttempt = { id: last.id || null, status: last.status, reason: last.reason || '', at: last.at, by: last.name, with: last.with || [] };
     }
   }
   return v;
 }
 
 function adminTaskView(t) {
-  return { ...t, attempts: t.attempts.slice(-5) };
+  const approved = t.attempts.filter((a) => a.status === 'approved').length;
+  return { ...t, approved, attempts: t.attempts.filter((a, i) => a.status === 'pending' || i >= t.attempts.length - 5) };
 }
+
+// Alle innleveringer som venter på godkjenning, eldste først
+function taskQueue() {
+  const out = [];
+  state.tasks.forEach((t) => t.attempts.forEach((a) => {
+    if (a.status !== 'pending') return;
+    const p = findParticipant(a.name);
+    out.push({ id: t.id, attempt: a.id || null, cat: t.cat || 'first', title: t.title, reward: t.reward, cash: taskCash(t), beer: t.beer || 0, name: a.name, with: a.with || [], avatar: (p && p.avatar) || null, text: a.text, url: a.url, at: a.at });
+  }));
+  return out.sort((a, b) => a.at - b.at);
+}
+
+const TASK_CAT_LABEL = { first: '', duo: 'duo-oppgaven ', mingle: '', gang: 'gjeng-oppgaven ' };
+const joinNames = (names) => (names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} og ${names[names.length - 1]}`);
 
 // ---- Arena: små PvP-spill om cash, spinn eller pils ----
 // Utfordreren spiller sin del og setter inn innsatsen. Motstanderen godtar og spiller,
@@ -929,7 +988,7 @@ function profileStats(p) {
     moggBest: state.moggBest[p.name] ? state.moggBest[p.name].score : null,
     duels: record(state.duels),
     moggs: record(state.moggs),
-    tasksDone: state.tasks.filter((t) => t.status === 'done' && currentAttempt(t).name === p.name).length,
+    tasksDone: state.tasks.reduce((n, t) => n + t.attempts.filter((a) => a.status === 'approved' && taskPeople(a).includes(p.name)).length, 0),
     casinoNet: p.casinoNet || 0,
     chatMessages: state.chat.filter((m) => m.name === p.name).length,
   };
@@ -1159,7 +1218,7 @@ const routes = {
       leaderboard: leaderboard(),
       standings: standings(),
       incomingDuels: me ? state.duels.filter((d) => d.status === 'pending' && d.opponent === me.name).length : 0,
-      openTasks: state.tasks.filter((t) => t.status === 'open').length,
+      openTasks: state.tasks.filter((t) => taskOpenFor(t, me && me.name)).length,
       incomingMoggs: me ? state.moggs.filter((m) => m.status === 'pending' && m.opponent === me.name).length : 0,
       incomingArena: me ? state.arena.filter((a) => a.status === 'pending' && a.opponent === me.name).length : 0,
     });
@@ -1842,22 +1901,51 @@ const routes = {
     sendJson(res, 200, { me: meView(p), tasks: state.tasks.map((t) => taskView(t, p)) });
   },
 
+  'GET /api/tasks/people': (req, res) => {
+    sendJson(res, 200, { people: state.participants.map((p) => ({ name: p.name, avatar: p.avatar || null })) });
+  },
+
   'POST /api/tasks/submit': (req, res, body) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
     const t = state.tasks.find((x) => x.id === body.id);
     if (!t) return sendJson(res, 404, { error: 'Fant ikke oppgaven.' });
-    if (t.status === 'done') return sendJson(res, 400, { error: `Oppgaven er allerede løst av ${currentAttempt(t).name}.` });
-    if (t.status === 'pending') return sendJson(res, 400, { error: `${currentAttempt(t).name} har allerede levert denne og venter på godkjenning.` });
-    const pending = state.tasks.filter((x) => x.status === 'pending' && currentAttempt(x).name === p.name).length;
+    const cat = t.cat || 'first';
+    if (cat === 'first') {
+      if (t.status === 'done') return sendJson(res, 400, { error: `Oppgaven er allerede løst av ${currentAttempt(t).name}.` });
+      if (t.status === 'pending') return sendJson(res, 400, { error: `${currentAttempt(t).name} har allerede levert denne og venter på godkjenning.` });
+    } else {
+      const mine = activeAttemptFor(t, p.name);
+      if (mine) return sendJson(res, 400, { error: mine.status === 'approved' ? 'Du har allerede klart denne oppgaven.' : 'Du er allerede med på en innlevering av denne som venter på godkjenning.' });
+    }
+    const pending = taskQueue().filter((x) => x.name === p.name).length;
     if (pending >= MAX_PENDING_TASKS) return sendJson(res, 400, { error: `Du kan ha maks ${MAX_PENDING_TASKS} oppgaver som venter på godkjenning om gangen.` });
+
+    // Duo og hele gjengen: hvem var med?
+    let withNames = [];
+    if (cat === 'duo' || cat === 'gang') {
+      const raw = Array.isArray(body.with) ? body.with : [];
+      for (const n of raw) {
+        const other = findParticipant(String(n));
+        if (!other) return sendJson(res, 400, { error: `Fant ikke ${String(n).slice(0, 40)}.` });
+        if (other.name === p.name) return sendJson(res, 400, { error: 'Du kan ikke velge deg selv.' });
+        if (!withNames.includes(other.name)) withNames.push(other.name);
+      }
+      if (cat === 'duo' && withNames.length !== 1) return sendJson(res, 400, { error: 'Velg kollegaen du gjorde oppgaven sammen med 👯' });
+      if (cat === 'gang' && withNames.length + 1 < (t.min || 4)) return sendJson(res, 400, { error: `Velg minst ${(t.min || 4) - 1} kollegaer som var med (dere må være minst ${t.min || 4}).` });
+      if (withNames.length > 30) return sendJson(res, 400, { error: 'Det var mange! Maks 30 kollegaer.' });
+      const busy = withNames.filter((n) => activeAttemptFor(t, n));
+      if (busy.length) return sendJson(res, 400, { error: `${joinNames(busy)} har allerede gjort denne (eller venter på godkjenning).` });
+    }
+
     const text = String(body.text || '').trim().slice(0, 500);
     if (t.proof === 'photo' && !body.image) return sendJson(res, 400, { error: 'Denne oppgaven krever et bilde som bevis 📸' });
     if (t.proof === 'text' && !text && !body.image) return sendJson(res, 400, { error: 'Skriv hva du gjorde som bevis.' });
 
     const url = body.image ? saveImage(body.image, 'tasks') : null;
-    t.attempts.push({ name: p.name, status: 'pending', text, url, at: Date.now() });
-    t.status = 'pending';
+    t.attempts.push({ id: crypto.randomBytes(5).toString('hex'), name: p.name, with: withNames, status: 'pending', text, url, at: Date.now() });
+    if (cat === 'first') t.status = 'pending';
+    withNames.forEach((n) => notify(n, '👯', `${p.name} leverte «${t.title}» med deg. Får den godkjent, får du også belønningen!`, { url: '/oppgaver.html', from: p.name }));
     saveState();
     broadcast('tasks', {});
     sendJson(res, 200, { task: taskView(t, p) });
@@ -1866,12 +1954,12 @@ const routes = {
   'POST /api/tasks/withdraw': (req, res, body) => {
     const p = currentParticipant(req);
     if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
-    const t = state.tasks.find((x) => x.id === body.id && x.status === 'pending');
-    const cur = t && currentAttempt(t);
-    if (!cur || cur.name !== p.name) return sendJson(res, 400, { error: 'Fant ikke innleveringen din.' });
+    const t = state.tasks.find((x) => x.id === body.id);
+    const cur = t && t.attempts.find((a) => a.status === 'pending' && a.name === p.name);
+    if (!cur) return sendJson(res, 400, { error: 'Fant ikke innleveringen din.' });
     deleteImage(cur.url);
-    t.attempts.pop();
-    t.status = 'open';
+    t.attempts = t.attempts.filter((a) => a !== cur);
+    if ((t.cat || 'first') === 'first') t.status = 'open';
     saveState();
     broadcast('tasks', {});
     sendJson(res, 200, { ok: true });
@@ -1879,35 +1967,43 @@ const routes = {
 
   'POST /api/admin/task-review': (req, res, body) => {
     if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
-    const t = state.tasks.find((x) => x.id === body.id && x.status === 'pending');
-    if (!t) return sendJson(res, 400, { error: 'Fant ikke innleveringen.' });
-    const cur = currentAttempt(t);
+    const t = state.tasks.find((x) => x.id === body.id);
+    const cur = t && (body.attempt ? t.attempts.find((a) => a.id === body.attempt) : t.attempts.find((a) => a.status === 'pending'));
+    if (!cur || cur.status !== 'pending') return sendJson(res, 400, { error: 'Fant ikke innleveringen.' });
+    const first = (t.cat || 'first') === 'first';
+    const people = taskPeople(cur).filter((n) => findParticipant(n));
+    const what = TASK_CAT_LABEL[t.cat] || '';
+    const together = (n) => (cur.with && cur.with.length ? ` sammen med ${joinNames(people.filter((x) => x !== n))}` : '');
     cur.reviewedAt = Date.now();
     if (body.approve) {
       cur.status = 'approved';
-      t.status = 'done';
-      const p = findParticipant(cur.name);
+      if (first) t.status = 'done';
       if (t.beer) {
-        if (p) p.taskBeers = (p.taskBeers || 0) + t.beer;
-        addActivity(cur.name, '🍺', `klarte den vanskelige oppgaven «${t.title}» og vant en pils! 🍺`, { url: cur.url });
-        notify(cur.name, '🍺', `Spillmesteren godkjente «${t.title}»! Du vant en pils til gode. Løs den inn i baren 🍻`, { url: '/baren.html' });
-        announceBeer(cur.name, `🍺 ${cur.name} vant en pils på oppgaven «${t.title}»!`);
+        people.forEach((n) => {
+          const p = findParticipant(n);
+          p.taskBeers = (p.taskBeers || 0) + t.beer;
+          notify(n, '🍺', `Spillmesteren godkjente «${t.title}»! Du vant en pils til gode. Løs den inn i baren 🍻`, { url: '/baren.html' });
+        });
+        addActivity(cur.name, '🍺', `${people.length > 1 ? `og ${joinNames(people.slice(1))} ` : ''}klarte den vanskelige oppgaven «${t.title}» og vant ${people.length > 1 ? 'en pils hver' : 'en pils'}! 🍺`, { url: cur.url });
+        announceBeer(cur.name, `🍺 ${joinNames(people)} vant pils på oppgaven «${t.title}»!`);
       } else {
-        if (p) {
+        people.forEach((n) => {
+          const p = findParticipant(n);
           addSpins(p, t.reward);
           addFlus(p, taskCash(t));
-        }
-        addActivity(cur.name, '🎯', `fullførte «${t.title}» og fikk ${t.reward} spinn og ${taskCash(t)} cash`, { url: cur.url });
-        notify(cur.name, '✅', `Spillmesteren godkjente «${t.title}»! Du fikk ${t.reward} spinn 🎰 og ${taskCash(t)} cash 💰`, { url: '/oppgaver.html' });
+          notify(n, '✅', `Spillmesteren godkjente «${t.title}»${together(n)}! Du fikk ${t.reward} spinn 🎰 og ${taskCash(t)} cash 💰`, { url: '/oppgaver.html' });
+        });
+        const each = people.length > 1 ? ' hver' : '';
+        addActivity(cur.name, people.length > 1 ? (t.cat === 'gang' ? '🎉' : '👯') : '🎯', `${people.length > 1 ? `og ${joinNames(people.slice(1))} ` : ''}fullførte ${what}«${t.title}» og fikk ${t.reward} spinn og ${taskCash(t)} cash${each}`, { url: cur.url });
       }
     } else {
-      // Avvist: oppgaven blir åpen for alle igjen
       cur.status = 'rejected';
       cur.reason = String(body.reason || '').trim().slice(0, 200);
-      notify(cur.name, '❌', `«${t.title}» ble ikke godkjent${cur.reason ? `: ${cur.reason}` : ''}. Oppgaven er åpen igjen.`, { url: '/oppgaver.html' });
+      people.forEach((n) => notify(n, '❌', `«${t.title}» ble ikke godkjent${cur.reason ? `: ${cur.reason}` : ''}. ${first ? 'Oppgaven er åpen igjen.' : 'Dere kan prøve igjen.'}`, { url: '/oppgaver.html' }));
       deleteImage(cur.url);
       cur.url = null;
-      t.status = 'open';
+      // Førstemann til mølla: oppgaven blir åpen for alle igjen
+      if (first) t.status = 'open';
     }
     saveState();
     broadcast('tasks', {});
@@ -1917,15 +2013,7 @@ const routes = {
   // Innleveringer som venter på godkjenning (til 🎯-boblen)
   'POST /api/admin/task-queue': (req, res, body) => {
     if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
-    const pending = state.tasks
-      .filter((t) => t.status === 'pending')
-      .map((t) => {
-        const a = currentAttempt(t);
-        const p = findParticipant(a.name);
-        return { id: t.id, title: t.title, reward: t.reward, cash: taskCash(t), beer: t.beer || 0, name: a.name, avatar: (p && p.avatar) || null, text: a.text, url: a.url, at: a.at };
-      })
-      .sort((a, b) => a.at - b.at);
-    sendJson(res, 200, { pending });
+    sendJson(res, 200, { pending: taskQueue() });
   },
 
   'POST /api/admin/task-add': (req, res, body) => {
@@ -1952,8 +2040,16 @@ const routes = {
       reward: body.reward ?? t.reward,
       proof: body.proof ?? t.proof,
       beer: body.beer ?? t.beer,
+      cat: body.cat ?? t.cat,
+      min: body.min ?? t.min,
     });
-    Object.assign(t, { title: fresh.title, desc: fresh.desc, reward: fresh.reward, proof: fresh.proof, beer: fresh.beer });
+    // Kategorien kan ikke byttes til/fra «førstemann» mens noen venter på godkjenning
+    if (fresh.cat !== (t.cat || 'first') && t.attempts.some((a) => a.status === 'pending')) {
+      return sendJson(res, 400, { error: 'Godkjenn eller avvis innleveringene først, så kan du bytte kategori.' });
+    }
+    if (fresh.cat !== 'first') t.status = 'open';
+    else if (t.cat !== 'first') t.status = t.attempts.some((a) => a.status === 'approved') ? 'done' : 'open';
+    Object.assign(t, { cat: fresh.cat, min: fresh.min, title: fresh.title, desc: fresh.desc, reward: fresh.reward, proof: fresh.proof, beer: fresh.beer });
     // «Åpne igjen»: en løst oppgave blir ledig for alle (det som er gitt, beholdes)
     if (body.reopen && t.status === 'done') t.status = 'open';
     saveState();
@@ -2389,6 +2485,7 @@ const routes = {
       chat: state.chat.slice(-50).reverse(),
       moggPodium: moggPodium(),
       tasks: state.tasks.map(adminTaskView),
+      taskQueue: taskQueue(),
     });
   },
 

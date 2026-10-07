@@ -222,10 +222,10 @@
     const info = document.createElement('div');
     info.className = 'ao-info';
     const title = document.createElement('strong');
-    title.textContent = `${t.name}: ${t.title}`;
+    title.textContent = `${t.with && t.with.length ? `${t.name} + ${t.with.join(', ')}` : t.name}: ${t.title}`;
     const meta = document.createElement('span');
     meta.className = 'muted';
-    meta.textContent = `${t.beer ? '🍺 1 PILS (vanskelig, koster budsjett)' : `🎰 ${t.reward} spinn + 💰 ${t.cash} cash`} · ${ago(t.at)}`;
+    meta.textContent = `${{ duo: '👯 Duo · ', mingle: '🤝 Mingle · ', gang: '🎉 Gjengen · ' }[t.cat] || ''}${t.beer ? '🍺 1 PILS (vanskelig, koster budsjett)' : `🎰 ${t.reward} spinn + 💰 ${t.cash} cash`}${t.with && t.with.length ? ` til hver av ${t.with.length + 1}` : ''} · ${ago(t.at)}`;
     info.append(title, meta);
     head.append(avatar(t.avatar, t.name), info);
     box.appendChild(head);
@@ -266,7 +266,7 @@
 
   async function review(t, approve, reason = '') {
     try {
-      await post('/api/admin/task-review', { id: t.id, approve, reason });
+      await post('/api/admin/task-review', { id: t.id, attempt: t.attempt, approve, reason });
     } catch (err) {
       alert(err.message);
     }

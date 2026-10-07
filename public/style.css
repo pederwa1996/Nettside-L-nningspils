@@ -2016,7 +2016,7 @@ body.minimal a { color: var(--gold); }
 body.minimal input, body.minimal textarea, body.minimal select {
   background: #111114 !important; color: var(--text) !important; border: 1px solid var(--line) !important; border-radius: 10px !important; box-shadow: none !important;
 }
-body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.ag):not(.sg) {
+body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.ag):not(.sg) {
   background: var(--gold) !important; color: #141414 !important; border: 0 !important; box-shadow: none !important; text-shadow: none !important; border-radius: 10px !important; font-family: inherit !important;
 }
 body.minimal button.secondary { background: #24242a !important; color: var(--text) !important; border: 1px solid var(--line) !important; box-shadow: none !important; }
@@ -2132,7 +2132,7 @@ body.minimal {
 }
 body.minimal .card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important; }
 body.minimal input, body.minimal textarea, body.minimal select { background: #fff !important; }
-body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.ag):not(.sg) {
+body.minimal button:not(.secondary):not(.ff):not(.ptab):not(.inv-btn):not(.guide-icon):not(.guide-x):not(.bio-edit):not(.gb-del):not(.story-bubble):not(.auth-tab):not(.wi-like):not(.admin-bubble):not(.notify-bubble):not(.chat-bubble):not(.chat-peek):not(.notify-toast):not(.cb-close):not(.ao-close):not(.rename-btn):not(.wall-more):not(.cel-action):not(.wallet-link):not(.task-cat):not(.partner-chip):not(.ag):not(.sg) {
   background: #f5b301 !important; color: #1d1c1a !important;
 }
 body.minimal button.secondary { background: var(--soft) !important; color: var(--text) !important; border-color: var(--line) !important; }
@@ -2645,3 +2645,42 @@ button.spin-pack:disabled { opacity: 0.45; filter: grayscale(0.4); }
 button.spin-pack:not(:disabled):active { transform: translateY(2px); box-shadow: 0 1px 0 #0b1f4d !important; }
 #shop-msg { margin: 6px 12px 10px; font-size: 0.85rem; }
 #shop-msg:empty { display: none; }
+
+/* Oppgaver: kategorier som faner */
+.task-cats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 4px 0 10px; }
+button.task-cat {
+  margin: 0 !important; padding: 9px 2px 8px !important; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  border-radius: 14px !important; background: #fff !important; color: var(--text) !important; border: 2px solid var(--line) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important; font-family: inherit !important; min-width: 0;
+}
+button.task-cat .tc-ico { font-size: 1.45rem; line-height: 1.1; }
+button.task-cat b { font-size: 0.74rem; font-weight: 800; white-space: nowrap; }
+button.task-cat small { font-size: 0.64rem; color: var(--muted); font-weight: 600; }
+button.task-cat.active { color: #fff !important; transform: translateY(-1px); }
+button.task-cat.active small { color: rgba(255, 255, 255, 0.85); }
+button.task-cat.cat-first.active { background: linear-gradient(150deg, #ffb020, #e06c00) !important; border-color: #e06c00 !important; }
+button.task-cat.cat-duo.active { background: linear-gradient(150deg, #ff6b9a, #c62a6a) !important; border-color: #c62a6a !important; }
+button.task-cat.cat-mingle.active { background: linear-gradient(150deg, #2ec4a6, #128a72) !important; border-color: #128a72 !important; }
+button.task-cat.cat-gang.active { background: linear-gradient(150deg, #8f6bff, #5631c4) !important; border-color: #5631c4 !important; }
+.cat-rule { display: flex; flex-direction: column; gap: 2px; margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; font-size: 0.84rem; line-height: 1.35; border-left: 4px solid; background: #fff; }
+.cat-rule:empty { display: none; }
+.cat-rule strong { font-size: 0.95rem; }
+.cat-rule.cat-first { border-color: #e06c00; }
+.cat-rule.cat-duo { border-color: #c62a6a; }
+.cat-rule.cat-mingle { border-color: #128a72; }
+.cat-rule.cat-gang { border-color: #5631c4; }
+.task-done-by { margin: 6px 0; font-size: 0.78rem; color: var(--muted); }
+/* Velg kollegaene som var med */
+.partner-pick { margin-bottom: 4px; }
+.partner-pick .field-label { margin: 0 0 6px; font-weight: 700; font-size: 0.88rem; }
+.partner-list { display: flex; flex-wrap: wrap; gap: 6px; max-height: 190px; overflow-y: auto; }
+button.partner-chip {
+  margin: 0 !important; display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px !important;
+  border-radius: 999px !important; background: #fff !important; color: var(--text) !important; border: 2px solid var(--line) !important;
+  box-shadow: none !important; font: 600 0.82rem/1 system-ui, sans-serif !important; width: auto !important; flex: none;
+}
+button.partner-chip.on { background: #e9fff6 !important; border-color: #1f9d55 !important; color: #0e5c33 !important; }
+button.partner-chip.on::after { content: '✓'; font-weight: 900; }
+/* Lang belønning («… cash hver») bryter til ny linje i stedet for å gå utenfor kortet */
+.task-head { flex-wrap: wrap; row-gap: 6px; }
+.task-head .task-title { flex: 1 1 140px; }

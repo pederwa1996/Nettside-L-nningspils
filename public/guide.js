@@ -81,7 +81,8 @@
       lines: () => [
         'Gjør oppgaven i virkeligheten, og last opp et bilde eller en tekst som bevis.',
         '👑 Spillmesteren godkjenner, og du får <b>spinn og litt cash</b>. Du får et varsel 🔔.',
-        'Hver oppgave kan bare løses av én person, så vær rask!',
+        '⚡ <b>Førstemann til mølla:</b> bare én kan ta hver oppgave, så vær rask!',
+        '👯 <b>Duo:</b> gjør den med en kollega, og begge får belønningen. 🤝 <b>Mingle:</b> alle kan gjøre hver oppgave én gang. 🎉 <b>Hele gjengen:</b> samle flere, og alle som er med får belønningen.',
       ],
     },
     profile: {

@@ -49,6 +49,12 @@
       <details class="tips">
         <summary>➕ Legg til oppgave</summary>
         <div class="task-form">
+          <label class="field">Kategori
+            <select id="new-task-cat"></select>
+          </label>
+          <label class="field" id="new-task-min-row">Minst antall personer (deg inkludert)
+            <input id="new-task-min" type="number" min="3" max="20" value="4">
+          </label>
           <input id="new-task-title" type="text" maxlength="80" placeholder="Tittel">
           <textarea id="new-task-desc" class="task-text" maxlength="400" placeholder="Beskrivelse"></textarea>
           <label class="field">Belønning (spinn, 1–10)
@@ -60,7 +66,7 @@
               <option value="text">Tekst holder (bilde valgfritt)</option>
             </select>
           </label>
-          <label class="check-row"><input id="new-task-beer" type="checkbox"> 🍺 Skikkelig vanskelig: gir 1 pils i stedet for spinn</label>
+          <label class="check-row" id="new-task-beer-row"><input id="new-task-beer" type="checkbox"> 🍺 Skikkelig vanskelig: gir 1 pils i stedet for spinn</label>
           <button id="new-task-btn">Legg til oppgave</button>
         </div>
       </details>

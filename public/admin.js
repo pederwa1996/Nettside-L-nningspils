@@ -98,18 +98,17 @@ async function load() {
   });
 
   // ---- Oppgaver ----
-  const pending = data.tasks.filter((t) => t.status === 'pending');
+  const pending = data.taskQueue || [];
   $('review-count').textContent = pending.length;
   $('admin-review').innerHTML = pending.length ? '' : '<p class="muted">Ingen innleveringer venter.</p>';
-  pending.forEach((t) => {
-    const a = t.attempts[t.attempts.length - 1];
+  pending.forEach((a) => {
     const box = document.createElement('div');
     box.className = 'review-box';
     const h = document.createElement('p');
     h.innerHTML = '<strong></strong> leverte <strong></strong> (<span></span>)';
-    h.querySelectorAll('strong')[0].textContent = a.name;
-    h.querySelectorAll('strong')[1].textContent = t.title;
-    h.querySelector('span').textContent = t.beer ? '🍺 1 pils' : `🎰 ${t.reward} spinn`;
+    h.querySelectorAll('strong')[0].textContent = a.with.length ? `${a.name} + ${a.with.join(', ')}` : a.name;
+    h.querySelectorAll('strong')[1].textContent = a.title;
+    h.querySelector('span').textContent = `${CAT_ICON[a.cat] || ''} ${a.beer ? '🍺 1 pils' : `🎰 ${a.reward} spinn`}${a.with.length ? ' hver' : ''}`;
     box.appendChild(h);
     if (a.url) {
       const img = document.createElement('img');
@@ -127,7 +126,7 @@ async function load() {
     const ok = document.createElement('button');
     ok.textContent = '✅ Godkjenn';
     ok.addEventListener('click', async () => {
-      await post('/api/admin/task-review', { id: t.id, approve: true });
+      await post('/api/admin/task-review', { id: a.id, attempt: a.attempt, approve: true });
       await load();
     });
     const no = document.createElement('button');
@@ -136,7 +135,7 @@ async function load() {
     no.addEventListener('click', async () => {
       const reason = prompt('Hvorfor avvises den? (vises for deltakeren, valgfritt)');
       if (reason === null) return;
-      await post('/api/admin/task-review', { id: t.id, approve: false, reason });
+      await post('/api/admin/task-review', { id: a.id, attempt: a.attempt, approve: false, reason });
       await load();
     });
     row.append(ok, no);
@@ -150,8 +149,10 @@ async function load() {
     li.className = 'duel-row';
     const span = document.createElement('span');
     const last = t.attempts[t.attempts.length - 1];
-    const status = t.status === 'done' ? `✅ ${last.name}` : t.status === 'pending' ? `⏳ ${last.name}` : '🟢 ledig';
-    span.textContent = `${t.title} · ${t.beer ? '🍺 1 pils' : `🎰 ${t.reward}`} · ${status}`;
+    const status = t.cat !== 'first'
+      ? `✅ ${t.approved || 0} ganger`
+      : t.status === 'done' ? `✅ ${last.name}` : t.status === 'pending' ? `⏳ ${last.name}` : '🟢 ledig';
+    span.textContent = `${CAT_ICON[t.cat] || ''} ${t.title} · ${t.beer ? '🍺 1 pils' : `🎰 ${t.reward}`} · ${status}`;
     const btns = document.createElement('span');
     btns.className = 'task-admin-btns';
     const editBtn = document.createElement('button');
@@ -302,11 +303,37 @@ $('draw-btn').addEventListener('click', async () => {
   }
 });
 
+const CAT_ICON = { first: '⚡', duo: '👯', mingle: '🤝', gang: '🎉' };
+const CAT_OPTIONS = `
+  <option value="first">⚡ Førstemann til mølla (én person)</option>
+  <option value="duo">👯 Duo (med én kollega, begge får belønning)</option>
+  <option value="mingle">🤝 Mingle (alle kan gjøre den én gang)</option>
+  <option value="gang">🎉 Hele gjengen (flere sammen, alle får belønning)</option>`;
+
+// Vis «minst antall» bare for gjengen, og pils bare for førstemann
+function catFields(sel, minRow, beerRow, beerBox, rewardInput) {
+  const sync = () => {
+    minRow.classList.toggle('hidden', sel.value !== 'gang');
+    beerRow.classList.toggle('hidden', sel.value !== 'first');
+    if (sel.value !== 'first') beerBox.checked = false;
+    rewardInput.disabled = beerBox.checked;
+  };
+  sel.addEventListener('change', sync);
+  beerBox.addEventListener('change', sync);
+  sync();
+}
+
 // Skjema for å redigere en oppgave rett i listen
 function taskEditor(t) {
   const box = document.createElement('div');
   box.className = 'task-form task-edit';
   box.innerHTML = `
+    <label class="field">Kategori
+      <select class="te-cat">${CAT_OPTIONS}</select>
+    </label>
+    <label class="field te-min-row">Minst antall personer (deg inkludert)
+      <input class="te-min" type="number" min="3" max="20">
+    </label>
     <input class="te-title" type="text" maxlength="80" placeholder="Tittel">
     <textarea class="te-desc task-text" maxlength="400" placeholder="Beskrivelse"></textarea>
     <label class="field">Belønning (spinn, 1–10)
@@ -318,7 +345,7 @@ function taskEditor(t) {
         <option value="text">Tekst holder (bilde valgfritt)</option>
       </select>
     </label>
-    <label class="check-row"><input class="te-beer" type="checkbox"> 🍺 Skikkelig vanskelig: gir 1 pils i stedet for spinn</label>
+    <label class="check-row te-beer-row"><input class="te-beer" type="checkbox"> 🍺 Skikkelig vanskelig: gir 1 pils i stedet for spinn</label>
     <label class="check-row te-reopen-row hidden"><input class="te-reopen" type="checkbox"> ↺ Gjør oppgaven ledig igjen (den er løst nå)</label>
     <div class="story-actions">
       <button type="button" class="te-save">💾 Lagre</button>
@@ -330,8 +357,9 @@ function taskEditor(t) {
   q('.te-reward').value = t.reward || 3;
   q('.te-proof').value = t.proof;
   q('.te-beer').checked = !!t.beer;
-  q('.te-reward').disabled = !!t.beer;
-  q('.te-beer').addEventListener('change', () => (q('.te-reward').disabled = q('.te-beer').checked));
+  q('.te-cat').value = t.cat || 'first';
+  q('.te-min').value = t.min > 2 ? t.min : 4;
+  catFields(q('.te-cat'), q('.te-min-row'), q('.te-beer-row'), q('.te-beer'), q('.te-reward'));
   q('.te-reopen-row').classList.toggle('hidden', t.status !== 'done');
   q('.te-cancel').addEventListener('click', () => box.remove());
   q('.te-save').addEventListener('click', async () => {
@@ -343,6 +371,8 @@ function taskEditor(t) {
         reward: Number(q('.te-reward').value) || 1,
         proof: q('.te-proof').value,
         beer: q('.te-beer').checked ? 1 : 0,
+        cat: q('.te-cat').value,
+        min: Number(q('.te-min').value) || 4,
         reopen: q('.te-reopen').checked,
       });
       showMsg(`Oppgaven «${q('.te-title').value}» er lagret ✅`, true);
@@ -354,6 +384,9 @@ function taskEditor(t) {
   return box;
 }
 
+$('new-task-cat').innerHTML = CAT_OPTIONS;
+catFields($('new-task-cat'), $('new-task-min-row'), $('new-task-beer-row'), $('new-task-beer'), $('new-task-reward'));
+
 $('new-task-btn').addEventListener('click', async () => {
   try {
     await post('/api/admin/task-add', {
@@ -362,6 +395,8 @@ $('new-task-btn').addEventListener('click', async () => {
       reward: Number($('new-task-reward').value),
       proof: $('new-task-proof').value,
       beer: $('new-task-beer').checked ? 1 : 0,
+      cat: $('new-task-cat').value,
+      min: Number($('new-task-min').value) || 4,
     });
     $('new-task-title').value = '';
     $('new-task-desc').value = '';
