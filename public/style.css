@@ -2595,8 +2595,8 @@ body.kasino .casino-menu .tab-wheel.active { background: linear-gradient(135deg,
   border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 11px solid #fff;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
 }
-.tab-wheel.active .mini-wheel { animation: mw-spin 3.6s cubic-bezier(0.15, 0.7, 0.25, 1) infinite; }
-.tab-wheel.active .tw-icon::after { animation: mw-tick 3.6s linear infinite; }
+.tab-wheel .mini-wheel, .tw-icon.spin .mini-wheel { animation: mw-spin 3.6s cubic-bezier(0.15, 0.7, 0.25, 1) infinite; }
+.tab-wheel .tw-icon::after, .tw-icon.spin::after { animation: mw-tick 3.6s linear infinite; }
 @keyframes mw-spin { 0% { transform: rotate(0); } 75%, 100% { transform: rotate(1170deg); } }
 @keyframes mw-tick { 0%, 45% { transform: translateX(-50%) rotate(0); } 5%, 15%, 25%, 35% { transform: translateX(-50%) rotate(-14deg); } 10%, 20%, 30%, 40% { transform: translateX(-50%) rotate(6deg); } }
 @keyframes tw-spin { to { transform: rotate(360deg); } }
@@ -2782,3 +2782,31 @@ body.minimal button.wp-del { position: absolute; top: 4px; right: 6px; margin: 0
 .sugg-item.read { opacity: 0.6; }
 .sugg-head { margin: 0 0 4px; }
 .sugg-text { margin: 0 0 8px; white-space: pre-wrap; }
+
+/* Kasino: den store hjul-knappen trengs ikke når man allerede er på hjulet */
+body.kasino[data-tab="wheel"] .casino-menu .tab-wheel { display: none !important; }
+body.kasino[data-tab="wheel"] .casino-menu-label { margin-top: 0; }
+/* Lykkehjul-boksen i samme blå tema som knappen, med det snurrende hjulet i tittelen */
+body.kasino #tab-wheel.card {
+  background: radial-gradient(120% 70% at 50% 0%, #3d84f0 0%, #1a47a3 45%, #0e2a66 100%) !important;
+  border: 2px solid #f2cf6b !important;
+  box-shadow: 0 0 0 3px #ffe08a, 0 0 26px rgba(255, 224, 138, 0.45), 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+}
+body.kasino #tab-wheel .wheel-title { display: flex; align-items: center; justify-content: center; gap: 12px; color: #fff !important; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4); }
+body.kasino #tab-wheel > p { color: #e8f0ff; }
+body.kasino #tab-wheel .spin-shop { background: rgba(0, 20, 60, 0.35); }
+
+/* Forsiden: lykkehjulet midt mellom de fire dørene */
+.go-wheel {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3;
+  width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #3d84f0, #1a47a3); border: 3px solid #f2cf6b;
+  box-shadow: 0 0 0 3px #1c1233, 0 0 18px rgba(255, 224, 138, 0.6), 0 6px 14px rgba(0, 0, 0, 0.45);
+  text-decoration: none; transition: transform 0.15s;
+}
+.go-wheel:active { transform: translate(-50%, -50%) scale(0.92); }
+.go-wheel .tw-icon { width: 52px; height: 52px; }
+.go-wheel .mini-wheel { border-width: 2px; }
+/* Litt luft rundt hjulet så det ikke dekker tekst og ikoner */
+.go-hub .go-grid .go-tile:nth-child(odd) { padding-right: 34px; }
+.go-hub .go-grid .go-tile:nth-child(even) { padding-left: 36px; }
