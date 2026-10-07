@@ -14,24 +14,6 @@
   </header>
 
   <main>
-    <!-- Story -->
-    <!-- Profilkortet ved siden av storyene: bildet ditt, navn og spinn/cash/pils -->
-    <div class="story-row">
-      <div id="me-bar" class="me-card hidden">
-        <a href="/profil.html" class="mc-who" title="Gå til profilen din">
-          <span class="me-av-wrap"><span id="me-avatar"></span><i class="me-av-go" aria-hidden="true">›</i></span>
-          <b id="me-name" class="mc-name"></b>
-          <small class="mc-link">Din profil ›</small>
-        </a>
-        <div class="mc-stats">
-          <a href="/kasino.html#hjul" title="Spinn"><b id="home-spins">0</b><span>🎡</span></a>
-          <a href="/kasino.html" title="Cash"><b id="home-flus">0</b><span>💰</span></a>
-          <a href="/baren.html" class="beer-link" title="Pils til gode – løs inn i baren"><b id="home-beers">0</b><span>🍺</span></a>
-        </div>
-      </div>
-      <div id="stories-bar" class="stories-bar"></div>
-    </div>
-
     <!-- Registrering / innlogging -->
     <section id="join-section" class="card hidden">
       <div class="auth-tabs" role="tablist">
@@ -79,24 +61,6 @@
 
     <!-- ===================== VEGGEN ===================== -->
     <div id="wall" class="wall hidden">
-      <!-- Neste steg rett under storyene: det som gir mest mening å gjøre nå -->
-      <a id="next-step" class="next-step" href="/kasino.html#hjul">
-        <span class="ns-icon" id="ns-icon">🎡</span>
-        <span class="ns-text">
-          <small>Neste steg</small>
-          <b id="ns-title">Spinn lykkehjulet</b>
-          <span id="ns-sub">15 % sjanse for en ekte pils</span>
-        </span>
-        <span class="ns-go">›</span>
-      </a>
-
-      <div class="home-notes">
-        <p id="my-result" class="result"></p>
-        <a id="set-password-nudge" class="duel-alert hidden" href="/profil.html#inventar">🔑 Velg et passord, så kan du logge inn fra alle enheter ›</a>
-        <a id="avatar-missing" class="duel-alert hidden" href="/profil.html#inventar">📸 Legg inn et profilbilde ›</a>
-        <p id="home-alerts" class="duel-alert hidden"></p>
-      </div>
-
       <!-- Hva vil du gjøre? Hovedfokuset på forsiden: fire dører inn i kvelden, samlet i ett «skilt» -->
       <h2 class="home-h go-hub-title">Hva vil du gjøre i kveld? <small>Trykk på en dør 👇</small></h2>
       <section class="go-hub" id="go-hub">
@@ -135,9 +99,45 @@
         </div>
       </section>
 
-      <!-- Hva skjer: Akkurat nå (hovedsak), Veggen og Hendelser -->
-      <section class="card wall-card feed-card">
-        <div class="wall-head"><h2>📡 Hva skjer</h2><span class="live-dot">LIVE</span></div>
+      <!-- ===== Det sosiale: deg, storyene, neste steg og hva som skjer, samlet ===== -->
+      <section class="card wall-card feed-card social-card">
+        <div class="wall-head"><h2>🍻 Gjengen <small class="h-sub">Deg, storyer og alt som skjer akkurat nå</small></h2><span class="live-dot">LIVE</span></div>
+        <!-- Profilkortet ved siden av storyene: bildet ditt, navn og spinn/cash/pils -->
+        <div class="story-row">
+          <div id="me-bar" class="me-card hidden">
+            <a href="/profil.html" class="mc-who" title="Gå til profilen din">
+              <span class="me-av-wrap"><span id="me-avatar"></span><i class="me-av-go" aria-hidden="true">›</i></span>
+              <b id="me-name" class="mc-name"></b>
+              <small class="mc-link">Din profil ›</small>
+            </a>
+            <div class="mc-stats">
+              <a href="/kasino.html#hjul" title="Spinn"><b id="home-spins">0</b><span>🎡</span></a>
+              <a href="/kasino.html" title="Cash"><b id="home-flus">0</b><span>💰</span></a>
+              <a href="/baren.html" class="beer-link" title="Pils til gode – løs inn i baren"><b id="home-beers">0</b><span>🍺</span></a>
+            </div>
+          </div>
+          <div id="stories-bar" class="stories-bar"></div>
+        </div>
+
+        <!-- Neste steg rett under storyene: det som gir mest mening å gjøre nå -->
+        <a id="next-step" class="next-step" href="/kasino.html#hjul">
+          <span class="ns-icon" id="ns-icon">🎡</span>
+          <span class="ns-text">
+            <small>Neste steg</small>
+            <b id="ns-title">Spinn lykkehjulet</b>
+            <span id="ns-sub">15 % sjanse for en ekte pils</span>
+          </span>
+          <span class="ns-go">›</span>
+        </a>
+
+        <div class="home-notes">
+          <p id="my-result" class="result"></p>
+          <a id="set-password-nudge" class="duel-alert hidden" href="/profil.html#inventar">🔑 Velg et passord, så kan du logge inn fra alle enheter ›</a>
+          <a id="avatar-missing" class="duel-alert hidden" href="/profil.html#inventar">📸 Legg inn et profilbilde ›</a>
+          <p id="home-alerts" class="duel-alert hidden"></p>
+        </div>
+
+        <div class="social-sep"><span>📡 Hva skjer</span></div>
         <div class="hs-tabs" role="tablist">
           <button type="button" class="hs-tab active" data-hs="now">🟢 Akkurat nå <b id="now-count" class="hs-count"></b></button>
           <button type="button" class="hs-tab" data-hs="wall">🧱 Veggen</button>

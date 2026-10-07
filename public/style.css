@@ -2993,3 +2993,13 @@ body.kasino .casino-games .tab.cg { aspect-ratio: 1 / 1; min-height: 0; height: 
 .mc-stats b { font-size: 0.85rem; }
 .mc-stats span { font-size: 0.75rem; }
 .mc-stats a.has-beer { background: #fff3cf; }
+
+/* 🍻 Gjengen: den sosiale delen av forsiden i ett kort */
+.social-card .story-row { margin: 4px 0 10px; }
+.social-card .me-card { background: linear-gradient(180deg, #fffaf0, #fff3dc); border-color: #ead9b5; box-shadow: none; }
+.social-card .stories-bar { padding-bottom: 6px; }
+body.minimal.home .social-card .next-step { margin-bottom: 8px; box-shadow: none; }
+.social-card .home-notes:not(:has(:not(.hidden):not(:empty))) { display: none; }
+.social-sep { display: flex; align-items: center; gap: 10px; margin: 12px 0 10px; font-size: 0.82rem; font-weight: 900; color: #3a2a12; letter-spacing: 0.3px; }
+.social-sep::before, .social-sep::after { content: ''; flex: 1; height: 1px; background: #e2d5bd; }
+.gwb-text b, .gwb-text small { overflow: hidden; text-overflow: ellipsis; }
