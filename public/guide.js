@@ -21,7 +21,7 @@
     casino: {
       title: 'Slik funker kasinoet',
       lines: () => [
-        `🎡 <b>Lykkehjul:</b> 1 spinn per runde, ${S.chance} % sjanse for en pils. Et lite 💀-felt tar et ekstra spinn.`,
+        `🎡 <b>Lykkehjul:</b> 1 spinn per runde, ${S.chance} % sjanse for en pils, 10 % for 💰 100 cash og 10 % for 🎡 et gratis spinn. Et lite 💀-felt tar et ekstra spinn.`,
         `🎰 <b>Automat:</b> ${S.price} cash per trekk, 3 linjer som betaler hver for seg. Tre 🍺 på en linje gir en pils. Se sannsynlighetene under automaten.`,
         '🃏 <b>Blackjack</b> og ♠️ <b>Poker</b> er felles bord: sett deg på en ledig plass for å spille, ellers ser du på.',
         '🔴 <b>Roulette</b> er ett hjul for alle: første innsats starter nedtellingen, og hjulet spinner for alle samtidig.',

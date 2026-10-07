@@ -21,6 +21,10 @@ const DRAW_FROM = process.env.DRAW_FROM === 'assigned' ? 'assigned' : 'all';
 // Sjanse for å treffe «−1 spinn»-feltet på lykkehjulet
 const SPIN_LOSE_CHANCE = process.env.SPIN_LOSE_CHANCE !== undefined ? Number(process.env.SPIN_LOSE_CHANCE) : 0.05;
 const SPIN_WIN_CHANCE = process.env.SPIN_WIN_CHANCE !== undefined ? Number(process.env.SPIN_WIN_CHANCE) : 0.15;
+// Lykkehjulet har også felt som gir cash og et nytt spinn
+const SPIN_CASH_CHANCE = process.env.SPIN_CASH_CHANCE !== undefined ? Number(process.env.SPIN_CASH_CHANCE) : 0.10;
+const SPIN_BONUS_CHANCE = process.env.SPIN_BONUS_CHANCE !== undefined ? Number(process.env.SPIN_BONUS_CHANCE) : 0.10;
+const SPIN_CASH_PRIZE = Number(process.env.SPIN_CASH_PRIZE) || 100;
 // Flappy-spillet: første milepæl og hvor ofte et rør dukker opp (brukes til juksesjekk)
 const GAME_FIRST_MILESTONE = Number(process.env.GAME_FIRST_MILESTONE) || 50;
 const GAME_PIPE_INTERVAL_MS = 1500;
@@ -1473,7 +1477,15 @@ const routes = {
     const win = roll < SPIN_WIN_CHANCE * 1_000_000;
     // Lite felt som tar et ekstra spinn (bare hvis man har et å miste)
     const lose = !win && roll < (SPIN_WIN_CHANCE + SPIN_LOSE_CHANCE) * 1_000_000;
+    const cashUpTo = SPIN_WIN_CHANCE + SPIN_LOSE_CHANCE + SPIN_CASH_CHANCE;
+    const cash = !win && !lose && roll < cashUpTo * 1_000_000 ? SPIN_CASH_PRIZE : 0;
+    const bonus = !win && !lose && !cash && roll < (cashUpTo + SPIN_BONUS_CHANCE) * 1_000_000;
     p.spins.push(win);
+    if (cash) {
+      addFlus(p, cash);
+      addActivity(p.name, '🎡', `vant ${cash} cash på lykkehjulet 💰`);
+    }
+    if (bonus) addSpins(p, 1);
     if (win) {
       addActivity(p.name, '🎡', 'vant en pils på lykkehjulet! 🍺');
       announceBeer(p.name, `🍺 ${p.name} vant en pils på lykkehjulet!`, 5500);
@@ -1481,7 +1493,7 @@ const routes = {
     const lostSpin = lose && spinsLeft(p) > 0;
     if (lostSpin) addSpins(p, -1);
     saveState();
-    sendJson(res, 200, { win, lose, lostSpin, me: meView(p) });
+    sendJson(res, 200, { win, lose, lostSpin, cash, bonus, me: meView(p) });
   },
 
   // Kjøp en pakke med spinn til lykkehjulet
@@ -2161,6 +2173,9 @@ const routes = {
       spinPacks: SPIN_PACKS,
       wheelChance: SPIN_WIN_CHANCE,
       wheelLoseChance: SPIN_LOSE_CHANCE,
+      wheelCashChance: SPIN_CASH_CHANCE,
+      wheelBonusChance: SPIN_BONUS_CHANCE,
+      wheelCashPrize: SPIN_CASH_PRIZE,
       slotTable: SLOT_RULES.map((r) => ({ id: r.id, combo: r.combo, label: r.label, flus: r.flus, beer: r.beer || 0, pLine: SLOT_ODDS.rules[r.id].line, pPull: SLOT_ODDS.rules[r.id].pull })),
       slotOdds: { anyWin: SLOT_ODDS.anyWin, avgCash: SLOT_ODDS.avgCash, lines: SLOT_LINES.length },
       log: state.casinoLog.slice(-10).reverse(),
