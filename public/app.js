@@ -49,12 +49,12 @@ function render() {
     $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 30));
     $('avatar-missing').classList.toggle('hidden', !!me.avatar);
     $('home-beers').closest('a').classList.toggle('has-beer', me.beersOwed > 0);
-    // Egen knapp til baren rett under «Hei»-linjen
+    // Bar-ikonet: gløder og viser antall når man har pils til gode
     $('bar-btn').classList.toggle('has-beer', me.beersOwed > 0);
-    $('bar-btn-count').textContent = `${me.beersOwed} 🍺`;
-    $('bar-btn-sub').textContent = me.beersOwed
-      ? `Du har ${me.beersOwed} pils til gode – trykk for å løse inn`
-      : 'Ingen pils til gode ennå – vinn på hjulet eller oppgaver';
+    $('bar-btn-count').textContent = me.beersOwed;
+    $('bar-btn-count').classList.toggle('hidden', !me.beersOwed);
+    $('bar-btn').title = me.beersOwed ? `${me.beersOwed} pils til gode – trykk for å løse inn` : 'Gå til baren';
+    if (!pokerLoaded) loadPoker();
     $('home-beers').closest('a').title = me.beersOwed ? `${me.beersOwed} pils til gode – trykk for å løse inn i baren` : 'Ingen pils til gode ennå';
     // Bare si ifra om vinnerlodd; resten av loddene ligger i inventaret på profilen
     const won = draw ? me.winningTickets.length : 0;
@@ -404,6 +404,67 @@ function feedItem(a, fresh = false) {
   item.append(badge, body);
   return item;
 }
+
+// ---------- Pokerbordet live: hvem spiller og hvem ser på ----------
+let pokerLoaded = false;
+let pokerTable = null;
+let pokerRooms = {};
+
+async function loadPoker() {
+  pokerLoaded = true;
+  try {
+    pokerTable = (await api('/api/poker')).table;
+    renderPoker();
+  } catch { /* ignorer */ }
+}
+
+function renderPoker() {
+  const t = pokerTable;
+  if (!t) return;
+  const box = $('poker-live-body');
+  box.innerHTML = '';
+  const seated = t.seats.map((s, i) => (s ? { ...s, seat: i } : null)).filter(Boolean);
+  const watching = (pokerRooms['kasino-poker'] || []).filter((x) => !seated.some((s) => s.name === x.name));
+  const winners = t.result ? new Set(t.result.winners.map((w) => w.seat)) : new Set();
+  if (!seated.length) {
+    box.appendChild(el('p', 'muted', watching.length ? `${watching.length} ser på bordet, men ingen har satt seg ennå.` : 'Ingen ved bordet akkurat nå. Bli den første! ♠️'));
+  } else {
+    const row = el('div', 'pl-players');
+    seated.forEach((s) => {
+      const p = el('a', 'pl-player');
+      p.href = '/kasino.html#poker';
+      if (s.seat === t.toAct) p.classList.add('turn');
+      if (s.folded) p.classList.add('folded');
+      if (winners.has(s.seat)) p.classList.add('won');
+      p.append(avatarEl(s.avatar, s.name, 38), el('span', 'pl-name', s.name.split(' ')[0]), el('span', 'pl-chips', `🪙 ${s.chips}`));
+      if (s.seat === t.toAct) p.appendChild(el('span', 'pl-tag', 'sin tur'));
+      else if (winners.has(s.seat)) p.appendChild(el('span', 'pl-tag won', 'vant!'));
+      else if (s.folded) p.appendChild(el('span', 'pl-tag', 'kastet'));
+      row.appendChild(p);
+    });
+    box.appendChild(row);
+    let status = `${seated.length} spiller${seated.length > 1 ? 'e' : ''}`;
+    if (t.phase === 'result' && t.result) status = t.result.winners.map((w) => `🏆 ${w.name.split(' ')[0]} vant ${w.amount}${w.hand ? ` med ${w.hand.toLowerCase()}` : ''}`).join(' · ');
+    else if (t.phase !== 'waiting') status += ` · pott ${t.pot}`;
+    else status += ' · venter på neste hånd';
+    box.appendChild(el('p', 'pl-status', status));
+  }
+  if (watching.length) {
+    const w = el('div', 'pl-watch');
+    watching.slice(0, 6).forEach((x) => w.appendChild(avatarEl(x.avatar, x.name, 22)));
+    w.appendChild(document.createTextNode(` 👀 ${watching.length} ser på`));
+    box.appendChild(w);
+  }
+  const mine = myName() && t.seats.some((s) => s && s.name === myName());
+  $('poker-live-link').textContent = mine ? 'Til bordet ›' : seated.length < 9 ? 'Sett deg ›' : 'Se på ›';
+}
+const myName = () => (data && data.me ? data.me.name : null);
+
+onLive('poker', () => data && data.me && loadPoker());
+document.addEventListener('presence', (e) => {
+  pokerRooms = e.detail.rooms || {};
+  renderPoker();
+});
 
 // Live: nye hendelser, likes og oppgaver
 let feedTimer = null;

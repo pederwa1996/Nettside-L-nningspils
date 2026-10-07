@@ -4,11 +4,72 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Baren – Lønningspils</title>
-  <!-- Baren ligger nå i kasinoet -->
-  <meta http-equiv="refresh" content="0; url=/kasino.html#baren">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Lobster&display=swap">
   <link rel="stylesheet" href="/style.css">
 </head>
-<body>
-  <main><p class="center"><a href="/kasino.html#baren">Baren har flyttet inn i kasinoet 🍻</a></p></main>
+<body class="kasino bar-page" data-tab="bar">
+  <header class="hero bar-hero">
+    <h1>🍻 Baren</h1>
+    <p class="sub">Løs inn pils til gode, så kommer spillmesteren med den til bordet</p>
+  </header>
+
+  <main>
+    <section id="not-joined" class="card hidden">
+      <p>Du må <a href="/">registrere deg</a> først.</p>
+    </section>
+
+    <section class="card wallet bar-wallet">
+      <div class="wallet-item"><span class="wallet-num" id="my-beers">0</span><span class="wallet-label">🍺 til gode</span></div>
+      <div class="wallet-item"><span class="wallet-num" id="my-flus">0</span><span class="wallet-label">💰 cash</span></div>
+    </section>
+
+    <section class="card">
+        <!-- Selve baren: hyller, disk, bartender og krakker med folk som er her -->
+        <div class="bar-scene" id="bar-scene">
+          <div class="bar-wall">
+            <div class="bar-neon">🍺 Lønningspils Bar</div>
+            <div class="bar-shelf"><span>🍾</span><span>🥃</span><span>🍷</span><span>🍸</span><span>🍾</span><span>🥃</span><span>🍷</span></div>
+            <div class="bar-shelf"><span>🥃</span><span>🍶</span><span>🍾</span><span>🍹</span><span>🥃</span><span>🍾</span><span>🍶</span></div>
+          </div>
+          <div class="bartender" id="bartender"></div>
+          <div class="bar-counter">
+            <div class="bar-taps"><i></i><i></i><i></i></div>
+            <div class="bar-slide" id="bar-slide">🍺</div>
+          </div>
+          <div class="stools" id="stools"></div>
+        </div>
+        <p id="bar-crowd" class="note center bar-crowd"></p>
+
+        <div id="bar">
+          <h2>🍻 Bestill pils</h2>
+          <p class="note">Spillmesteren kommer med pilsen til bordet ditt.</p>
+          <p id="won-info" class="note"></p>
+          <div class="stepper center-stepper">
+            <span class="muted">Antall</span>
+            <button type="button" class="secondary" id="qty-minus">−</button>
+            <span id="qty">1</span>
+            <button type="button" class="secondary" id="qty-plus">+</button>
+          </div>
+          <input id="note" type="text" maxlength="100" placeholder="Hvor sitter du? (valgfritt)" class="search bar-note">
+          <div class="bar-buttons">
+            <button id="order-credit" class="big">🍺 Bruk pils til gode</button>
+          </div>
+          <p class="note">Pils vinner du på lykkehjulet, automaten og i loddtrekningen. De kan ikke kjøpes for cash.</p>
+          <p id="msg" class="result"></p>
+          <h3>Dine bestillinger</h3>
+          <ul id="orders" class="order-list"></ul>
+        </div>
+    </section>
+  </main>
+
+  <script src="/media.js"></script>
+  <script src="/beerwins.js"></script>
+  <script src="/guide.js"></script>
+  <script src="/baren.js"></script>
+  <script src="/presence.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/chatbox.js"></script>
+  <script src="/notify.js"></script>
+  <script src="/admin-bubble.js"></script>
 </body>
 </html>

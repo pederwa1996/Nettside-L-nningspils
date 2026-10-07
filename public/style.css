@@ -2439,3 +2439,47 @@ body.kasino .slot-machine.vintage {
 .sm-plate { margin: 12px 16px 0; padding: 6px 8px; border-radius: 8px; text-align: center; font-size: 0.74rem; font-weight: 900; letter-spacing: 0.5px; color: #3a2400; background: linear-gradient(180deg, #fff6d0, #d4a530); border: 2px solid #8a5d00; box-shadow: inset 0 1px 0 #fff; }
 .sm-tray { position: relative; margin: 10px auto 0; width: 58%; height: 20px; border-radius: 0 0 16px 16px; background: linear-gradient(180deg, #120a02, #3a2400); border: 3px solid #8a5d00; border-top: 0; box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.7); }
 .slot-machine.vintage.jackpot { animation: jackpot 0.4s ease-in-out 6 alternate; }
+
+/* Forsiden: bar-ikonet først i story-raden */
+.story-row { display: flex; align-items: flex-start; gap: 14px; }
+.story-row .stories-bar { flex: 1; min-width: 0; }
+.bar-icon { flex: none; width: 70px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 4px; text-decoration: none; color: var(--text) !important; font-size: 0.75rem; }
+.bar-icon small { font-weight: 700; }
+.bar-icon-sign {
+  position: relative; width: 64px; height: 64px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #ffe9a8, #f5b301 45%, #b56d00 100%);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #f5b301, 0 4px 12px rgba(181, 109, 0, 0.45);
+  transition: transform 0.15s;
+}
+.bar-icon:active .bar-icon-sign { transform: scale(0.92); }
+.bar-icon-emoji { font-size: 2rem; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3)); }
+.bar-icon-badge { position: absolute; top: -4px; right: -4px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #e0283f; color: #fff; font-size: 0.75rem; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+.bar-icon.has-beer .bar-icon-sign { animation: bar-glow 1.4s ease-in-out infinite alternate; }
+.bar-icon.has-beer .bar-icon-emoji { animation: bar-cheers 1.4s ease-in-out infinite alternate; }
+@keyframes bar-glow { to { box-shadow: 0 0 0 2px #f5b301, 0 0 22px 6px rgba(245, 179, 1, 0.75); } }
+@keyframes bar-cheers { to { transform: rotate(-12deg) scale(1.08); } }
+
+/* Forsiden: pokerbordet live */
+.poker-live .wall-head { margin-bottom: 6px; }
+.pl-players { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: none; }
+.pl-players::-webkit-scrollbar { display: none; }
+.pl-player { flex: none; width: 64px; display: flex; flex-direction: column; align-items: center; gap: 2px; text-decoration: none; color: var(--text) !important; }
+.pl-player .avatar { border: 2px solid #1f8a4c; }
+.pl-player.turn .avatar { border-color: #f5b301; box-shadow: 0 0 0 3px rgba(245, 179, 1, 0.35); animation: pk-pulse 1s ease-in-out infinite alternate; }
+.pl-player.won .avatar { border-color: #13843f; box-shadow: 0 0 12px rgba(19, 132, 63, 0.7); }
+.pl-player.folded { opacity: 0.45; }
+.pl-name { font-size: 0.75rem; font-weight: 700; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-chips { font-size: 0.7rem; color: var(--muted); font-weight: 700; }
+.pl-tag { font-size: 0.6rem; font-weight: 900; text-transform: uppercase; color: #8a5d00; }
+.pl-tag.won { color: #13843f; }
+.pl-status { margin: 4px 0 0; font-size: 0.85rem; color: var(--muted); }
+.pl-watch { display: flex; align-items: center; gap: 2px; margin-top: 6px; font-size: 0.8rem; color: var(--muted); }
+.pl-watch .avatar { margin-right: -4px; border: 1px solid #fff; }
+
+/* Egen bar-side */
+.bar-page .bar-hero { padding: 22px 16px 4px; }
+.bar-page .bar-hero h1 { font-family: 'Lobster', cursive; font-size: 2.4rem; }
+.bar-wallet { max-width: 340px; margin-left: auto; margin-right: auto; }
+body.minimal .wall-more { background: var(--soft); color: var(--text) !important; border: 1px solid var(--line); }

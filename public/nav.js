@@ -5,7 +5,7 @@
 (function () {
   const ITEMS = [
     { key: 'home', href: '/', icon: '🏠', label: 'Hjem', paths: ['/', '/index.html'] },
-    { key: 'casino', href: '/kasino.html', icon: '🎰', label: 'Kasino', paths: ['/kasino.html', '/baren.html'] },
+    { key: 'casino', href: '/kasino.html', icon: '🎰', label: 'Kasino', paths: ['/kasino.html'] },
     { key: 'pvp', href: '/pvp.html', icon: '⚔️', label: 'PvP', paths: ['/pvp.html', '/duell.html', '/mogg.html', '/spill.html', '/arena.html'] },
     { key: 'tasks', href: '/oppgaver.html', icon: '🎯', label: 'Oppgaver', paths: ['/oppgaver.html'] },
     { key: 'profile', href: '/profil.html', icon: '👤', label: 'Profil', paths: ['/profil.html'] },

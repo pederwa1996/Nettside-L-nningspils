@@ -18,14 +18,16 @@
       <a href="/profil.html" class="me-bar-who" title="Din profil"><span id="me-avatar"></span><span>Hei, <b id="me-name"></b></span></a>
       <a class="mb-chip" href="/kasino.html#hjul" title="Spinn"><span id="home-spins">0</span> 🎡</a>
       <a class="mb-chip" href="/kasino.html" title="Cash"><span id="home-flus">0</span> 💰</a>
-      <a class="mb-chip beer-link" href="/kasino.html#baren" title="Pils til gode – løs inn i baren"><span id="home-beers">0</span> 🍺</a>
+      <a class="mb-chip beer-link" href="/baren.html" title="Pils til gode – løs inn i baren"><span id="home-beers">0</span> 🍺</a>
     </div>
-    <a id="bar-btn" class="bar-btn hidden" href="/kasino.html#baren">
-      <span class="bar-btn-icon">🍻</span>
-      <span class="bar-btn-text"><b>Baren</b><small id="bar-btn-sub">Løs inn pils til gode</small></span>
-      <span class="bar-btn-count" id="bar-btn-count">0 🍺</span>
-    </a>
-    <div id="stories-bar" class="stories-bar"></div>
+    <!-- Baren som et eget ikon først i story-raden: rett til baren -->
+    <div class="story-row">
+      <a id="bar-btn" class="bar-icon hidden" href="/baren.html" title="Gå til baren">
+        <span class="bar-icon-sign"><span class="bar-icon-emoji">🍻</span><b id="bar-btn-count" class="bar-icon-badge hidden">0</b></span>
+        <small>Baren</small>
+      </a>
+      <div id="stories-bar" class="stories-bar"></div>
+    </div>
 
     <!-- Registrering / innlogging -->
     <section id="join-section" class="card hidden">
@@ -80,6 +82,16 @@
         <a id="avatar-missing" class="duel-alert hidden" href="/profil.html#inventar">📸 Legg inn et profilbilde ›</a>
         <p id="home-alerts" class="duel-alert hidden"></p>
       </div>
+
+      <!-- Pokerbordet live -->
+      <section id="poker-live" class="card poker-live">
+        <div class="wall-head">
+          <h2>♠️ Pokerbordet</h2>
+          <span class="live-dot">LIVE</span>
+          <a href="/kasino.html#poker" class="wall-more" id="poker-live-link">Se på ›</a>
+        </div>
+        <div id="poker-live-body" class="pl-body"></div>
+      </section>
 
       <!-- Hva skjer -->
       <section class="card wall-card feed-card">

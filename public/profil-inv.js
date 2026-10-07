@@ -55,7 +55,7 @@
       : '<span class="muted">Ingen lodd (du ble med etter at de var delt ut).</span>';
     inv.innerHTML = `
       <h2>🎒 Inventar</h2>
-      <a class="inv-beer${me.beersOwed ? ' has' : ''}" href="/kasino.html#baren">
+      <a class="inv-beer${me.beersOwed ? ' has' : ''}" href="/baren.html">
         <span class="inv-big">🍺 ${me.beersOwed}</span>
         <span><b>pils til gode</b><br><small>${me.beersOwed ? 'Trykk for å løse inn i baren. Spillmesteren kommer med den til bordet!' : 'Vinn pils på lykkehjulet, automaten eller i loddtrekningen.'}</small></span>
       </a>

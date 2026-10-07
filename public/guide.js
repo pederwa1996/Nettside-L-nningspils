@@ -37,6 +37,14 @@
         `🕊️ <b>Flappy Sjef:</b> ${S.flappy} poeng gir 1 spinn, ${S.flappy * 2} gir 2, ${S.flappy * 4} gir 3 …`,
       ],
     },
+    bar: {
+      title: 'Slik funker baren',
+      lines: () => [
+        '🍺 Har du <b>pils til gode</b>, trykk «Bruk pils til gode» og skriv gjerne hvor du sitter.',
+        '👑 Spillmesteren får beskjed og kommer med pilsen til bordet ditt.',
+        'Alle som er i baren akkurat nå sitter på krakkene. Baren finnes også i kasinoet.',
+      ],
+    },
     arena: {
       title: 'Slik funker arenaen',
       lines: () => [
@@ -88,7 +96,7 @@
   const path = location.pathname.replace(/\/$/, '') || '/';
   const key = {
     '/': 'home', '/index.html': 'home', '/kasino.html': 'casino', '/pvp.html': 'pvp', '/duell.html': 'duel',
-    '/mogg.html': 'mogg', '/arena.html': 'arena', '/spill.html': 'flappy', '/oppgaver.html': 'tasks', '/profil.html': 'profile',
+    '/mogg.html': 'mogg', '/arena.html': 'arena', '/baren.html': 'bar', '/spill.html': 'flappy', '/oppgaver.html': 'tasks', '/profil.html': 'profile',
   }[path];
   if (!key) return;
 

@@ -11,6 +11,7 @@
     'kasino-blackjack': 'blackjack-bordet',
     'kasino-poker': 'pokerbordet',
     'kasino-bar': 'baren',
+    baren: 'baren',
     chat: 'chatten',
     pvp: 'PvP',
     arena: 'arenaen',
@@ -26,6 +27,7 @@
     if (path === '/' || path === '/index.html') return 'hjem';
     if (path === '/kasino.html') return `kasino-${document.body.dataset.tab || 'wheel'}`;
     if (path === '/spill.html') return 'flappy';
+    if (path === '/baren.html') return 'baren';
     const page = path.replace(/^\//, '').replace(/\.html$/, '');
     return ROOM_NAMES[page] ? page : null;
   }

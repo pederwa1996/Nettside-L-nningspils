@@ -131,7 +131,7 @@
     const stoolsEl = document.getElementById('stools');
     if (!stoolsEl) return;
     const meName = data && data.me ? data.me.name : null;
-    const here = (lastRooms['kasino-bar'] || []).slice();
+    const here = [...(lastRooms['kasino-bar'] || []), ...(lastRooms.baren || [])];
     // Spillmesteren står bak disken hvis hen er i baren
     const bt = here.find((x) => admins.includes(x.name));
     const tender = document.getElementById('bartender');

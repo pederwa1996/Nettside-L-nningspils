@@ -1833,7 +1833,7 @@ const routes = {
       if (t.beer) {
         if (p) p.taskBeers = (p.taskBeers || 0) + t.beer;
         addActivity(cur.name, '🍺', `klarte den vanskelige oppgaven «${t.title}» og vant en pils! 🍺`, { url: cur.url });
-        notify(cur.name, '🍺', `Spillmesteren godkjente «${t.title}»! Du vant en pils til gode. Løs den inn i baren 🍻`, { url: '/kasino.html#baren' });
+        notify(cur.name, '🍺', `Spillmesteren godkjente «${t.title}»! Du vant en pils til gode. Løs den inn i baren 🍻`, { url: '/baren.html' });
         announceBeer(cur.name, `🍺 ${cur.name} vant en pils på oppgaven «${t.title}»!`);
       } else {
         if (p) {
@@ -2118,12 +2118,12 @@ const routes = {
     if (body.status === 'delivered') {
       o.status = 'delivered';
       o.kr = o.qty * state.budget.price; // trekkes fra budsjettet
-      notify(o.name, '🍺', `Spillmesteren har levert ${o.qty > 1 ? `${o.qty} pils` : 'pilsen'} din. Skål! 🍻`, { url: '/kasino.html#baren' });
+      notify(o.name, '🍺', `Spillmesteren har levert ${o.qty > 1 ? `${o.qty} pils` : 'pilsen'} din. Skål! 🍻`, { url: '/baren.html' });
     } else if (body.status === 'cancelled') {
       o.status = 'cancelled';
       const p = findParticipant(o.name);
       if (p && o.pay === 'flus') addFlus(p, o.cost); // pengene tilbake
-      notify(o.name, '🚫', `Spillmesteren avbrøt bestillingen din${o.pay === 'flus' ? ` (${o.cost} cash er betalt tilbake)` : ' (pilsen er fortsatt til gode)'}`, { url: '/kasino.html#baren' });
+      notify(o.name, '🚫', `Spillmesteren avbrøt bestillingen din${o.pay === 'flus' ? ` (${o.cost} cash er betalt tilbake)` : ' (pilsen er fortsatt til gode)'}`, { url: '/baren.html' });
     } else return sendJson(res, 400, { error: 'Ukjent status.' });
     o.doneAt = Date.now();
     saveState();
