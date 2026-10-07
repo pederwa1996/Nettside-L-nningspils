@@ -106,29 +106,45 @@
   // ---------- «Slik funker det» på hver side ----------
   function pageCard() {
     const page = PAGES[key];
-    const card = el('details', 'card guide-card');
-    card.open = store.get(`guide:${key}`) !== 'seen';
-    const sum = el('summary', '', `❓ ${page.title}`);
+    // Et lite ❓-ikon øverst til venstre; forklaringen vises bare når man trykker
+    const btn = el('button', 'guide-icon', '?');
+    btn.type = 'button';
+    btn.title = page.title;
+    btn.setAttribute('aria-label', page.title);
+    const pop = el('div', 'guide-pop hidden');
+    pop.setAttribute('role', 'dialog');
+    const head = el('div', 'guide-pop-head', `<strong>${page.title}</strong>`);
+    const x = el('button', 'guide-x', '✕');
+    x.type = 'button';
+    head.appendChild(x);
     const ul = el('ul', 'guide-lines');
     page.lines().forEach((l) => ul.appendChild(el('li', '', l)));
-    const ok = el('button', 'small-btn guide-ok', 'Skjønner! 👍');
-    ok.type = 'button';
-    ok.addEventListener('click', () => {
-      card.open = false;
-      store.set(`guide:${key}`, 'seen');
-    });
-    card.append(sum, ul, ok);
+    pop.append(head, ul);
     if (key === 'home') {
       const again = el('button', 'secondary small-btn guide-ok', '🎬 Vis velkomsten igjen');
       again.type = 'button';
-      again.addEventListener('click', showWelcome);
-      card.appendChild(again);
+      again.addEventListener('click', () => {
+        close();
+        showWelcome();
+      });
+      pop.appendChild(again);
     }
-    card.addEventListener('toggle', () => !card.open && store.set(`guide:${key}`, 'seen'));
-    const main = document.querySelector('main');
-    // På forsiden hører den til veggen (som er skjult til man er logget inn)
-    const host = key === 'home' ? document.getElementById('wall') : main;
-    if (host) host.prepend(card);
+    const open = () => {
+      pop.classList.remove('hidden');
+      btn.classList.add('active');
+    };
+    const close = () => {
+      pop.classList.add('hidden');
+      btn.classList.remove('active');
+    };
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (pop.classList.contains('hidden')) open();
+      else close();
+    });
+    x.addEventListener('click', close);
+    document.addEventListener('click', (e) => !pop.contains(e.target) && close());
+    document.body.append(btn, pop);
   }
 
   // ---------- Velkomstvindu første gang ----------

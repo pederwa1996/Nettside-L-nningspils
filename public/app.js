@@ -30,8 +30,7 @@ function render() {
   // Før man er logget inn er resten av siden (meny, story, veggen) skjult
   document.body.classList.toggle('logged-out', !me);
   $('wall').classList.toggle('hidden', !me);
-  $('set-password').classList.toggle('hidden', !me || me.hasPassword);
-  $('change-password-btn').classList.toggle('hidden', !me || !me.hasPassword);
+  $('set-password-nudge').classList.toggle('hidden', !me || me.hasPassword);
   $('open-tasks').textContent = data.openTasks ? `${data.openTasks} ledige` : 'Alle er tatt!';
 
   const alerts = [];
@@ -46,27 +45,13 @@ function render() {
     $('home-flus').textContent = me.flus;
     $('home-beers').textContent = me.beersOwed;
     $('me-name').textContent = me.isAdmin ? `${me.name} 👑` : me.name;
-    $('admin-btn').classList.toggle('hidden', !me.isAdmin);
-    $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 64));
+    $('me-avatar').replaceChildren(avatarEl(me.avatar, me.name, 44));
     $('avatar-missing').classList.toggle('hidden', !!me.avatar);
-    const winSet = new Set(me.winningTickets);
-    $('my-tickets').innerHTML = '';
-    if (!me.tickets.length) $('my-tickets').innerHTML = '<p class="note">Du ble med etter at loddene var delt ut, så du har ingen lodd. Spinn, spill og oppgaver gjelder fortsatt!</p>';
-    me.tickets.forEach((t) => {
-      const el = document.createElement('div');
-      el.className = 'ticket' + (winSet.has(t) ? ' winner' : '');
-      el.textContent = `#${t}`;
-      $('my-tickets').appendChild(el);
-    });
-    if (draw) {
-      $('my-result').textContent = me.winningTickets.length
-        ? `🎉 Du har ${me.winningTickets.length} vinnerlodd! Det er ${me.winningTickets.length} øl til deg! 🍺`
-        : 'Ingen vinnerlodd denne gangen 😢';
-      $('my-result').className = 'result ' + (me.winningTickets.length ? 'win' : 'lose');
-    } else {
-      $('my-result').textContent = '';
-    }
-    renderChatPreview(data.chatPreview);
+    $('home-beers').closest('a').classList.toggle('has-beer', me.beersOwed > 0);
+    // Bare si ifra om vinnerlodd; resten av loddene ligger i inventaret på profilen
+    const won = draw ? me.winningTickets.length : 0;
+    $('my-result').textContent = won ? `🎉 Du har ${won} vinnerlodd! Det er ${won} pils til deg! 🍺` : '';
+    $('my-result').className = won ? 'result win' : 'result hidden';
     renderTaskPreview(data.taskPreview);
     if (!feedLoaded) loadFeed();
   }
@@ -169,20 +154,6 @@ $('avatar-input').addEventListener('change', async () => {
   }
 });
 
-$('change-avatar-input').addEventListener('change', async () => {
-  const file = $('change-avatar-input').files[0];
-  $('change-avatar-input').value = '';
-  if (!file) return;
-  try {
-    const avatar = await resizeImage(file, 320, 0.85, true);
-    await api('/api/avatar', { avatar });
-    await refresh();
-    if (window.reloadStories) window.reloadStories();
-  } catch (err) {
-    alert(err.message);
-  }
-});
-
 $('join-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('join-error').textContent = '';
@@ -252,67 +223,6 @@ $('login-form').addEventListener('submit', async (e) => {
   $('login-btn').disabled = false;
 });
 
-$('logout-btn').addEventListener('click', async () => {
-  if (!confirm(data.me.hasPassword
-    ? 'Logge ut på denne enheten? Du kan logge inn igjen med navn og passord.'
-    : 'Du har ikke passord ennå, så du kommer ikke inn igjen uten kode. Velg et passord først! Logge ut likevel?')) return;
-  await api('/api/logout', {}).catch(() => {});
-  location.replace('/');
-});
-
-$('set-password').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  $('set-password-error').textContent = '';
-  try {
-    await api('/api/password', { password: $('new-password').value });
-    $('new-password').value = '';
-    await refresh();
-    alert('Passordet er lagret 🔑 Nå kan du logge inn med navnet ditt og passordet på alle enheter.');
-  } catch (err) {
-    $('set-password-error').textContent = err.message;
-  }
-});
-
-$('change-password-btn').addEventListener('click', async () => {
-  const current = prompt('Skriv inn passordet du har nå:');
-  if (current === null) return;
-  const password = prompt('Skriv inn det nye passordet (minst 4 tegn):');
-  if (password === null) return;
-  try {
-    await api('/api/password', { current, password });
-    alert('Passordet er byttet 🔑');
-  } catch (err) {
-    alert(err.message);
-  }
-});
-
-// ---------- Endre navn ----------
-$('rename-btn').addEventListener('click', async () => {
-  const name = prompt('Hva vil du hete?', data.me.name);
-  if (name === null || !name.trim() || name.trim() === data.me.name) return;
-  try {
-    await api('/api/rename', { name });
-    await refresh();
-    if (window.reloadStories) window.reloadStories();
-  } catch (err) {
-    alert(err.message);
-  }
-});
-
-// ---------- Samme profil på flere enheter ----------
-$('device-btn').addEventListener('click', async () => {
-  try {
-    const r = await api('/api/device-code', {});
-    const link = `${location.origin}/?kode=${r.code}`;
-    $('device-code').textContent = r.code;
-    $('device-link').textContent = link;
-    $('device-link').href = link;
-    $('device-code-box').classList.remove('hidden');
-  } catch (err) {
-    alert(err.message);
-  }
-});
-
 async function loginWithCode(code) {
   $('code-error').textContent = '';
   try {
@@ -337,7 +247,7 @@ if (codeFromLink) {
   loginWithCode(codeFromLink);
 }
 
-// ---------- Veggen: chat, oppgaver og hva som skjer ----------
+// ---------- Veggen: oppgaver og hva som skjer ----------
 function el(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -346,40 +256,6 @@ function el(tag, cls, text) {
 }
 
 const profileUrl = (n) => `/profil.html?navn=${encodeURIComponent(n)}`;
-
-function renderChatPreview(list) {
-  const box = $('chat-preview');
-  box.innerHTML = '';
-  if (!list.length) {
-    box.appendChild(el('p', 'muted', 'Ingen har sagt noe ennå. Bli den første!'));
-    return;
-  }
-  list.forEach((m) => {
-    const row = el('a', 'cp-msg');
-    row.href = '#chat';
-    row.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (window.openChat) window.openChat();
-    });
-    const body = el('div', 'cp-body');
-    body.append(el('strong', '', m.name), el('span', 'cp-text', m.text));
-    row.append(avatarEl(m.avatar, m.name, 30), body, el('small', 'muted', timeAgo(m.at)));
-    box.appendChild(row);
-  });
-}
-
-$('quick-chat').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const text = $('quick-chat-input').value.trim();
-  if (!text) return;
-  try {
-    await api('/api/chat', { text });
-    $('quick-chat-input').value = '';
-    refresh();
-  } catch (err) {
-    alert(err.message);
-  }
-});
 
 function renderTaskPreview(list) {
   const ul = $('task-preview');
@@ -428,26 +304,55 @@ $('feed-more').addEventListener('click', async () => {
   }
 });
 
+// Kategori ut fra ikonet, så feeden kan fargelegges og filtreres
+function feedCat(a) {
+  if (/pils|🍺/.test(a.text) && ['🎡', '🎟️', '🎰', '🍺'].includes(a.icon)) return 'beer';
+  if (['🎰', '🎡', '♠️', '🃏'].includes(a.icon)) return 'casino';
+  if (['⚔️', '🗿', '🕊️'].includes(a.icon)) return 'pvp';
+  if (a.icon === '🎯') return 'tasks';
+  return 'social';
+}
+const CAT_LABEL = { beer: '🍺 PILS!', casino: '🎰 Kasino', pvp: '⚔️ PvP', tasks: '🎯 Oppgave', social: '👋' };
+
+let feedFilter = 'all';
+const seenFeed = new Set();
+let feedFirst = true;
+
+document.querySelectorAll('#feed-filters .ff').forEach((b) => b.addEventListener('click', () => {
+  feedFilter = b.dataset.cat;
+  document.querySelectorAll('#feed-filters .ff').forEach((x) => x.classList.toggle('active', x === b));
+  renderFeed();
+}));
+
 function renderFeed() {
   const box = $('feed');
   box.innerHTML = '';
-  if (!feedItems.length) box.appendChild(el('p', 'muted', 'Ingenting har skjedd ennå.'));
-  feedItems.forEach((a) => box.appendChild(feedItem(a)));
+  const list = feedItems.filter((a) => feedFilter === 'all' || (feedFilter === 'photos' ? !!a.url : feedCat(a) === feedFilter));
+  if (!list.length) box.appendChild(el('p', 'muted center', feedFilter === 'all' ? 'Ingenting har skjedd ennå. Bli den første! 🎉' : 'Ingenting her ennå.'));
+  list.forEach((a) => {
+    const fresh = !feedFirst && !seenFeed.has(a.id);
+    box.appendChild(feedItem(a, fresh));
+  });
+  feedItems.forEach((a) => seenFeed.add(a.id));
+  feedFirst = false;
   $('feed-more').classList.toggle('hidden', !feedMore);
 }
 
-function feedItem(a) {
+function feedItem(a, fresh = false) {
+  const cat = feedCat(a);
   const postUrl = `${profileUrl(a.name)}&innlegg=${a.id}`;
-  const item = el('article', 'wall-item');
-  const av = el('a', 'wi-avatar');
-  av.href = profileUrl(a.name);
-  av.appendChild(avatarEl(a.avatar, a.name, 40));
+  const item = el('article', `wall-item cat-${cat}${fresh ? ' fresh' : ''}`);
+  const badge = el('a', 'wi-badge');
+  badge.href = profileUrl(a.name);
+  badge.append(avatarEl(a.avatar, a.name, 46), el('span', 'wi-emoji', a.icon));
   const body = el('div', 'wi-body');
-  const p = el('p', 'wi-text');
+  const top = el('div', 'wi-top');
   const who = el('a', 'wi-name', a.admin ? `${a.name} 👑` : a.name);
   who.href = profileUrl(a.name);
-  p.append(el('span', 'wi-icon', a.icon), who, document.createTextNode(` ${a.text}`));
-  body.append(p, el('small', 'muted', timeAgo(a.at)));
+  top.append(who);
+  if (cat !== 'social') top.append(el('span', `wi-tag tag-${cat}`, CAT_LABEL[cat]));
+  if (Date.now() - a.at < 3 * 60 * 1000) top.append(el('span', 'wi-new', '🔥 NY'));
+  body.append(top, el('p', 'wi-text', a.text), el('small', 'wi-time', timeAgo(a.at)));
   if (a.url) {
     const link = el('a', 'wi-img');
     link.href = postUrl;
@@ -465,7 +370,9 @@ function feedItem(a) {
     try {
       const r = await api('/api/react/like', { id: a.id });
       Object.assign(a, r.activity);
-      item.replaceWith(feedItem(a));
+      const next = feedItem(a);
+      if (a.liked) next.querySelector('.wi-like').classList.add('pop');
+      item.replaceWith(next);
     } catch (err) {
       alert(err.message);
     }
@@ -473,6 +380,7 @@ function feedItem(a) {
   const comments = el('a', 'wi-comments', `💬 ${a.comments.length || 'Kommenter'}`);
   comments.href = postUrl;
   actions.append(like, comments);
+  if (a.likedBy && a.likedBy.length) actions.append(el('span', 'wi-likers', `likt av ${a.likedBy.slice(-2).join(', ')}${a.likes > 2 ? ` +${a.likes - 2}` : ''}`));
   body.appendChild(actions);
   if (a.comments.length) {
     const c = a.comments[a.comments.length - 1];
@@ -481,11 +389,11 @@ function feedItem(a) {
     last.append(el('strong', '', c.name), document.createTextNode(` ${c.text}`));
     body.appendChild(last);
   }
-  item.append(av, body);
+  item.append(badge, body);
   return item;
 }
 
-// Live: nye hendelser, likes, chat og oppgaver
+// Live: nye hendelser, likes og oppgaver
 let feedTimer = null;
 const reloadFeedSoon = () => {
   clearTimeout(feedTimer);
@@ -493,7 +401,6 @@ const reloadFeedSoon = () => {
 };
 onLive('activity', reloadFeedSoon);
 onLive('reactions', reloadFeedSoon);
-onLive('chat', () => data && data.me && refresh());
 onLive('tasks', () => data && data.me && refresh());
 
 refresh();

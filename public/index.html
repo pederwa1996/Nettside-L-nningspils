@@ -68,30 +68,20 @@
 
     <!-- ===================== VEGGEN ===================== -->
     <div id="wall" class="wall hidden">
-      <section id="me-section" class="card">
-        <div class="me-head">
-          <div class="me-avatar">
-            <span id="me-avatar"></span>
-            <!-- Bare det lille kameraet åpner kameraet, så man ikke kommer borti det ved et uhell -->
-            <label class="me-avatar-edit" title="Bytt profilbilde">
-              <input id="change-avatar-input" type="file" accept="image/*" capture="user" hidden>📷
-            </label>
-          </div>
-          <h2>Hei, <span id="me-name"></span>! 👋 <button type="button" id="rename-btn" class="rename-btn" title="Endre navn">✏️</button></h2>
-        </div>
-        <!-- Profiler laget før passord fantes: be om å velge et -->
-        <form id="set-password" class="set-password hidden">
-          <p><strong>🔑 Velg et passord</strong><br><small>Da kan du logge inn på profilen din fra hvilken som helst mobil eller PC.</small></p>
-          <input id="new-password" type="password" placeholder="Nytt passord (minst 4 tegn)" minlength="4" maxlength="100" autocomplete="new-password" required>
-          <button type="submit">Lagre passord</button>
-          <p id="set-password-error" class="error"></p>
-        </form>
-        <p id="avatar-missing" class="duel-alert hidden">📸 Trykk på det lille kameraet for å legge inn et profilbilde!</p>
+      <section id="me-section" class="card me-strip">
+        <a href="/profil.html" class="me-strip-head" title="Profilen din">
+          <span id="me-avatar"></span>
+          <span class="me-hello">Hei, <b id="me-name"></b>! 👋</span>
+          <span class="me-inv">🎒 Inventar ›</span>
+        </a>
         <div class="home-wallet">
           <a class="wallet-link" href="/kasino.html#hjul" title="Spinn på lykkehjulet"><span id="home-spins">0</span><small>🎡 spinn ›</small></a>
           <a class="wallet-link" href="/kasino.html" title="Til kasinoet"><span id="home-flus">0</span><small>💰 cash ›</small></a>
-          <a class="wallet-link" href="/kasino.html#baren" title="Gå til baren"><span id="home-beers">0</span><small>🍺 til gode ›</small></a>
+          <a class="wallet-link beer-link" href="/kasino.html#baren" title="Løs inn i baren"><span id="home-beers">0</span><small>🍺 til gode ›</small></a>
         </div>
+        <p id="my-result" class="result"></p>
+        <a id="set-password-nudge" class="duel-alert hidden" href="/profil.html#inventar">🔑 Velg et passord, så kan du logge inn fra alle enheter ›</a>
+        <a id="avatar-missing" class="duel-alert hidden" href="/profil.html#inventar">📸 Legg inn et profilbilde ›</a>
         <p id="home-alerts" class="duel-alert hidden"></p>
         <div class="quick-links">
           <a href="/kasino.html#hjul">🎡 Lykkehjulet</a>
@@ -99,36 +89,6 @@
           <a href="/oppgaver.html">🎯 Oppgaver</a>
           <a href="#stilling">🏆 Stilling</a>
         </div>
-        <details class="tips">
-          <summary>🎟️ Dine lodd</summary>
-          <div id="my-tickets" class="tickets"></div>
-        </details>
-        <p id="my-result" class="result"></p>
-        <div class="me-links">
-          <a id="admin-btn" class="button small-btn hidden" href="/admin.html">🔐 Admin</a>
-          <button type="button" id="device-btn" class="secondary small-btn">💻 Bruk på annen enhet</button>
-          <button type="button" id="change-password-btn" class="secondary small-btn">🔑 Bytt passord</button>
-          <button type="button" id="logout-btn" class="secondary small-btn">🚪 Logg ut</button>
-        </div>
-        <div id="device-code-box" class="device-code-box hidden">
-          <p>Skriv inn denne koden på den andre enheten (under «Logg inn med kode»):</p>
-          <p class="device-code" id="device-code"></p>
-          <p class="note">Eller åpn denne lenken der: <a id="device-link" href="#"></a></p>
-          <p class="note">Koden virker én gang og går ut om 10 minutter. Ikke del den med andre, da logger de inn som deg!</p>
-        </div>
-      </section>
-
-      <!-- Chatten -->
-      <section class="card wall-card">
-        <div class="wall-head">
-          <h2>💬 Chatten</h2>
-          <button type="button" class="wall-more" onclick="window.openChat && window.openChat()">Åpne ›</button>
-        </div>
-        <div id="chat-preview" class="chat-preview"></div>
-        <form id="quick-chat" class="quick-chat">
-          <input id="quick-chat-input" type="text" maxlength="500" placeholder="Si noe til alle ..." autocomplete="off">
-          <button type="submit">Send</button>
-        </form>
       </section>
 
       <!-- Oppgaver -->
@@ -142,8 +102,16 @@
       </section>
 
       <!-- Hva skjer -->
-      <section class="card wall-card">
-        <div class="wall-head"><h2>📰 Hva skjer</h2></div>
+      <section class="card wall-card feed-card">
+        <div class="wall-head"><h2>📰 Hva skjer</h2><span class="live-dot">LIVE</span></div>
+        <div id="feed-filters" class="feed-filters">
+          <button type="button" class="ff active" data-cat="all">Alt</button>
+          <button type="button" class="ff" data-cat="beer">🍺 Pils</button>
+          <button type="button" class="ff" data-cat="casino">🎰 Kasino</button>
+          <button type="button" class="ff" data-cat="pvp">⚔️ PvP</button>
+          <button type="button" class="ff" data-cat="tasks">🎯 Oppgaver</button>
+          <button type="button" class="ff" data-cat="photos">📸 Bilder</button>
+        </div>
         <div id="feed" class="wall-feed"></div>
         <button type="button" id="feed-more" class="secondary small-btn hidden">Vis eldre</button>
       </section>

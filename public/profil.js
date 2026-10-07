@@ -67,7 +67,7 @@
       ['🍺', s.beersWon, 'pils vunnet'],
       ['🍻', s.beersOwed, 'pils til gode'],
       ['🎰', s.spinsLeft, 'spinn igjen'],
-      ['💰', s.flus, 'flus'],
+      ['💰', s.flus, 'cash'],
       ['🎡', s.wheelSpins, 'hjulspinn'],
       ['🕊️', s.flappyBest, 'Flappy-rekord'],
       ['🗿', s.moggBest === null ? '–' : s.moggBest.toFixed(2), 'beste mogg'],
