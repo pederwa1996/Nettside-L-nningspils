@@ -1920,6 +1920,29 @@ const routes = {
     sendJson(res, 200, { ok: true });
   },
 
+  // Rediger en oppgave (tittel, beskrivelse, belønning, bevis, pils). Kan også åpne den igjen.
+  'POST /api/admin/task-edit': (req, res, body) => {
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const t = state.tasks.find((x) => x.id === body.id);
+    if (!t) return sendJson(res, 404, { error: 'Fant ikke oppgaven.' });
+    const title = String(body.title ?? t.title).trim();
+    if (title.length < 3) return sendJson(res, 400, { error: 'Oppgaven trenger en tittel (minst 3 tegn).' });
+    // Samme regler som en ny oppgave, men id, status og innleveringer beholdes
+    const fresh = newTask({
+      title,
+      desc: body.desc ?? t.desc,
+      reward: body.reward ?? t.reward,
+      proof: body.proof ?? t.proof,
+      beer: body.beer ?? t.beer,
+    });
+    Object.assign(t, { title: fresh.title, desc: fresh.desc, reward: fresh.reward, proof: fresh.proof, beer: fresh.beer });
+    // «Åpne igjen»: en løst oppgave blir ledig for alle (det som er gitt, beholdes)
+    if (body.reopen && t.status === 'done') t.status = 'open';
+    saveState();
+    broadcast('tasks', {});
+    sendJson(res, 200, { ok: true, task: adminTaskView(t) });
+  },
+
   'POST /api/admin/task-delete': (req, res, body) => {
     if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const t = state.tasks.find((x) => x.id === body.id);

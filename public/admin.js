@@ -152,6 +152,16 @@ async function load() {
     const last = t.attempts[t.attempts.length - 1];
     const status = t.status === 'done' ? `✅ ${last.name}` : t.status === 'pending' ? `⏳ ${last.name}` : '🟢 ledig';
     span.textContent = `${t.title} · ${t.beer ? '🍺 1 pils' : `🎰 ${t.reward}`} · ${status}`;
+    const btns = document.createElement('span');
+    btns.className = 'task-admin-btns';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'small-btn';
+    editBtn.textContent = '✏️ Rediger';
+    editBtn.addEventListener('click', () => {
+      const open = li.querySelector('.task-edit');
+      if (open) return open.remove();
+      li.appendChild(taskEditor(t));
+    });
     const del = document.createElement('button');
     del.className = 'secondary small-btn';
     del.textContent = 'Slett';
@@ -160,7 +170,8 @@ async function load() {
       await post('/api/admin/task-delete', { id: t.id });
       await load();
     });
-    li.append(span, del);
+    btns.append(editBtn, del);
+    li.append(span, btns);
     $('admin-tasks').appendChild(li);
   });
 
@@ -290,6 +301,58 @@ $('draw-btn').addEventListener('click', async () => {
     showMsg(err.message);
   }
 });
+
+// Skjema for å redigere en oppgave rett i listen
+function taskEditor(t) {
+  const box = document.createElement('div');
+  box.className = 'task-form task-edit';
+  box.innerHTML = `
+    <input class="te-title" type="text" maxlength="80" placeholder="Tittel">
+    <textarea class="te-desc task-text" maxlength="400" placeholder="Beskrivelse"></textarea>
+    <label class="field">Belønning (spinn, 1–10)
+      <input class="te-reward" type="number" min="1" max="10">
+    </label>
+    <label class="field">Bevis
+      <select class="te-proof">
+        <option value="photo">Bilde kreves</option>
+        <option value="text">Tekst holder (bilde valgfritt)</option>
+      </select>
+    </label>
+    <label class="check-row"><input class="te-beer" type="checkbox"> 🍺 Skikkelig vanskelig: gir 1 pils i stedet for spinn</label>
+    <label class="check-row te-reopen-row hidden"><input class="te-reopen" type="checkbox"> ↺ Gjør oppgaven ledig igjen (den er løst nå)</label>
+    <div class="story-actions">
+      <button type="button" class="te-save">💾 Lagre</button>
+      <button type="button" class="secondary te-cancel">Avbryt</button>
+    </div>`;
+  const q = (c) => box.querySelector(c);
+  q('.te-title').value = t.title;
+  q('.te-desc').value = t.desc || '';
+  q('.te-reward').value = t.reward || 3;
+  q('.te-proof').value = t.proof;
+  q('.te-beer').checked = !!t.beer;
+  q('.te-reward').disabled = !!t.beer;
+  q('.te-beer').addEventListener('change', () => (q('.te-reward').disabled = q('.te-beer').checked));
+  q('.te-reopen-row').classList.toggle('hidden', t.status !== 'done');
+  q('.te-cancel').addEventListener('click', () => box.remove());
+  q('.te-save').addEventListener('click', async () => {
+    try {
+      await post('/api/admin/task-edit', {
+        id: t.id,
+        title: q('.te-title').value,
+        desc: q('.te-desc').value,
+        reward: Number(q('.te-reward').value) || 1,
+        proof: q('.te-proof').value,
+        beer: q('.te-beer').checked ? 1 : 0,
+        reopen: q('.te-reopen').checked,
+      });
+      showMsg(`Oppgaven «${q('.te-title').value}» er lagret ✅`, true);
+      await load();
+    } catch (err) {
+      showMsg(err.message);
+    }
+  });
+  return box;
+}
 
 $('new-task-btn').addEventListener('click', async () => {
   try {

@@ -2590,3 +2590,12 @@ body.minimal.home .mb-chip, body.minimal.home .go-live, body.minimal.home .wall-
 .pt-odds b { display: block; }
 .pt-odds small { font-size: 0.68rem; opacity: 0.7; }
 .paytable2 tr.pt-beer td { background: rgba(255, 211, 77, 0.12); }
+
+/* Admin: rediger oppgaver */
+#admin-tasks li.duel-row { flex-wrap: wrap; }
+.task-admin-btns { display: flex; gap: 6px; flex: none; }
+.task-admin-btns .small-btn { margin: 0; padding: 6px 10px; }
+.task-edit { flex-basis: 100%; margin-top: 8px; padding: 10px; border-radius: 10px; background: rgba(245, 179, 1, 0.08); border: 1px solid rgba(245, 179, 1, 0.35); }
+.task-edit { display: flex; flex-direction: column; gap: 8px; }
+.task-edit > *, .task-edit input, .task-edit textarea, .task-edit select { flex: none; margin: 0; }
+.task-edit textarea { min-height: 70px; }
