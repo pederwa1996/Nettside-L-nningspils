@@ -107,7 +107,17 @@
   }
 
   let current = null;
-  window.celebrate = function ({ tier = 'win', amount = 0, title, sub = '', icon, action } = {}) {
+  // Ekte gevinstlyd og kasinoverten (sfx.js) hvis de er lastet, ellers den syntetiske fanfaren
+  function winSound(tier, voice) {
+    const s = window.sfx;
+    if (!s || s.muted) return false;
+    const ok = s.sample(tier === 'win' ? 'win' : 'bigwin');
+    const line = voice || (tier === 'beer' ? 'v_pils' : tier === 'big' ? 'v_storgevinst' : null);
+    if (line) s.say(line, tier === 'win' ? 0.2 : 0.5);
+    return !!ok;
+  }
+
+  window.celebrate = function ({ tier = 'win', amount = 0, title, sub = '', icon, action, voice } = {}) {
     if (current) current.remove();
     const overlay = document.createElement('div');
     overlay.className = `celebrate cel-${tier}`;
@@ -163,7 +173,7 @@
 
     confetti(canvas, tier);
     rain(drops, tier);
-    fanfare(tier);
+    if (!winSound(tier, voice)) fanfare(tier);
     if (navigator.vibrate) navigator.vibrate(tier === 'win' ? [60, 40, 90] : [80, 50, 80, 50, 220]);
 
     function close() {
@@ -180,7 +190,7 @@
     el.classList.remove('lose-shake');
     void el.offsetWidth;
     el.classList.add('lose-shake');
-    tone(220, 0, 0.18, 'sine', 0.05);
+    if (!(window.sfx && window.sfx.sample('lose'))) tone(220, 0, 0.18, 'sine', 0.05);
   };
 
   // Nettlesere tillater bare lyd etter at man har trykket på siden

@@ -127,7 +127,7 @@
     if (t.result && t.result.id !== celebrated) {
       const mine = t.result.winners.find((w) => w.seat === t.mySeat);
       if (mine && celebrated !== undefined && window.celebrate) {
-        celebrate({ tier: mine.amount >= 200 ? 'big' : 'win', amount: mine.amount, title: 'POTTEN ER DIN!', icon: '♠️', sub: mine.hand ? `Med ${mine.hand.toLowerCase()}` : 'Alle de andre kastet seg' });
+        celebrate({ tier: mine.amount >= 200 ? 'big' : 'win', amount: mine.amount, title: 'POTTEN ER DIN!', voice: 'v_potten', icon: '♠️', sub: mine.hand ? `Med ${mine.hand.toLowerCase()}` : 'Alle de andre kastet seg' });
       }
       celebrated = t.result.id;
     } else if (!t.result && celebrated === undefined) celebrated = null;

@@ -1,6 +1,9 @@
 'use strict';
 
-// Små, rolige lydeffekter på hele siden, laget med Web Audio (ingen lydfiler).
+// Små lydeffekter på hele siden. Ekte lyder fra ElevenLabs ligger i /sfx/*.mp3 (lages med
+// et skript, nøkkelen er aldri i koden). Mangler en fil, brukes en enkel syntetisk lyd i stedet.
+//   sfx.say('v_pils')                         – kasinoverten sier noe (norsk stemme)
+//   sfx.loop('pour') -> stop()                 – lyd som går til man stopper den
 //   sfx.play('chip' | 'card' | 'tick' | 'lever' | 'reelTick' | 'reelStop' | 'coin' | 'ballDrop' | 'skull' | 'tap')
 //   sfx.follow(element, stepDeg, ms, sound)  – lyd hver gang et roterende element passerer et felt
 //   sfx.ballRoll(ms)                          – kula som ruller i rouletten
@@ -61,6 +64,61 @@
     src.connect(f).connect(g).connect(a.destination);
     src.start(at, Math.random() * 0.5);
     src.stop(at + dur + 0.02);
+  }
+
+  // ---------- Ekte lyder (ElevenLabs) ----------
+  // lyd -> [fil, volum]
+  const FILES = {
+    tick: ['tick', 0.6], chip: ['chips', 0.7], card: ['card', 0.8], lever: ['lever', 0.8], reelStop: ['reelstop', 0.8],
+    coin: ['coin', 0.7], ballDrop: ['balldrop', 0.9], skull: ['skull', 0.8], door: ['door', 0.5], back: ['back', 0.5],
+    notify: ['notify', 0.7], cheers: ['cheers', 0.9], send: ['send', 0.5], pop: ['pop', 0.6], sad: ['sad', 0.7], like: ['like', 0.6],
+    win: ['win', 0.6], bigwin: ['bigwin', 0.6], lose: ['lose', 0.5], reels: ['reels', 0.45], ballroll: ['ballroll', 0.55], pour: ['pour', 0.6],
+    v_jackpot: ['v_jackpot', 1], v_blackjack: ['v_blackjack', 1], v_pils: ['v_pils', 1], v_storgevinst: ['v_storgevinst', 1],
+    v_potten: ['v_potten', 1], v_nomore: ['v_nomore', 0.9], v_skaal: ['v_skaal', 1], v_kjipt: ['v_kjipt', 1],
+  };
+  const buffers = {};
+  const loading = {};
+  function loadFile(file) {
+    const a = ctx();
+    if (!a || buffers[file] || loading[file]) return;
+    loading[file] = fetch(`/sfx/${file}.mp3`)
+      .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error('mangler'))))
+      .then((b) => new Promise((res, rej) => a.decodeAudioData(b, res, rej)))
+      .then((buf) => (buffers[file] = buf))
+      .catch(() => { /* bruk den syntetiske lyden */ });
+  }
+  // Last alle filene første gang man trykker på siden (små filer, caches av nettleseren)
+  function preload() {
+    Object.values(FILES).forEach(([f]) => loadFile(f));
+  }
+  // Spill en fil. Returnerer en stopp-funksjon, eller null hvis filen ikke er klar.
+  function sample(name, { vol = 1, maxMs = 0, loop = false, delay = 0 } = {}) {
+    const a = ctx();
+    const def = FILES[name];
+    if (!a || muted || !def) return null;
+    const buf = buffers[def[0]];
+    if (!buf) {
+      loadFile(def[0]);
+      return null;
+    }
+    const src = a.createBufferSource();
+    src.buffer = buf;
+    src.loop = loop;
+    const g = a.createGain();
+    const at = a.currentTime + delay;
+    g.gain.setValueAtTime(def[1] * vol, at);
+    src.connect(g).connect(a.destination);
+    src.start(at);
+    const stop = (fade = 0.15) => {
+      try {
+        const t = a.currentTime;
+        g.gain.setValueAtTime(g.gain.value, t);
+        g.gain.linearRampToValueAtTime(0.0001, t + fade);
+        src.stop(t + fade + 0.02);
+      } catch { /* allerede stoppet */ }
+    };
+    if (maxMs) setTimeout(() => stop(0.25), delay * 1000 + maxMs);
+    return stop;
   }
 
   const SOUNDS = {
@@ -144,9 +202,28 @@
       if (now - lastTick < 28) return;
       lastTick = now;
     }
+    // Ekte lyd hvis den er lastet, ellers den syntetiske
+    if (FILES[name] && sample(name)) return;
     try {
       SOUNDS[name]();
     } catch { /* ignorer */ }
+  }
+
+  // Kasinoverten: norsk stemme (bare fra fil)
+  let lastSay = 0;
+  function say(name, delay = 0) {
+    if (window.__sfxLog) window.__sfxLog.push(name);
+    if (muted) return;
+    const now = performance.now();
+    if (now - lastSay < 1200) return; // ikke snakk i munnen på seg selv
+    lastSay = now;
+    sample(name, { delay });
+  }
+
+  // Lyd som går helt til man stopper den (f.eks. pils som tappes)
+  function loop(name) {
+    if (window.__sfxLog) window.__sfxLog.push(name);
+    return sample(name, { loop: true }) || (() => {});
   }
 
   // Les av hvor mye et element er rotert (fra CSS-animasjonen), i grader
@@ -187,6 +264,12 @@
     const a = ctx();
     if (!a || muted) return;
     const dur = Math.max(1.2, ms / 1000);
+    say('v_nomore');
+    // Ekte kule som ruller (fades ut rett før den faller ned)
+    if (sample('ballroll', { maxMs: Math.max(800, dur * 1000 - 450), delay: 0.6 })) {
+      setTimeout(() => play('ballDrop'), dur * 1000 - 300);
+      return;
+    }
     const steps = Math.floor(dur * 9);
     for (let i = 0; i < steps; i++) {
       // Tikkene kommer tettere i starten og glisner mot slutten
@@ -216,7 +299,10 @@
   btn.title = muted ? 'Skru på lyd' : 'Skru av lyd';
 
   // Nettlesere tillater bare lyd etter at man har trykket på siden
-  document.addEventListener('pointerdown', ctx, { once: true });
+  document.addEventListener('pointerdown', () => {
+    ctx();
+    preload();
+  }, { once: true });
 
   // Lenker til en annen side: spill «dør»-lyden og vent et øyeblikk så den rekker å høres
   document.addEventListener('click', (e) => {
@@ -251,6 +337,10 @@
 
   window.sfx = {
     play,
+    say,
+    loop,
+    sample: (name, opts) => sample(name, opts),
+    loaded: () => Object.keys(buffers), // hvilke lydfiler som er klare (til testing)
     watch,
     follow,
     ballRoll,

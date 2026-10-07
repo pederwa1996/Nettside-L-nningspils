@@ -128,7 +128,10 @@
       await api('/api/bar/order', { qty: n, pay: 'credit', note: $('note').value });
       showMsg(`🍻 Skål! ${n} pils er bestilt. Spillmesteren kommer med ${n > 1 ? 'dem' : 'den'} til bordet.`, 'win');
       slideBeer();
-      if (window.sfx) sfx.play('cheers');
+      if (window.sfx) {
+        sfx.play('cheers');
+        sfx.say('v_skaal', 0.6);
+      }
       qty = 1;
     });
   }
@@ -145,7 +148,9 @@
     $('tap-handle').classList.add('pouring');
     $('th-text').textContent = '🍺 Tapper …';
     let lastSound = 0;
-    filling = { raf: 0 };
+    // Ekte øl som tappes (går så lenge man holder inne); ellers små syntetiske bobler
+    const stopPour = window.sfx ? sfx.sample('pour', { loop: true }) : null;
+    filling = { raf: 0, stopPour };
     (function frame(now) {
       const p = Math.min(1, (now - start) / total);
       $('th-fill').style.width = `${p * 100}%`;
@@ -155,7 +160,7 @@
         g.style.setProperty('--fill', gp);
       });
       // Litt sildring mens det tappes
-      if (window.sfx && now - lastSound > 140) {
+      if (window.sfx && !filling.stopPour && now - lastSound > 140) {
         lastSound = now;
         sfx.play('pour');
       }
@@ -169,6 +174,7 @@
   function stopFill(done) {
     if (!filling) return;
     cancelAnimationFrame(filling.raf);
+    if (filling.stopPour) filling.stopPour(done === true ? 0.3 : 0.12);
     filling = null;
     $('tap-handle').classList.remove('pouring');
     if (done === true) {
@@ -198,7 +204,10 @@
     g.classList.remove('wobble');
     void g.offsetWidth;
     g.classList.add('wobble');
-    if (window.sfx) sfx.play('sad');
+    if (window.sfx) {
+        sfx.play('sad');
+        sfx.say('v_kjipt', 0.1);
+      }
   });
 
   // ---------- Baren som scene: bartender og krakker ----------

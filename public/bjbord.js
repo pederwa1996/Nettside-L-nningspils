@@ -156,7 +156,7 @@
       if (celebrated !== undefined && mine && mine.result && window.celebrate) {
         const [label] = RESULT[mine.result];
         if (mine.payout > mine.bet) {
-          celebrate({ tier: mine.result === 'blackjack' || mine.payout >= 200 ? 'big' : 'win', amount: mine.payout, title: mine.result === 'blackjack' ? 'BLACKJACK!' : 'DU VANT!', icon: '🃏', sub: mine.result === 'dealer-bust' ? 'Dealeren gikk over 21!' : `${mine.value} mot dealerens ${t.dealerValue}` });
+          celebrate({ tier: mine.result === 'blackjack' || mine.payout >= 200 ? 'big' : 'win', amount: mine.payout, title: mine.result === 'blackjack' ? 'BLACKJACK!' : 'DU VANT!', voice: mine.result === 'blackjack' ? 'v_blackjack' : null, icon: '🃏', sub: mine.result === 'dealer-bust' ? 'Dealeren gikk over 21!' : `${mine.value} mot dealerens ${t.dealerValue}` });
         } else if (mine.payout < mine.bet) {
           msg(`${label}. Du tapte ${mine.bet} cash.`, 'lose');
           if (window.loseNudge) loseNudge($('bj-msg'));

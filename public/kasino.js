@@ -60,6 +60,8 @@
   // Ruller hvert hjul gjennom tilfeldige symboler og stopper på resultatet, ett etter ett
   // result[hjul] = [topp, midt, bunn]
   function spinReels(result) {
+    // Ekte hjul som snurrer; finnes ikke lyden, tikker det syntetisk per symbol i stedet
+    const stopReels = window.sfx ? sfx.sample('reels', { loop: true }) : null;
     return Promise.all(strips.map((st, i) => {
       const filler = Array.from({ length: 18 + i * 6 }, () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
       const current = [...st.children].slice(0, ROWS).map((d) => d.textContent);
@@ -70,13 +72,13 @@
       const dur = 1.2 + i * 0.5;
       st.style.transition = `transform ${dur}s cubic-bezier(0.12, 0.7, 0.2, 1)`;
       st.style.transform = `translateY(-${(current.length + filler.length) * SYMBOL_H}px)`;
-      reelSound(st, dur * 1000);
+      if (!stopReels) reelSound(st, dur * 1000);
       return sleep(dur * 1000 + 50).then(() => window.sfx && sfx.play('reelStop'));
-    })).then(() => strips.forEach((st, i) => {
+    })).then(() => (stopReels && stopReels(0.1), strips.forEach((st, i) => {
       st.style.transition = 'none';
       st.style.transform = 'translateY(0)';
       setReel(st, result[i]);
-    }));
+    })));
   }
 
   // Lavt tikk hver gang et symbol passerer, så hjulene høres ut som de går rundt
@@ -122,7 +124,7 @@
         $('slot-result').textContent = `🍺🍺🍺 TRE PILS PÅ RAD! Du har vunnet en pils! ${lineText}`;
         $('slot-result').classList.add('win');
         document.querySelector('.slot-machine').classList.add('jackpot');
-        beerWin(`🍺🍺🍺 Tre pils på rad på automaten!${r.flus ? ` Pluss ${r.flus} cash.` : ''}`);
+        beerWin(`🍺🍺🍺 Tre pils på rad på automaten!${r.flus ? ` Pluss ${r.flus} cash.` : ''}`, 'v_jackpot');
       } else if (r.flus) {
         $('slot-result').textContent = `🎉 Du vant ${flusWord(r.flus)}! ${lineText}`;
         $('slot-result').classList.add('win');
@@ -198,8 +200,8 @@
   }
 
   // Pils vunnet: størst feiring, med snarvei til baren
-  function beerWin(sub) {
-    celebrate({ tier: 'beer', sub: `${sub} Løs den inn i baren, så kommer spillmesteren med den til bordet.`, action: { label: '🍻 Til baren', onClick: () => showTab('bar') } });
+  function beerWin(sub, voice) {
+    celebrate({ tier: 'beer', voice, sub: `${sub} Løs den inn i baren, så kommer spillmesteren med den til bordet.`, action: { label: '🍻 Til baren', onClick: () => showTab('bar') } });
   }
 
   // ---------- Lykkehjulet ----------
