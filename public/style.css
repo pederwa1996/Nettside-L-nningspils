@@ -2946,3 +2946,21 @@ body.home .presence { right: 98px; }
 body.minimal.home .home-hero { padding-top: 58px !important; }
 .gwb-text b { white-space: nowrap; font-size: 1.05rem; }
 .gwb-text small { white-space: nowrap; }
+
+/* Kasino: alle fem spillene på én linje; det du er på lyser opp i stedet for å forsvinne */
+.casino-games { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+.casino-games .tab.active { display: flex !important; }
+body.kasino .casino-games .tab.cg { padding: 15px 2px 6px !important; border-radius: 12px !important; opacity: 0.82; }
+body.kasino .casino-games .tab.cg.active {
+  opacity: 1; transform: translateY(-2px);
+  box-shadow: 0 0 0 2px #fff6c9, 0 0 16px rgba(255, 224, 138, 0.85), 0 6px 14px rgba(0, 0, 0, 0.45) !important;
+}
+body.kasino .casino-games .tab.cg.active::after {
+  content: ''; position: absolute; left: 50%; bottom: 3px; width: 18px; height: 3px; margin-left: -9px; border-radius: 2px; background: #fff6c9;
+}
+.casino-games .cg b { font-size: 0.62rem; }
+.casino-games .cg .tc-icon { font-size: 1.4rem; }
+.casino-games .cg .tw-icon { width: 26px; height: 26px; }
+.cg-badge { font-size: 0.46rem; letter-spacing: 0.2px; }
+.cg-live { font-size: 0.52rem; padding: 1px 4px; }
+.cg-chip { font-size: 0.56rem; padding: 1px 5px; }

@@ -427,7 +427,8 @@
     const rooms = e.detail.rooms || {};
     document.querySelectorAll('.cg-live').forEach((x) => {
       const n = (rooms[x.dataset.room] || []).length;
-      x.textContent = n ? `🟢 ${n} spiller` : '';
+      x.textContent = n ? `🟢 ${n}` : '';
+      x.title = n ? `${n} spiller nå` : '';
     });
   });
 
