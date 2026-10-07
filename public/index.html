@@ -122,8 +122,7 @@
       <section class="card wall-card">
         <div class="wall-head">
           <h2>💬 Chatten</h2>
-          <span class="tile-here hidden" data-rooms="chat"></span>
-          <a href="/chat.html" class="wall-more">Åpne ›</a>
+          <button type="button" class="wall-more" onclick="window.openChat && window.openChat()">Åpne ›</button>
         </div>
         <div id="chat-preview" class="chat-preview"></div>
         <form id="quick-chat" class="quick-chat">
@@ -184,6 +183,7 @@
   <script src="/app.js"></script>
   <script src="/presence.js"></script>
   <script src="/nav.js"></script>
+  <script src="/chatbox.js"></script>
   <script src="/notify.js"></script>
   <script src="/admin-bubble.js"></script>
 </body>

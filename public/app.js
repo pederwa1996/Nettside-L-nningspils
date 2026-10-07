@@ -356,7 +356,11 @@ function renderChatPreview(list) {
   }
   list.forEach((m) => {
     const row = el('a', 'cp-msg');
-    row.href = '/chat.html';
+    row.href = '#chat';
+    row.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.openChat) window.openChat();
+    });
     const body = el('div', 'cp-body');
     body.append(el('strong', '', m.name), el('span', 'cp-text', m.text));
     row.append(avatarEl(m.avatar, m.name, 30), body, el('small', 'muted', timeAgo(m.at)));

@@ -28,10 +28,8 @@
 
   function renderQty() {
     $('qty').textContent = qty;
-    $('flus-cost').textContent = qty * data.price;
     const me = data.me;
     $('order-credit').disabled = me.beersOwed < qty;
-    $('order-flus').disabled = me.flus < qty * data.price;
   }
 
   function render() {
@@ -41,12 +39,11 @@
     if (!me) return;
     $('my-beers').textContent = me.beersOwed;
     $('my-flus').textContent = me.flus;
-    $('price').textContent = data.price;
     const w = data.won;
     const total = w.wheel + w.tickets + w.slot;
     $('won-info').textContent = total
       ? `Du har vunnet ${total} pils totalt: ${w.wheel} fra lykkehjulet, ${w.tickets} fra loddtrekningen og ${w.slot} fra automaten.`
-      : 'Du har ikke vunnet noen pils ennå, men du kan kjøpe for flus.';
+      : 'Du har ikke vunnet noen pils ennå. Prøv lykkehjulet eller automaten!';
     renderQty();
 
     const ul = $('orders');
@@ -121,7 +118,6 @@
     renderQty();
   });
   $('order-credit').addEventListener('click', () => order('credit'));
-  $('order-flus').addEventListener('click', () => order('flus'));
 
   // ---------- Baren som scene: bartender og krakker ----------
   let admins = [];

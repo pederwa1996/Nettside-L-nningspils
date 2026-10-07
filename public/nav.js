@@ -1,13 +1,13 @@
 'use strict';
 
-// Menyen nederst, lik på alle sider: Hjem · Kasino · PvP · Chat · Profil.
+// Menyen nederst, lik på alle sider: Hjem · Kasino · PvP · Oppgaver · Profil.
 // Viser et lite hint første gang, og et rødt tall på PvP når noen har utfordret deg.
 (function () {
   const ITEMS = [
     { key: 'home', href: '/', icon: '🏠', label: 'Hjem', paths: ['/', '/index.html'] },
     { key: 'casino', href: '/kasino.html', icon: '🎰', label: 'Kasino', paths: ['/kasino.html', '/baren.html'] },
     { key: 'pvp', href: '/pvp.html', icon: '⚔️', label: 'PvP', paths: ['/pvp.html', '/duell.html', '/mogg.html', '/spill.html'] },
-    { key: 'chat', href: '/chat.html', icon: '💬', label: 'Chat', paths: ['/chat.html'] },
+    { key: 'tasks', href: '/oppgaver.html', icon: '🎯', label: 'Oppgaver', paths: ['/oppgaver.html'] },
     { key: 'profile', href: '/profil.html', icon: '👤', label: 'Profil', paths: ['/profil.html'] },
   ];
 
@@ -39,7 +39,7 @@
     seenHint = true;
     const hint = document.createElement('div');
     hint.className = 'nav-hint';
-    hint.innerHTML = '👇 Her er menyen! Trykk for å gå til <b>Kasino</b>, <b>PvP</b>, <b>Chat</b> og <b>Profil</b>.';
+    hint.innerHTML = '👇 Her er menyen! Trykk for å gå til <b>Kasino</b>, <b>PvP</b>, <b>Oppgaver</b> og <b>Profil</b>. Chatten er 💬-boblen nede til venstre.';
     const close = () => {
       hint.remove();
       nav.classList.remove('nav-glow');

@@ -35,7 +35,6 @@ const CHAT_HISTORY = 300;
 const START_FLUS = process.env.START_FLUS !== undefined ? Number(process.env.START_FLUS) : 100;
 const CASINO_MIN_BET = 10;
 const CASINO_MAX_BET = Number(process.env.CASINO_MAX_BET) || 200;
-const PILS_PRICE = Number(process.env.PILS_PRICE) || 250; // pris i flus for én pils i baren
 // Pris i flus for ett spinn på lykkehjulet eller automaten. Holdes over det et spinn er verdt
 // i snitt (ca. 37 flus på hjulet, 30 på automaten), så flus ikke blir en pengemaskin.
 const SPIN_PRICE = Number(process.env.SPIN_PRICE) || 50;
@@ -950,6 +949,11 @@ function serveStatic(req, res) {
     res.writeHead(403);
     return res.end();
   }
+  // Chatten er en boble på alle sider nå; gamle lenker åpner den på forsiden
+  if (urlPath === '/chat.html') {
+    res.writeHead(302, { Location: '/#chat', 'Cache-Control': 'no-store' });
+    return res.end();
+  }
   // Alle sider utenom forsiden og admin krever at man er registrert/logget inn
   if (file.endsWith('.html') && !OPEN_PAGES.has(path.basename(file)) && !currentParticipant(req)) {
     res.writeHead(302, { Location: '/', 'Cache-Control': 'no-store' });
@@ -1784,7 +1788,6 @@ const routes = {
     const p = currentParticipant(req);
     sendJson(res, 200, {
       me: meView(p),
-      price: PILS_PRICE,
       maxPerOrder: MAX_PILS_PER_ORDER,
       won: p ? beersWon(p) : null,
       orders: p ? state.orders.filter((o) => o.name === p.name).slice(-10).reverse().map(orderView) : [],
@@ -1800,15 +1803,11 @@ const routes = {
     }
     const pending = state.orders.filter((o) => o.name === p.name && o.status === 'pending').length;
     if (pending >= MAX_PENDING_ORDERS) return sendJson(res, 400, { error: 'Du har allerede bestillinger som venter. Vent til spillmesteren har levert!' });
-    const pay = body.pay === 'flus' ? 'flus' : 'credit';
-    let cost = 0;
-    if (pay === 'credit') {
-      if (beersOwed(p) < qty) return sendJson(res, 400, { error: `Du har bare ${beersOwed(p)} pils til gode.` });
-    } else {
-      cost = qty * PILS_PRICE;
-      if ((p.flus || 0) < cost) return sendJson(res, 400, { error: `${qty} pils koster ${cost} flus, men du har bare ${p.flus || 0}.` });
-      addFlus(p, -cost);
-    }
+    // Pils kan bare tas ut som gevinst (til gode), ikke kjøpes for flus
+    if (body.pay === 'flus') return sendJson(res, 400, { error: 'Pils kan ikke kjøpes for flus. Vinn dem på lykkehjulet eller automaten!' });
+    const pay = 'credit';
+    const cost = 0;
+    if (beersOwed(p) < qty) return sendJson(res, 400, { error: qty === 1 ? 'Du har ingen pils til gode.' : `Du har bare ${beersOwed(p)} pils til gode.` });
     const order = {
       id: crypto.randomBytes(6).toString('hex'),
       name: p.name,

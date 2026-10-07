@@ -627,7 +627,7 @@ body.kasino .wallet-item {
 body.kasino .wallet-label { color: var(--gold-1); opacity: 0.8; }
 
 /* Gullknapper */
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.wallet-link),
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.wallet-link),
 body.kasino .button {
   background: linear-gradient(180deg, var(--gold-1) 0%, var(--gold-2) 50%, #b88a1e 51%, var(--gold-2) 100%);
   color: #3a0006;
@@ -635,7 +635,7 @@ body.kasino .button {
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
   box-shadow: 0 3px 0 var(--gold-3), 0 6px 14px rgba(0, 0, 0, 0.5);
 }
-body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.wallet-link):hover:not(:disabled) {
+body.kasino button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.wallet-link):hover:not(:disabled) {
   filter: brightness(1.08);
 }
 body.kasino button.secondary {
@@ -828,13 +828,13 @@ body.cantina h3 {
 }
 
 /* Knapper i ølfarge med varm glød */
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab),
 body.cantina .button {
   background: linear-gradient(180deg, #ffcf5a, #f2a516);
   color: #2a1608;
   box-shadow: 0 3px 0 #a86a0b, 0 0 16px rgba(255, 180, 60, 0.3);
 }
-body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab):hover:not(:disabled),
+body.cantina button:not(.secondary):not(.story-bubble):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.ao-close):not(.rename-btn):not(.wi-like):not(.auth-tab):hover:not(:disabled),
 body.cantina .button:hover {
   background: linear-gradient(180deg, #ffd977, #f7b02a);
 }
@@ -1203,7 +1203,7 @@ body.kasino[data-tab="slot"] .wallet-num {
 }
 body.kasino[data-tab="slot"] .tab { background: #12061f; color: #ffb3ec; border-color: #ff2ec4; }
 body.kasino[data-tab="slot"] .tab.active { background: #ff2ec4; color: #fff; box-shadow: 0 0 16px #ff2ec4; }
-body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.wallet-link) {
+body.kasino[data-tab="slot"] button:not(.secondary):not(.tab):not(.chip):not(.bet-opt):not(.ao-close):not(.admin-bubble):not(.notify-bubble):not(.notify-toast):not(.chat-bubble):not(.chat-peek):not(.cb-close):not(.wall-more):not(.wallet-link) {
   background: linear-gradient(180deg, #00f0ff, #00a8c6);
   color: #08010f;
   border-color: #00e5ff;
@@ -1697,3 +1697,88 @@ a.nt-item:active { background: rgba(255, 255, 255, 0.08); }
 .set-password p { margin: 0; }
 .goto-login { margin-left: 4px; }
 .set-password input, .set-password button { flex: none; margin: 0; }
+
+/* =========================================================
+   💬 Chat-boble og chat som folder seg ut over siden
+   ========================================================= */
+.chat-bubble {
+  position: fixed;
+  left: 80px;
+  bottom: 16px;
+  z-index: 90;
+  width: 54px;
+  height: 54px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  font-size: 1.6rem;
+  background: linear-gradient(180deg, #2ee6d6, #1a9fd6) !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
+}
+.chat-bubble.has-unread { background: linear-gradient(180deg, #ff6b8b, #ff3b5c) !important; }
+.chat-bubble.active { background: #34384f !important; }
+.chat-bubble.pulse { animation: bubble-pulse 0.6s ease-in-out 3; }
+body:has(.bottom-nav) .chat-bubble { bottom: calc(var(--nav-h) + 14px + env(safe-area-inset-bottom)); }
+.chat-peek {
+  position: fixed;
+  left: 16px;
+  bottom: calc(16px + 64px);
+  z-index: 92;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 8px 12px 8px 8px !important;
+  border-radius: 16px 16px 16px 4px !important;
+  background: #fff !important;
+  color: #1b1e2e !important;
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  border: 0 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  animation: toast-in 0.3s ease;
+}
+body:has(.bottom-nav) .chat-peek { bottom: calc(var(--nav-h) + 80px + env(safe-area-inset-bottom)); }
+.cp-peek-text { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.chatbox {
+  position: fixed;
+  left: 8px;
+  right: 8px;
+  top: max(10px, env(safe-area-inset-top));
+  bottom: 80px;
+  z-index: 93;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0d1a33, #120b24);
+  color: #eef3ff;
+  border: 2px solid #2ee6d6;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  transform-origin: 20% 100%;
+  animation: chat-unfold 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.chatbox.hidden { display: none; }
+@keyframes chat-unfold { from { opacity: 0; transform: scale(0.2); } }
+body:has(.bottom-nav) .chatbox { bottom: calc(var(--nav-h) + 8px + env(safe-area-inset-bottom)); }
+.cb-head { display: flex; align-items: center; gap: 8px; padding: 12px 12px 12px 16px; background: rgba(46, 230, 214, 0.12); border-bottom: 1px solid rgba(46, 230, 214, 0.3); }
+.cb-head strong { font-size: 1.15rem; }
+.cb-sub { flex: 1; font-size: 0.8rem; opacity: 0.7; }
+.cb-close { width: 36px; height: 36px; padding: 0 !important; border-radius: 50% !important; background: rgba(255, 255, 255, 0.1) !important; color: #fff !important; border: 0 !important; box-shadow: none !important; font-size: 1rem; }
+.cb-list { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 2px; }
+.cb-list .msg { max-width: 88%; }
+.cb-list .bubble { background: rgba(255, 255, 255, 0.1); color: #eef3ff; }
+.cb-list .msg.mine .bubble { background: linear-gradient(135deg, #2ee6d6, #7b6cff); color: #06121f; }
+.cb-list .msg-name { display: block; text-decoration: none; color: #2ee6d6; }
+.cb-list .avatar-spacer { width: 32px; flex: none; }
+.cb-form { display: flex; gap: 8px; margin: 0; padding: 10px; background: rgba(0, 0, 0, 0.35); border-top: 1px solid rgba(46, 230, 214, 0.3); }
+.cb-form input { flex: 1; min-width: 0; margin: 0; }
+.cb-form button { margin: 0; padding: 10px 16px !important; background: #2ee6d6 !important; color: #06121f !important; border: 0 !important; box-shadow: none !important; font-weight: 800; }
+/* Bak chatten skal ikke siden scrolle på mobil */
+@media (max-width: 700px) { body.chat-open { overflow: hidden; } }
+.wall-more { border: 0; cursor: pointer; font: inherit; font-weight: 800; }
