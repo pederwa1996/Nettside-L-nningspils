@@ -3,8 +3,15 @@
 (function () {
   const $ = (id) => document.getElementById(id);
   let password = '';
-  let step = 1;
   let players = [];
+  // Hva som deles ut, og stegene per trykk
+  const KINDS = {
+    spins: { word: 'spinn', icon: '🎡', key: 'spinsLeft', steps: [1, 2, 5, 10] },
+    cash: { word: 'cash', icon: '💰', key: 'flus', steps: [50, 100, 250, 500] },
+    beer: { word: 'pils', icon: '🍺', key: 'beersOwed', steps: [1, 2, 3] },
+  };
+  let kind = 'spins';
+  let step = 1;
 
   try {
     password = sessionStorage.getItem('adminPassword') || '';
@@ -43,11 +50,12 @@
       minus.type = 'button';
       minus.className = 'secondary sp-btn';
       minus.textContent = `−${step}`;
-      minus.disabled = p.spinsLeft === 0;
+      minus.disabled = p[KINDS[kind].key] === 0;
       minus.addEventListener('click', () => change(p, -step));
       const count = document.createElement('span');
       count.className = 'sp-count';
-      count.textContent = p.spinsLeft;
+      count.textContent = p[KINDS[kind].key];
+      count.title = KINDS[kind].word;
       const plus = document.createElement('button');
       plus.type = 'button';
       plus.className = 'sp-btn';
@@ -65,7 +73,8 @@
     log.forEach((e) => {
       const li = document.createElement('li');
       li.className = e.delta > 0 ? 'won' : 'lost';
-      li.textContent = `${timeOfDay(e.at)} · ${e.name} ${e.delta > 0 ? '+' : '−'}${Math.abs(e.delta)} spinn`;
+      const k = KINDS[e.kind] || KINDS.spins;
+      li.textContent = `${timeOfDay(e.at)} · ${e.name} ${e.delta > 0 ? '+' : '−'}${Math.abs(e.delta)} ${k.word} ${k.icon}`;
       ul.appendChild(li);
     });
   }
@@ -79,9 +88,10 @@
 
   async function change(p, delta) {
     try {
-      const r = await post('/api/admin/spins', { name: p.name, delta });
+      const r = await post('/api/admin/spins', { name: p.name, delta, kind });
       const sign = r.delta > 0 ? '+' : '−';
-      showMsg(`${r.name}: ${sign}${Math.abs(r.delta)} spinn. Har nå ${r.spinsLeft}.`, r.delta > 0 ? 'win' : 'lose');
+      const k = KINDS[r.kind] || KINDS.spins;
+      showMsg(`${r.name}: ${sign}${Math.abs(r.delta)} ${k.word} ${k.icon}. Har nå ${r.now}.`, r.delta > 0 ? 'win' : 'lose');
       await load();
     } catch (err) {
       showMsg(err.message, 'lose');
@@ -116,13 +126,39 @@
     login();
   });
 
+  function renderSteps() {
+    const k = KINDS[kind];
+    $('kind-word').textContent = k.word;
+    $('beer-note').classList.toggle('hidden', kind !== 'beer');
+    $('steps').innerHTML = '';
+    k.steps.forEach((n) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (n === step ? ' active' : '');
+      b.dataset.step = n;
+      b.textContent = n;
+      $('steps').appendChild(b);
+    });
+  }
+
+  $('kinds').addEventListener('click', (e) => {
+    const b = e.target.closest('.chip');
+    if (!b) return;
+    kind = b.dataset.kind;
+    step = KINDS[kind].steps[0];
+    $('kinds').querySelectorAll('.chip').forEach((c) => c.classList.toggle('active', c === b));
+    renderSteps();
+    renderPlayers();
+  });
+
   $('steps').addEventListener('click', (e) => {
     const b = e.target.closest('.chip');
     if (!b) return;
     step = Number(b.dataset.step);
-    document.querySelectorAll('.chip').forEach((c) => c.classList.toggle('active', c === b));
+    $('steps').querySelectorAll('.chip').forEach((c) => c.classList.toggle('active', c === b));
     renderPlayers();
   });
+  renderSteps();
 
   $('search').addEventListener('input', renderPlayers);
 

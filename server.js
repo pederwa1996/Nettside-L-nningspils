@@ -579,6 +579,7 @@ function beersWon(p) {
     slot: p.slotBeers || 0,
     task: p.taskBeers || 0,
     pvp: p.pvpBeers || 0, // vunnet minus tapt i arenaen
+    admin: p.adminBeers || 0, // gitt (eller tatt) av spillmesteren
   };
 }
 
@@ -589,7 +590,7 @@ function beersOwed(p) {
     .filter((o) => o.name === p.name && o.pay === 'credit' && o.status !== 'cancelled')
     .reduce((sum, o) => sum + o.qty, 0);
   // Gaver: pils man har fått minus pils man har gitt bort
-  return Math.max(0, w.wheel + w.tickets + w.slot + w.task + w.pvp + (p.giftBeers || 0) - used);
+  return Math.max(0, w.wheel + w.tickets + w.slot + w.task + w.pvp + w.admin + (p.giftBeers || 0) - used);
 }
 
 // Budsjett: brukt = leverte pils (kroner lagres på bestillingen når den leveres).
@@ -652,6 +653,13 @@ function announceBeer(name, text, delayMs = 0) {
 
 // ---- Oppgaver ----
 const MAX_PENDING_TASKS = 2;
+
+// 🎁 Spillmesteren kan gi og ta spinn, cash og pils (admin-spinn.html)
+const ADMIN_GIVE = {
+  spins: { label: 'spinn', icon: '🎡', max: 100, has: (p) => spinsLeft(p), url: '/kasino.html#hjul' },
+  cash: { label: 'cash', icon: '💰', max: 10000, has: (p) => p.flus || 0, url: '/kasino.html' },
+  beer: { label: 'pils', icon: '🍺', max: 10, has: (p) => beersOwed(p), url: '/baren.html' },
+};
 
 // 🎁 Gaver til andre: spinn, cash eller pils (fra det man selv har)
 const GIFT_KINDS = {
@@ -2314,29 +2322,36 @@ const routes = {
     if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     sendJson(res, 200, {
       players: state.participants
-        .map((p) => ({ name: p.name, avatar: p.avatar || null, spinsLeft: spinsLeft(p) }))
+        .map((p) => ({ name: p.name, avatar: p.avatar || null, spinsLeft: spinsLeft(p), flus: p.flus || 0, beersOwed: beersOwed(p) }))
         .sort((a, b) => a.name.localeCompare(b.name, 'no')),
       log: state.spinLog.slice(-20).reverse(),
     });
   },
 
+  // Spillmesteren gir eller tar spinn, cash eller pils (kind: spins | cash | beer)
   'POST /api/admin/spins': (req, res, body) => {
     if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
     const p = findParticipant(String(body.name || ''));
     if (!p) return sendJson(res, 404, { error: 'Fant ikke deltakeren.' });
+    const kind = ADMIN_GIVE[body.kind] ? body.kind : 'spins';
+    const k = ADMIN_GIVE[kind];
     let delta = Math.trunc(Number(body.delta));
-    if (!Number.isFinite(delta) || delta === 0 || Math.abs(delta) > 100) {
-      return sendJson(res, 400, { error: 'Antall må være mellom −100 og 100 (og ikke 0).' });
+    if (!Number.isFinite(delta) || delta === 0 || Math.abs(delta) > k.max) {
+      return sendJson(res, 400, { error: `Antall må være mellom −${k.max} og ${k.max} (og ikke 0).` });
     }
-    // Kan ikke ta flere spinn enn personen har
-    delta = Math.max(delta, -spinsLeft(p));
-    if (delta === 0) return sendJson(res, 400, { error: `${p.name} har ingen spinn å ta.` });
-    addSpins(p, delta);
-    notify(p.name, delta > 0 ? '🎁' : '➖', delta > 0 ? `Spillmesteren ga deg ${delta} spinn! 🎰` : `Spillmesteren tok ${-delta} spinn fra deg`, { url: '/kasino.html#hjul' });
-    state.spinLog.push({ name: p.name, delta, at: Date.now() });
+    // Kan ikke ta mer enn personen har
+    delta = Math.max(delta, -k.has(p));
+    if (delta === 0) return sendJson(res, 400, { error: `${p.name} har ingen ${k.label} å ta.` });
+    if (kind === 'cash') addFlus(p, delta);
+    else if (kind === 'beer') p.adminBeers = (p.adminBeers || 0) + delta;
+    else addSpins(p, delta);
+    const amount = `${Math.abs(delta)} ${k.label} ${k.icon}`;
+    notify(p.name, delta > 0 ? '🎁' : '➖', delta > 0 ? `Spillmesteren ga deg ${amount}!` : `Spillmesteren tok ${amount} fra deg`, { url: k.url });
+    if (kind === 'beer' && delta > 0) addActivity(p.name, '🎁', `fikk ${amount} av spillmesteren`);
+    state.spinLog.push({ name: p.name, kind, delta, at: Date.now() });
     if (state.spinLog.length > 50) state.spinLog = state.spinLog.slice(-50);
     saveState();
-    sendJson(res, 200, { name: p.name, delta, spinsLeft: spinsLeft(p) });
+    sendJson(res, 200, { name: p.name, kind, delta, now: k.has(p), spinsLeft: spinsLeft(p) });
   },
 
   // ---- Poker ----

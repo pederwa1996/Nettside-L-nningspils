@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Spinn-admin – Lønningspils</title>
+  <title>Gi og ta – Lønningspils</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body class="minimal">
   <header class="hero">
-    <h1>🎰 Spinn-admin</h1>
+    <h1>🎁 Gi og ta</h1>
     <p class="sub"><a href="/admin.html">← Tilbake til admin</a></p>
   </header>
 
@@ -24,13 +24,15 @@
 
     <div id="panel" class="hidden">
       <section class="card">
-        <p class="field-label">Hvor mange spinn per trykk?</p>
-        <div class="step-chips" id="steps">
-          <button type="button" class="chip active" data-step="1">1</button>
-          <button type="button" class="chip" data-step="2">2</button>
-          <button type="button" class="chip" data-step="5">5</button>
-          <button type="button" class="chip" data-step="10">10</button>
+        <p class="field-label">Hva vil du dele ut?</p>
+        <div class="step-chips" id="kinds">
+          <button type="button" class="chip active" data-kind="spins">🎡 Spinn</button>
+          <button type="button" class="chip" data-kind="cash">💰 Cash</button>
+          <button type="button" class="chip" data-kind="beer">🍺 Pils</button>
         </div>
+        <p class="field-label">Hvor mange <span id="kind-word">spinn</span> per trykk?</p>
+        <div class="step-chips" id="steps"></div>
+        <p id="beer-note" class="muted hidden">Pils du gir kommer fra budsjettet og vises som «pils til gode» i baren.</p>
         <input id="search" type="search" placeholder="Søk etter navn ..." class="search">
         <p id="msg" class="result"></p>
       </section>

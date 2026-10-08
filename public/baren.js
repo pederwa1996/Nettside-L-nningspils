@@ -62,9 +62,9 @@
     $('my-beers').textContent = me.beersOwed;
     $('my-flus').textContent = me.flus;
     const w = data.won;
-    const total = w.wheel + w.tickets + w.slot + (w.task || 0);
+    const total = w.wheel + w.tickets + w.slot + (w.task || 0) + (w.admin || 0);
     $('won-info').textContent = total
-      ? `Du har vunnet ${total} pils totalt: ${w.wheel} fra lykkehjulet, ${w.tickets} fra loddtrekningen, ${w.slot} fra automaten og ${w.task || 0} fra oppgaver.`
+      ? `Du har vunnet ${total} pils totalt: ${w.wheel} fra lykkehjulet, ${w.tickets} fra loddtrekningen, ${w.slot} fra automaten og ${w.task || 0} fra oppgaver${w.admin ? `, pluss ${w.admin} fra spillmesteren` : ''}.`
       : 'Du har ikke vunnet noen pils ennå. Prøv lykkehjulet eller automaten!';
     renderGlasses();
 
