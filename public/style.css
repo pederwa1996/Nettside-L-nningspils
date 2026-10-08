@@ -3599,3 +3599,18 @@ body.kasino .table-console .chip { flex: 0 0 50px; font-size: 0.8rem; }
 body.kasino .table-console .chip:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #3a0006; }
 .pk-mine { margin-top: 26px; }
 .rl-mychip { top: auto; bottom: 6px; right: 6px; min-width: 28px; height: 28px; font-size: 0.6rem; }
+
+/* Spillknappene: ingenting skal stikke ut over de runde hjørnene (Safari klipper ikke
+   animerte barn etter border-radius). Glansen er nå et rundt lag som flytter bakgrunnen,
+   uten transform, og merkelappen øverst har runde hjørner selv. */
+body.kasino .casino-games .tab.cg { isolation: isolate; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.casino-games .cg::before,
+.casino-games .cg-slot::before {
+  inset: 0 !important; left: 0 !important; width: auto !important; border-radius: inherit; transform: none !important;
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.28) 45%, transparent 55%) !important;
+  background-size: 300% 100% !important; background-repeat: no-repeat !important; background-position: 150% 0;
+  animation-name: cg-shine2 !important;
+}
+.casino-games .cg-slot::before { background-image: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, 0.85) 45%, transparent 52%) !important; }
+@keyframes cg-shine2 { 0%, 60% { background-position: 150% 0; } 85%, 100% { background-position: -50% 0; } }
+body.kasino .casino-games .cg-badge { border-radius: 10px 10px 0 0; }
