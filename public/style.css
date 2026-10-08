@@ -3462,3 +3462,140 @@ body.pvp-arena .math-q { font-family: 'Bebas Neue', system-ui, sans-serif; font-
 .pv-panel .card:has(> .big-number):has(> .result:empty) { display: none; }
 .wheel-cash-list { list-style: none; margin: 4px 0 8px; padding: 0; display: grid; grid-template-columns: 1fr; gap: 2px; }
 .wheel-cash-list li { display: flex; justify-content: space-between; font-size: 0.84rem; color: #e8f0ff; border-bottom: 1px dashed rgba(255, 255, 255, 0.15); padding: 2px 0; }
+
+/* =========================================================
+   🃏 Bordspillene oppfrisket: poker, blackjack og roulette
+   Felles «konsoll» med store, fargekodede knapper, myke kort som deles ut og snus
+   ========================================================= */
+body.kasino .table-console {
+  margin: 12px auto 0; max-width: 420px; padding: 12px; border-radius: 16px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.26));
+  border: 1px solid rgba(249, 226, 156, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: tc-in 0.25s ease-out;
+}
+body.kasino .table-console.hidden { display: none !important; }
+@keyframes tc-in { from { opacity: 0; transform: translateY(8px); } }
+.tc-title { margin: 0 0 6px; text-align: center; font-weight: 800; color: #f9e29c; font-size: 0.88rem; }
+.tc-big-num { text-align: center; font-size: 2rem; font-weight: 900; color: #ffe27a; line-height: 1.1; margin-bottom: 8px; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5); font-variant-numeric: tabular-nums; }
+.tc-big-num small { font-size: 0.9rem; color: #f9e29c; font-weight: 700; }
+.tc-turn { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-weight: 900; color: #ffe27a; font-size: 0.95rem; white-space: nowrap; }
+.tc-turn > span::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: #3cff8a; box-shadow: 0 0 8px #3cff8a; vertical-align: 1px; animation: tc-breathe 1.2s ease-in-out infinite; }
+.tc-turn b { color: #fff; font-size: 1.1rem; }
+.tc-timer { flex: 1; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.tc-timer b { display: block; height: 100%; width: 100%; border-radius: 3px; background: linear-gradient(90deg, #ff5a5a, #ffe27a 35%, #3cff8a); transition: width 0.25s linear; }
+.tc-row { display: flex; gap: 8px; }
+.tc-row-small { margin-top: 8px; }
+body.kasino .tc-btn {
+  flex: 1; min-height: 52px; padding: 10px 6px !important; border-radius: 14px !important; border: 0 !important;
+  font-weight: 900 !important; font-size: 1rem !important; letter-spacing: 0.3px; color: #fff !important; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 -3px 0 rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.35) !important;
+  transition: transform 0.08s ease, filter 0.15s ease, opacity 0.15s ease; -webkit-tap-highlight-color: transparent;
+}
+body.kasino .tc-btn:hover:not(:disabled) { filter: brightness(1.08); }
+body.kasino .tc-btn:active:not(:disabled) { transform: translateY(2px) scale(0.98); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 4px rgba(0, 0, 0, 0.3) !important; }
+body.kasino .tc-btn:disabled { opacity: 0.38; filter: grayscale(0.6); cursor: default; }
+body.kasino .tc-btn.hidden { display: none !important; }
+body.kasino .tc-red { background: linear-gradient(180deg, #e2525a, #a3182a) !important; }
+body.kasino .tc-green { background: linear-gradient(180deg, #36c47a, #14794a) !important; }
+body.kasino .tc-gold { background: linear-gradient(180deg, #ffe58a, #e0a91e 55%, #b27a0c) !important; color: #3a2300 !important; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45); }
+body.kasino .tc-gold.open { box-shadow: 0 0 0 2px #fff3c4, 0 0 14px rgba(255, 215, 100, 0.8) !important; }
+body.kasino .tc-dark { min-height: 40px; font-size: 0.85rem !important; background: rgba(255, 255, 255, 0.08) !important; color: #f9e29c !important; border: 1px solid rgba(249, 226, 156, 0.35) !important; box-shadow: none !important; text-shadow: none; }
+body.kasino .tc-wide { display: block; width: 100%; margin-top: 10px; }
+body.kasino .tc-btn.allin { background: linear-gradient(180deg, #ff7a45, #c0182a) !important; color: #fff !important; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4); animation: tc-hot 0.9s ease-in-out infinite alternate; }
+@keyframes tc-hot { to { filter: brightness(1.15); box-shadow: 0 0 18px rgba(255, 90, 60, 0.8) !important; } }
+.tc-raise { margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(249, 226, 156, 0.25); animation: tc-in 0.2s ease-out; }
+.tc-raise.hidden { display: none; }
+.tc-presets { display: flex; gap: 6px; margin-bottom: 8px; }
+body.kasino .tc-preset {
+  flex: 1; min-width: 0; padding: 8px 4px !important; border-radius: 999px !important; font-size: 0.78rem !important; font-weight: 800 !important;
+  background: rgba(255, 255, 255, 0.08) !important; color: #f9e29c !important; border: 1px solid rgba(249, 226, 156, 0.35) !important; box-shadow: none !important; white-space: nowrap;
+}
+body.kasino .tc-preset.active { background: #f9e29c !important; color: #2a1606 !important; }
+.tc-slider { display: flex; align-items: center; gap: 8px; }
+.tc-slider input[type=range], .tc-buyin input[type=range] { flex: 1; width: 100%; accent-color: #e0a91e; padding: 0; border: 0; background: none; }
+.tc-buyin input[type=range] { margin: 4px 0 10px; }
+body.kasino .tc-step { flex: none; width: 40px; height: 40px; padding: 0 !important; border-radius: 50% !important; font-size: 1.3rem !important; font-weight: 900 !important; background: rgba(255, 255, 255, 0.1) !important; color: #f9e29c !important; border: 1px solid rgba(249, 226, 156, 0.4) !important; box-shadow: none !important; }
+.tc-wait { text-align: center; margin: 12px 0 0; color: #f9e29c; font-weight: 800; animation: tc-breathe 1.6s ease-in-out infinite; }
+.tc-wait.hidden { display: none; }
+@keyframes tc-breathe { 50% { opacity: 0.45; } }
+body.kasino .tc-leave, body.kasino .tc-clear {
+  display: block; margin: 10px auto 0; padding: 6px !important; background: none !important; border: 0 !important; box-shadow: none !important;
+  color: rgba(249, 226, 156, 0.75) !important; font-size: 0.8rem !important; font-weight: 700 !important; text-decoration: underline; text-underline-offset: 3px;
+}
+body.kasino .tc-clear { margin: 0 auto 6px; }
+body.kasino .tc-clear:disabled { visibility: hidden; }
+body.kasino .tc-leave.hidden { display: none !important; }
+.tc-mine { text-align: center; margin: 8px 0 0; font-size: 0.82rem; color: #f9e29c; }
+.tc-mine:empty { display: none; }
+.tc-rules { margin-top: 12px; }
+body.kasino .table-console .step-chips { justify-content: center; margin-bottom: 4px; }
+
+/* Kortene: litt finere forside og bakside, og myke animasjoner */
+.pk-card { background: linear-gradient(180deg, #ffffff, #f2ede4); border: 1px solid rgba(0, 0, 0, 0.12); }
+.pk-card.back {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 226, 122, 0.35) 0 18%, transparent 19%),
+    repeating-linear-gradient(45deg, #8e1622 0 3px, #a8202e 3px 6px);
+  border: 2px solid #fff; box-shadow: inset 0 0 0 1px #d4a530, 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+.pk-card.small { width: 24px; height: 34px; border-radius: 4px; }
+.pk-card.small .pk-rank, .pk-card.small .pk-suit { font-size: 0.68rem; }
+.pk-card.fx-deal { animation: card-deal 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.15) both; }
+@keyframes card-deal { from { opacity: 0; transform: translateY(-46px) rotate(-14deg) scale(0.6); } 60% { opacity: 1; } }
+.pk-card.fx-flip { animation: card-flip 0.45s cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+@keyframes card-flip { 0% { transform: perspective(300px) rotateY(90deg) scale(1.08); filter: brightness(0.8); } 100% { transform: none; filter: none; } }
+.pk-board, .pk-my-cards, .bj-cards2, .bj-seat-cards, .pk-seat-cards { perspective: 400px; }
+
+/* Poker: mine kort med hva jeg har */
+.pk-mine { gap: 14px; margin-top: 12px; }
+.pk-my-side { display: flex; flex-direction: column; gap: 4px; min-width: 110px; }
+.pk-my-hand { font-weight: 900; font-size: 1.1rem; color: #ffe27a; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); }
+.pk-my-hand.dim { color: rgba(249, 226, 156, 0.6); font-weight: 700; font-size: 0.95rem; }
+.pk-my-hand:empty { display: none; }
+.pk-my-info { font-size: 0.85rem; font-weight: 700; color: #f9e29c; }
+.pk-pot:not(:empty) { padding: 2px 10px; border-radius: 999px; background: rgba(0, 0, 0, 0.45); font-size: 0.85rem; }
+
+/* 🔴 Roulette: kule, nedtelling og mine sjetonger på brettet */
+.rl-status { position: relative; overflow: hidden; }
+.rl-count { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; }
+.rl-count b { display: block; height: 100%; width: 0; background: rgba(0, 0, 0, 0.45); transition: width 1s linear; }
+.roulette-wrap { position: relative; }
+.rl-orbit { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.rl-ball {
+  position: absolute; left: 50%; top: 0; width: 5.5%; aspect-ratio: 1; margin-left: -2.75%; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff, #e9e9e9 45%, #8f8f8f); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.rl-ball.rest { top: 11.5%; }
+.rl-spot { min-height: 76px; }
+.rl-mychip {
+  position: absolute; right: 8px; top: 8px; min-width: 32px; height: 32px; padding: 0 3px; border-radius: 50%; display: none; align-items: center; justify-content: center;
+  font-size: 0.66rem; font-weight: 900; color: #fff; text-shadow: 0 1px 1px #000;
+  background: radial-gradient(circle, #b3121f 0 50%, #fff 51% 58%, #b3121f 59%); border: 2px dashed #fff; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55);
+}
+.rl-mychip:not(:empty) { display: flex; }
+.rl-mychip.pop { animation: chip-pop 0.32s cubic-bezier(0.2, 1.6, 0.4, 1); }
+@keyframes chip-pop { from { transform: translateY(-16px) scale(1.4); opacity: 0; } }
+
+/* ♠️ Poker-knappen får også en «clickbait»-merkelapp */
+body.kasino .casino-games .cg-poker .cg-badge { background: linear-gradient(90deg, #b9a2ff, #f3edff, #b9a2ff) !important; color: #1c0c4f !important; }
+
+/* 🎰 Automaten: lyspærene følger buen, med sokler og et rolig løpelys */
+body.kasino .slot-machine.vintage .sm-crown { --arch: 70px; border-radius: 50% 50% 14px 14px / var(--arch) var(--arch) 14px 14px; padding: 38px 10px 12px; }
+body.kasino .sm-crown .sm-bulbs { position: absolute; inset: 0; display: block; padding: 0; margin: 0; pointer-events: none; }
+body.kasino .sm-crown .sm-bulbs i {
+  position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0 18%, #ffeaa3 42%, #e3a51f 100%);
+  box-shadow: 0 0 0 2px #4a3004, 0 0 0 3px #c99a2e;
+  animation: sm-chase 1.8s ease-in-out infinite; animation-delay: calc(var(--i) * 0.12s);
+}
+@keyframes sm-chase {
+  0%, 100% { filter: brightness(0.55) saturate(0.85); }
+  50% { filter: brightness(1.15); box-shadow: 0 0 0 2px #4a3004, 0 0 0 3px #c99a2e, 0 0 10px 3px rgba(255, 214, 100, 0.85); }
+}
+body.kasino .slot-machine.vintage.jackpot .sm-crown .sm-bulbs i { animation: sm-chase 0.45s ease-in-out infinite; animation-delay: calc(var(--i) * 0.03s); }
+body.kasino .table-console .step-chips { flex-wrap: nowrap; gap: 6px; }
+body.kasino .table-console .chip { flex: 0 0 50px; font-size: 0.8rem; }
+body.kasino .table-console .chip:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #3a0006; }
+.pk-mine { margin-top: 26px; }
+.rl-mychip { top: auto; bottom: 6px; right: 6px; min-width: 28px; height: 28px; font-size: 0.6rem; }

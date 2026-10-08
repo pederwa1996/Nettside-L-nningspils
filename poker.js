@@ -65,6 +65,22 @@ function bestHand(cards) {
 }
 
 // ---------- Bordet ----------
+// Hva jeg har nå (mine kort + bordet), til hjelp for spilleren. Før floppen: par eller høyt kort.
+function handNow(cards) {
+  if (cards.length < 5) return cards.length === 2 && cards[0].r === cards[1].r ? HAND_NAMES[1] : HAND_NAMES[0];
+  let best = null;
+  const pick = (start, chosen) => {
+    if (chosen.length === 5) {
+      const s = score5(chosen);
+      if (!best || compareScore(s, best) > 0) best = s;
+      return;
+    }
+    for (let i = start; i < cards.length; i++) pick(i + 1, [...chosen, cards[i]]);
+  };
+  pick(0, []);
+  return HAND_NAMES[best[0]];
+}
+
 function createPoker(ctx) {
   // ctx: { state(), save(), broadcast(), findParticipant(name), addFlus(p, n), randomInt(n), shuffle(arr),
   //        onWin(name, won, net, handName), blinds: {small, big}, minBuyIn, maxBuyIn }
@@ -464,6 +480,7 @@ function createPoker(ctx) {
       deadline: h ? h.deadline : 0,
       mySeat,
       legal: h && mySeat >= 0 ? legal(mySeat) : null,
+      myHand: h && h.players[mySeat] && !h.players[mySeat].folded ? handNow([...h.players[mySeat].cards, ...h.board]) : null,
       result: !h && t.lastResult
         ? { ...t.lastResult, board: undefined, shown: undefined, winners: t.lastResult.winners.map((w) => ({ ...w, best: w.best ? w.best.map(label) : null })) }
         : null,

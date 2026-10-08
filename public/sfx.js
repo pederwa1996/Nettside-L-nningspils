@@ -69,7 +69,7 @@
   // ---------- Ekte lyder (ElevenLabs) ----------
   // lyd -> [fil, volum]
   const FILES = {
-    tick: ['tick', 0.6], chip: ['chips', 0.7], card: ['card', 0.8], lever: ['lever', 0.8], reelStop: ['reelstop', 0.8],
+    tick: ['tick', 0.9], chip: ['chips', 0.6], card: ['card', 0.75], cardflip: ['cardflip', 0.7], lever: ['lever', 0.8], reelStop: ['reelstop', 0.8],
     coin: ['coin', 0.7], ballDrop: ['balldrop', 0.9], skull: ['skull', 0.8], door: ['door', 0.5], back: ['back', 0.5],
     notify: ['notify', 0.7], cheers: ['cheers', 0.9], send: ['send', 0.5], pop: ['pop', 0.6], sad: ['sad', 0.7], like: ['like', 0.6],
     win: ['win', 0.6], bigwin: ['bigwin', 0.6], lose: ['lose', 0.5], reels: ['reels', 0.45], ballroll: ['ballroll', 0.55], pour: ['pour', 0.6],
@@ -125,14 +125,15 @@
 
   const SOUNDS = {
     // Pila på lykkehjulet som slår mot en pinne
-    tick: () => tone(1500, { dur: 0.025, type: 'triangle', vol: 0.035 }),
+    tick: () => tone(1100, { dur: 0.03, type: 'sine', vol: 0.025, to: 700 }),
     // Sjetonger som legges på bordet: to små klikk
     chip: () => {
       noise(0.03, { freq: 5200, q: 4, vol: 0.09 });
       noise(0.03, { t: 0.045, freq: 4600, q: 4, vol: 0.06 });
     },
-    // Et kort som skyves over filten
-    card: () => noise(0.11, { freq: 2600, to: 1200, q: 0.8, vol: 0.07 }),
+    // Et kort som skyves over filten, og et kort som snus
+    card: () => noise(0.12, { freq: 1800, to: 700, q: 0.7, vol: 0.04 }),
+    cardflip: () => noise(0.06, { freq: 1400, to: 900, q: 1.2, vol: 0.04 }),
     // Spaken på automaten
     lever: () => {
       tone(160, { dur: 0.16, type: 'triangle', vol: 0.07, to: 80 });
@@ -206,17 +207,17 @@
   };
 
   let lastTick = 0;
-  function play(name) {
+  function play(name, { vol = 1 } = {}) {
     if (window.__sfxLog) window.__sfxLog.push(name); // brukes av testene
     if (muted) return;
-    // Ikke spill tikk tettere enn hvert 28. ms (blir bare sus)
+    // Ikke spill tikk tettere enn hvert 45. ms (blir bare hard skravling)
     if (name === 'tick' || name === 'reelTick') {
       const now = performance.now();
-      if (now - lastTick < 28) return;
+      if (now - lastTick < 45) return;
       lastTick = now;
     }
     // Ekte lyd hvis den er lastet, ellers den syntetiske
-    if (FILES[name] && sample(name)) return;
+    if (FILES[name] && sample(name, { vol })) return;
     if (!SOUNDS[name]) return;
     try {
       SOUNDS[name]();
@@ -255,6 +256,7 @@
     let prev = angleOf(el);
     let travelled = 0;
     let lastStep = 0;
+    let lastStepAt = performance.now();
     const end = performance.now() + ms;
     (function frame() {
       const a = angleOf(el);
@@ -266,7 +268,11 @@
       const step = Math.floor(travelled / stepDeg);
       if (step !== lastStep) {
         lastStep = step;
-        play(sound);
+        // Mykt når hjulet går fort (mange tikk), tydeligere når det roer seg og nærmer seg målet
+        const t = performance.now();
+        const gap = t - lastStepAt;
+        lastStepAt = t;
+        play(sound, { vol: Math.min(1, Math.max(0.3, gap / 140)) });
       }
       if (performance.now() < end) requestAnimationFrame(frame);
     })();
@@ -338,7 +344,7 @@
     if (e.target.closest && e.target.closest('.hs-tab, .task-cat, .ptab, .ff, .partner-chip, .suggest-kinds label, .auth-tab')) play('tap');
   });
 
-  // Spill en lyd når et antall øker (nye kort på bordet, flere sjetonger i potten)
+  // Spill en lyd når et antall øker (flere sjetonger i potten)
   const counts = {};
   function watch(key, n, sound) {
     if (counts[key] !== undefined && n > counts[key]) {

@@ -17,6 +17,10 @@
   let t = null;
   let me = null;
   let bet = 25;
+  try {
+    bet = Number(localStorage.getItem('bj-bet')) || 25; // samme innsats som sist
+  } catch { /* ignorer */ }
+  const fx = window.cardFx('blackjack');
   let busy = false;
   let tick = null;
   let celebrated; // runde-id vi har feiret (undefined = ikke lastet ennå)
@@ -37,16 +41,7 @@
     return e;
   }
 
-  function card(c, size = '') {
-    const d = el('div', `pk-card ${size}`);
-    if (!c || c.hidden) {
-      d.classList.add('back');
-      return d;
-    }
-    if (c.s === '♥' || c.s === '♦') d.classList.add('red');
-    d.append(el('span', 'pk-rank', c.r), el('span', 'pk-suit', c.s));
-    return d;
-  }
+  const card = (c, size, key) => fx.card(c, size, key);
 
   function msg(text, kind = '') {
     $('bj-msg').textContent = text;
@@ -77,10 +72,11 @@
 
   function render() {
     if (!t) return;
+    fx.begin();
     // Dealer
     const dc = $('bj-dealer-cards');
     dc.innerHTML = '';
-    t.dealer.forEach((c) => dc.appendChild(card(c)));
+    t.dealer.forEach((c, j) => dc.appendChild(card(c, '', `d${j}`)));
     $('bj-dealer-value').textContent = t.dealerValue === null ? '' : t.dealerValue;
     $('bj-status').textContent = statusText();
 
@@ -108,7 +104,7 @@
       if (s.result) wrap.classList.add(`res-${RESULT[s.result][1] || 'push'}`);
       if (s.cards) {
         const cards = el('div', 'bj-seat-cards');
-        s.cards.forEach((c) => cards.appendChild(card(c, 'tiny')));
+        s.cards.forEach((c, j) => cards.appendChild(card(c, i === t.mySeat ? 'small' : 'tiny', `s${i}:${j}`)));
         wrap.appendChild(cards);
       }
       const av = el('div', 'pk-avatar');
@@ -129,11 +125,10 @@
       }
       seatsEl.appendChild(wrap);
     });
+    fx.end();
 
-    // Lyd: kort som deles ut og sjetonger som settes
+    // Lyd: sjetonger som settes (kortene har egen lyd i kortfx.js)
     if (window.sfx && document.body.dataset.tab === 'blackjack') {
-      const cards = t.dealer.length + t.seats.reduce((n, s) => n + (s && s.cards ? s.cards.length : 0), 0);
-      sfx.watch('bj-cards', cards, 'card');
       sfx.watch('bj-bets', t.seats.reduce((n, s) => n + (s ? s.bet || 0 : 0), 0), 'chip');
     }
 
@@ -143,8 +138,21 @@
     const canBet = seated && ['waiting', 'betting'].includes(t.phase);
     $('bj-bet').classList.toggle('hidden', !canBet);
     if (canBet) renderChips(mine.bet);
-    $('bj-actions').classList.toggle('hidden', !(t.phase === 'playing' && t.turn === t.mySeat && seated));
-    $('bj-double').classList.toggle('hidden', !t.canDouble);
+    const myTurn = t.phase === 'playing' && t.turn === t.mySeat && seated;
+    $('bj-actions').classList.toggle('hidden', !myTurn);
+    $('bj-double').disabled = !t.canDouble;
+    if (myTurn) {
+      $('bj-my-value').textContent = mine.value;
+      $('bj-turn-bar').style.width = `${Math.min(100, Math.max(0, ((t.deadline - Date.now()) / 20000) * 100))}%`;
+    }
+    // Sitter jeg og venter: si hva som skjer
+    let wait = '';
+    if (seated && mine && mine.cards && !myTurn) {
+      if (t.phase === 'playing' && t.seats[t.turn]) wait = `Venter på ${t.seats[t.turn].name.split(' ')[0]} …`;
+      else if (t.phase === 'dealer') wait = 'Dealeren trekker …';
+    }
+    $('bj-wait').textContent = wait;
+    $('bj-wait').classList.toggle('hidden', !wait);
     $('bj-leave').classList.toggle('hidden', !seated);
     const watchers = t.seats.filter(Boolean).length;
     $('bj-info').textContent = seated
@@ -166,23 +174,33 @@
     } else if (t.phase !== 'result' && celebrated === undefined) celebrated = null;
   }
 
+  // Sjetongene legges oppå hverandre: trykk 100 + 50 + 25 for å satse 175
   function renderChips(current) {
     const wrap = $('bj-chips');
     wrap.innerHTML = '';
     const cash = me ? me.flus + (current || 0) : 0;
-    CHIPS.filter((c) => c >= t.minBet && c <= t.maxBet).forEach((c) => {
-      const b = el('button', `chip${c === bet ? ' active' : ''}`, String(c));
+    const cap = Math.min(t.maxBet, cash);
+    bet = Math.max(t.minBet, Math.min(bet, cap));
+    CHIPS.filter((c) => c <= t.maxBet).forEach((c) => {
+      const b = el('button', 'chip', `+${c}`);
       b.type = 'button';
-      b.disabled = c > cash;
+      b.disabled = bet + c > cap;
       b.addEventListener('click', () => {
-        bet = c;
+        bet = Math.min(cap, bet + c);
+        if (window.sfx) sfx.play('chip');
         renderChips(current);
       });
       wrap.appendChild(b);
     });
     $('bj-bet-amount').textContent = bet;
-    $('bj-bet-btn').textContent = current ? `Endre innsats til ${bet}` : `Sats ${bet} cash`;
+    $('bj-clear').disabled = bet === t.minBet;
+    $('bj-bet-btn').textContent = current ? (current === bet ? `Satset ${bet} ✓` : `Endre til ${bet}`) : `Sats ${bet} cash`;
+    $('bj-bet-btn').disabled = current === bet;
   }
+  $('bj-clear').addEventListener('click', () => {
+    bet = t ? t.minBet : 10;
+    if (t) renderChips(t.mySeat >= 0 && t.seats[t.mySeat] ? t.seats[t.mySeat].bet : 0);
+  });
 
   async function send(path, body, okText) {
     if (busy) return;
@@ -200,7 +218,13 @@
     busy = false;
   }
 
-  $('bj-bet-btn').addEventListener('click', () => send('/api/bj/bet', { amount: bet }, ''));
+  $('bj-bet-btn').addEventListener('click', () => {
+    try {
+      localStorage.setItem('bj-bet', String(bet));
+    } catch { /* ignorer */ }
+    msg('');
+    send('/api/bj/bet', { amount: bet }, '');
+  });
   $('bj-hit').addEventListener('click', () => send('/api/bj/act', { action: 'hit' }));
   $('bj-stand').addEventListener('click', () => send('/api/bj/act', { action: 'stand' }));
   $('bj-double').addEventListener('click', () => send('/api/bj/act', { action: 'double' }));

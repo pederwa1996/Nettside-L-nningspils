@@ -58,6 +58,7 @@
             <span class="cg-foot"><span class="cg-live" data-room="kasino-blackjack"></span></span>
           </button>
           <button type="button" class="tab cg cg-poker" data-tab="poker">
+            <em class="cg-badge">ALL IN</em>
             <i class="tc-icon">♠️</i>
             <b>Poker</b><small>Bløff kollegaene rett i trynet</small>
             <span class="cg-foot"><span class="cg-live" data-room="kasino-poker"></span></span>
@@ -134,26 +135,36 @@
       <!-- Roulette: ett felles hjul for alle -->
       <section id="tab-roulette" class="card hidden">
         <div class="rl-top">
-          <div id="rl-status" class="rl-status">Satse for å starte runden</div>
+          <div id="rl-status" class="rl-status"><span id="rl-status-text">Satse for å starte runden</span><i class="rl-count"><b id="rl-count-bar"></b></i></div>
           <div id="rl-history" class="rl-history"></div>
         </div>
         <div class="wheel-wrap roulette-wrap">
           <div class="pointer">▼</div>
           <canvas id="roulette" width="600" height="600"></canvas>
+          <!-- Kula går rundt motsatt vei og faller ned i lomma under pila -->
+          <div class="rl-orbit" id="rl-orbit"><i class="rl-ball" id="rl-ball"></i></div>
           <div id="rl-number" class="rl-number hidden"></div>
         </div>
         <p id="rl-result" class="result"></p>
         <div class="rl-board" id="rl-board">
-          <button type="button" class="rl-spot red" data-type="red"><b>Rød</b><span class="rl-total"></span><span class="rl-chips"></span></button>
-          <button type="button" class="rl-spot black" data-type="black"><b>Svart</b><span class="rl-total"></span><span class="rl-chips"></span></button>
-          <button type="button" class="rl-spot even" data-type="even"><b>Partall</b><span class="rl-total"></span><span class="rl-chips"></span></button>
-          <button type="button" class="rl-spot odd" data-type="odd"><b>Oddetall</b><span class="rl-total"></span><span class="rl-chips"></span></button>
+          <button type="button" class="rl-spot red" data-type="red"><b>Rød</b><span class="rl-mychip"></span><span class="rl-total"></span><span class="rl-chips"></span></button>
+          <button type="button" class="rl-spot black" data-type="black"><b>Svart</b><span class="rl-mychip"></span><span class="rl-total"></span><span class="rl-chips"></span></button>
+          <button type="button" class="rl-spot even" data-type="even"><b>Partall</b><span class="rl-mychip"></span><span class="rl-total"></span><span class="rl-chips"></span></button>
+          <button type="button" class="rl-spot odd" data-type="odd"><b>Oddetall</b><span class="rl-mychip"></span><span class="rl-total"></span><span class="rl-chips"></span></button>
         </div>
-        <p class="field-label">Trykk på et felt for å satse <strong id="rl-chip">25</strong> cash · gevinst = dobbelt tilbake</p>
-        <div class="step-chips" id="rl-chips"></div>
-        <p id="rl-mine" class="note center"></p>
-        <button type="button" id="rl-clear" class="secondary small-btn hidden">Ta tilbake innsatsene mine</button>
-        <p class="note">Ett hjul for alle i kasinoet. Første innsats starter nedtellingen, og så spinner hjulet for alle samtidig. 0 er grønn og gir huset fordelen.</p>
+        <div class="table-console rl-console">
+          <p class="tc-title">Velg sjetong, trykk på et felt · <strong id="rl-chip">25</strong> cash per trykk</p>
+          <div class="step-chips" id="rl-chips"></div>
+          <div class="tc-row tc-row-small">
+            <button type="button" id="rl-repeat" class="tc-btn tc-dark hidden">↺ Samme som sist</button>
+            <button type="button" id="rl-clear" class="tc-btn tc-dark hidden">✕ Ta tilbake</button>
+          </div>
+          <p id="rl-mine" class="tc-mine"></p>
+        </div>
+        <details class="tips tc-rules">
+          <summary>📜 Regler</summary>
+          <p>Ett hjul for alle i kasinoet. Første innsats starter nedtellingen, og så spinner hjulet for alle samtidig. Riktig farge eller partall/oddetall gir dobbelt tilbake. 0 er grønn og gir huset fordelen.</p>
+        </details>
       </section>
 
       <!-- Blackjack: ett felles bord med 5 plasser -->
@@ -167,22 +178,31 @@
           </div>
           <div id="bj-seats"></div>
         </div>
-        <div id="bj-bet" class="bj-bet hidden">
-          <p class="field-label">Innsats: <strong id="bj-bet-amount">25</strong> cash</p>
-          <div class="step-chips" id="bj-chips"></div>
-          <button type="button" id="bj-bet-btn" class="big">Sats</button>
+        <!-- Innsats: velg sjetong og sats -->
+        <div id="bj-bet" class="table-console hidden">
+          <p class="tc-title">Velg innsats</p>
+          <div class="tc-big-num"><span id="bj-bet-amount">25</span> <small>cash</small></div>
+          <div class="step-chips casino-chips" id="bj-chips"></div>
+          <button type="button" class="tc-clear" id="bj-clear">Nullstill</button>
+          <button type="button" id="bj-bet-btn" class="tc-btn tc-gold tc-wide">Sats</button>
         </div>
-        <div id="bj-actions" class="pk-actions hidden">
-          <div class="pk-buttons">
-            <button type="button" id="bj-hit">Trekk</button>
-            <button type="button" class="secondary" id="bj-stand">Stå</button>
-            <button type="button" class="secondary" id="bj-double">Doble</button>
+        <p id="bj-wait" class="tc-wait hidden"></p>
+        <!-- Min tur: hånden min og tre store knapper -->
+        <div id="bj-actions" class="table-console hidden">
+          <div class="tc-turn"><span>Din tur · du har <b id="bj-my-value">0</b></span><i class="tc-timer"><b id="bj-turn-bar"></b></i></div>
+          <div class="tc-row">
+            <button type="button" class="tc-btn tc-green" id="bj-hit">Trekk</button>
+            <button type="button" class="tc-btn tc-red" id="bj-stand">Stå</button>
+            <button type="button" class="tc-btn tc-gold" id="bj-double">Doble</button>
           </div>
         </div>
         <p id="bj-msg" class="result"></p>
         <p id="bj-info" class="note center"></p>
-        <button type="button" id="bj-leave" class="secondary small-btn hidden">Reis deg fra bordet</button>
-        <p class="note">Ett bord for alle med 5 plasser. Sett deg og sats; første innsats starter nedtellingen. Dealer trekker til 17, blackjack betaler 3:2, og du kan doble på de to første kortene.</p>
+        <button type="button" id="bj-leave" class="tc-leave hidden">Reis deg fra bordet</button>
+        <details class="tips tc-rules">
+          <summary>📜 Regler</summary>
+          <p>Ett bord for alle med 5 plasser. Sett deg og sats; første innsats starter nedtellingen. Dealer trekker til 17, blackjack betaler 3:2, og du kan doble på de to første kortene.</p>
+        </details>
       </section>
 
       <!-- Poker -->
@@ -198,32 +218,44 @@
         </div>
         <div id="pk-mine" class="pk-mine hidden">
           <div id="pk-my-cards" class="pk-my-cards"></div>
-          <div id="pk-my-info" class="pk-my-info"></div>
-        </div>
-        <div id="pk-actions" class="pk-actions hidden">
-          <div class="pk-buttons">
-            <button type="button" class="secondary" id="pk-fold">Kast</button>
-            <button type="button" id="pk-call">Sjekk</button>
+          <div class="pk-my-side">
+            <div id="pk-my-hand" class="pk-my-hand"></div>
+            <div id="pk-my-info" class="pk-my-info"></div>
           </div>
-          <div class="pk-raise" id="pk-raise-box">
-            <input type="range" id="pk-raise-range" step="5">
-            <div class="pk-buttons">
-              <button type="button" id="pk-raise">Høyne til <span id="pk-raise-to">0</span></button>
-              <button type="button" class="secondary" id="pk-allin">All in</button>
+        </div>
+        <p id="pk-wait" class="tc-wait hidden"></p>
+        <!-- Handlinger: tre store knapper, og et panel for å høyne -->
+        <div id="pk-actions" class="table-console hidden">
+          <div class="tc-turn"><span>Din tur</span><i class="tc-timer"><b id="pk-turn-bar"></b></i></div>
+          <div class="tc-row">
+            <button type="button" class="tc-btn tc-red" id="pk-fold">Kast</button>
+            <button type="button" class="tc-btn tc-green" id="pk-call">Sjekk</button>
+            <button type="button" class="tc-btn tc-gold" id="pk-raise-open">Høyne</button>
+          </div>
+          <div class="tc-raise hidden" id="pk-raise-box">
+            <div class="tc-presets" id="pk-presets"></div>
+            <div class="tc-slider">
+              <button type="button" class="tc-step" id="pk-minus" aria-label="Mindre">−</button>
+              <input type="range" id="pk-raise-range" step="5">
+              <button type="button" class="tc-step" id="pk-plus" aria-label="Mer">+</button>
             </div>
+            <button type="button" class="tc-btn tc-gold tc-wide" id="pk-raise">Høyne til <span id="pk-raise-to">0</span></button>
           </div>
         </div>
-        <div id="pk-buyin" class="pk-buyin hidden">
-          <p>Sett deg på plass <strong id="pk-buyin-seat">1</strong>. Hvor mye cash vil du ta med til bordet?</p>
+        <!-- Innkjøp når man setter seg -->
+        <div id="pk-buyin" class="table-console tc-buyin hidden">
+          <p class="tc-title">Plass <strong id="pk-buyin-seat">1</strong> · hvor mye cash tar du med?</p>
+          <div class="tc-big-num"><span id="pk-buyin-amount">200</span> <small>cash</small></div>
+          <div class="tc-presets" id="pk-buyin-presets"></div>
           <input type="range" id="pk-buyin-range" step="10">
-          <div class="pk-buttons">
-            <button type="button" class="secondary" id="pk-buyin-cancel">Avbryt</button>
-            <button type="button" id="pk-buyin-ok">Sett deg med <span id="pk-buyin-amount">200</span> cash</button>
+          <div class="tc-row">
+            <button type="button" class="tc-btn tc-dark" id="pk-buyin-cancel">Avbryt</button>
+            <button type="button" class="tc-btn tc-gold" id="pk-buyin-ok">Sett deg</button>
           </div>
         </div>
         <p id="pk-msg" class="result"></p>
         <p id="pk-info" class="note center"></p>
-        <button type="button" id="pk-leave" class="secondary small-btn hidden">Reis deg fra bordet (sjetongene går tilbake til cash)</button>
+        <button type="button" id="pk-leave" class="tc-leave hidden">Reis deg fra bordet</button>
       </section>
 
       <!-- Baren -->
@@ -299,6 +331,7 @@
   <script src="/celebrate.js"></script>
   <script src="/kasino.js"></script>
   <script src="/baren.js"></script>
+  <script src="/kortfx.js"></script>
   <script src="/pokerbord.js"></script>
   <script src="/bjbord.js"></script>
   <script src="/roulettebord.js"></script>

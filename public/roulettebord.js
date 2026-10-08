@@ -15,6 +15,11 @@
   let chip = 25;
   let busy = false;
   let rotation = 0;
+  let ballRotation = 0;
+  let lastBets = [];
+  try {
+    lastBets = JSON.parse(localStorage.getItem('rl-last') || '[]');
+  } catch { /* ignorer */ }
   let spunRound = null; // runden hjulet allerede har spunnet for
   let loaded = false;
   let settledRound; // runden vi har vist resultat for (undefined = ikke lastet ennå)
@@ -88,8 +93,21 @@
     const current = ((rotation % 360) + 360) % 360;
     rotation += 360 * 5 + ((wanted - current + 360) % 360);
     const c = $('roulette');
-    c.style.transition = `transform ${Math.max(1.5, ms / 1000)}s cubic-bezier(0.15, 0.85, 0.2, 1)`;
+    const dur = Math.max(1.5, ms / 1000);
+    c.style.transition = `transform ${dur}s cubic-bezier(0.15, 0.85, 0.2, 1)`;
     c.style.transform = `rotate(${rotation}deg)`;
+    // Kula: ut på kanten, rundt motsatt vei, og ned i lomma under pila mot slutten
+    const orbit = $('rl-orbit');
+    const ball = $('rl-ball');
+    ball.style.transition = 'top 0.4s ease-out';
+    ball.classList.remove('rest');
+    ballRotation -= 360 * 8;
+    orbit.style.transition = `transform ${dur}s cubic-bezier(0.2, 0.7, 0.25, 1)`;
+    orbit.style.transform = `rotate(${ballRotation}deg)`;
+    setTimeout(() => {
+      ball.style.transition = `top ${dur * 0.22}s cubic-bezier(0.5, 1.8, 0.5, 1)`;
+      ball.classList.add('rest');
+    }, dur * 720);
     if (window.sfx && document.body.dataset.tab === 'roulette') sfx.ballRoll(Math.max(1500, ms));
   }
 
@@ -103,8 +121,9 @@
 
   function render() {
     if (!t) return;
-    $('rl-status').textContent = statusText();
+    $('rl-status-text').textContent = statusText();
     $('rl-status').className = `rl-status ph-${t.phase}`;
+    $('rl-count-bar').style.width = t.phase === 'betting' ? `${Math.min(100, Math.max(0, ((t.spinAt - Date.now()) / 15000) * 100))}%` : '0%';
 
     // Siste tall
     const hist = $('rl-history');
@@ -128,6 +147,16 @@
     document.querySelectorAll('.rl-spot').forEach((spot) => {
       const b = t.bets[spot.dataset.type];
       spot.querySelector('.rl-total').textContent = b.total ? `${b.total}` : '';
+      const my = t.myBets.filter((x) => x.type === spot.dataset.type).reduce((n, x) => n + x.amount, 0);
+      const mc = spot.querySelector('.rl-mychip');
+      if (mc.textContent !== (my ? String(my) : '')) {
+        mc.textContent = my ? String(my) : '';
+        if (my) {
+          mc.classList.remove('pop');
+          void mc.offsetWidth; // start animasjonen på nytt
+          mc.classList.add('pop');
+        }
+      }
       const chips = spot.querySelector('.rl-chips');
       chips.innerHTML = '';
       b.players.slice(0, 6).forEach((x) => {
@@ -152,9 +181,19 @@
 
     // Mine innsatser
     const mineTotal = t.myBets.reduce((s, b) => s + b.amount, 0);
-    const LABEL = { red: 'Rød', black: 'Svart', even: 'Partall', odd: 'Oddetall' };
-    $('rl-mine').textContent = mineTotal ? `Dine innsatser: ${t.myBets.map((b) => `${LABEL[b.type]} ${b.amount}`).join(' · ')} (maks ${t.maxBet} per runde)` : '';
+    $('rl-mine').textContent = mineTotal ? `Du har satset ${mineTotal} cash (maks ${t.maxBet} per runde)` : '';
     $('rl-clear').classList.toggle('hidden', !(t.phase === 'betting' && mineTotal));
+    // Samme innsats som forrige runde, med ett trykk
+    const lastTotal = lastBets.reduce((n, b) => n + b.amount, 0);
+    $('rl-repeat').classList.toggle('hidden', !(open && me && !mineTotal && lastTotal));
+    $('rl-repeat').textContent = `↺ Samme som sist (${lastTotal})`;
+    $('rl-repeat').disabled = !me || lastTotal > me.flus;
+    if (mineTotal && open) {
+      lastBets = t.myBets.map((b) => ({ type: b.type, amount: b.amount }));
+      try {
+        localStorage.setItem('rl-last', JSON.stringify(lastBets));
+      } catch { /* ignorer */ }
+    }
     renderChips();
 
     // Resultat for meg
@@ -210,6 +249,10 @@
     send('/api/roulette/bet', { type: spot.dataset.type, amount: chip });
   }));
   $('rl-clear').addEventListener('click', () => send('/api/roulette/clear', {}));
+  $('rl-repeat').addEventListener('click', async () => {
+    const bets = lastBets.slice();
+    for (const b of bets) await send('/api/roulette/bet', { type: b.type, amount: b.amount });
+  });
 
   async function load() {
     try {

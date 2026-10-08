@@ -7,14 +7,15 @@ AUTH = ['-H', f'xi-api-key: {KEY}'] if KEY else []  # ellers legges nøkkelen p�
 
 SFX = {
   # Kasino
-  'tick':      ('single short sharp plastic click of a carnival prize wheel flapper hitting a peg, dry, close up', 0.5),
+  'tick':      ('soft leather flapper ticking once against a wooden peg of a spinning wheel of fortune, warm, muted', 0.5),  # første tikk klippes ut i ferdig.py
   'lever':     ('slot machine lever pulled down, heavy mechanical clunk and spring, close up', 1.0),
   'reels':     ('slot machine reels spinning, steady mechanical whirring and clicking', 3.0),
   'reelstop':  ('slot machine reel stopping with a short solid mechanical thunk', 0.5),
   'ballroll':  ('roulette ball rolling fast around a wooden roulette wheel, slowing down', 5.0),
   'balldrop':  ('roulette ball bouncing a few times and dropping into the number pocket, clack clack click', 1.2),
-  'card':      ('a single playing card dealt and sliding across a felt casino table, quick swish', 0.5),
-  'chips':     ('a small stack of clay poker chips placed on a felt table, chips clicking together', 0.7),
+  'card':      ('soft muted playing card slide on thick green felt, gentle whisper of paper, satisfying, very soft', 0.5),
+  'cardflip':  ('a single playing card being turned face up on a felt table, soft satisfying paper flip, gentle, ASMR', 0.5),
+  'chips':     ('a small stack of clay poker chips placed on a felt table, chips clicking together', 0.7),  # dempes med lavpass i ferdig.py
   'coin':      ('a few coins dropping into a pile, short purchase confirmation', 0.8),
   'win':       ('short bright cheerful casino slot machine win jingle, coins, 8-bit free, modern', 1.6),
   'bigwin':    ('big casino jackpot win, bells ringing and coins pouring out of a slot machine, celebratory', 3.0),

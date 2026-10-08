@@ -10,6 +10,8 @@
   let busy = false;
   let buyInSeat = -1;
   let tick = null;
+  let raiseOpen = false;
+  const fx = window.cardFx('poker');
 
   async function api(path, body) {
     const res = await fetch(path, body
@@ -27,16 +29,7 @@
     return e;
   }
 
-  function card(c, size = '') {
-    const d = el('div', `pk-card ${size}`);
-    if (!c || c.hidden) {
-      d.classList.add('back');
-      return d;
-    }
-    if (c.s === '♥' || c.s === '♦') d.classList.add('red');
-    d.append(el('span', 'pk-rank', c.r), el('span', 'pk-suit', c.s));
-    return d;
-  }
+  const card = (c, size, key) => fx.card(c, size, key);
 
   function msg(text, kind = '') {
     $('pk-msg').textContent = text;
@@ -54,6 +47,7 @@
 
   function render() {
     if (!t) return;
+    fx.begin();
     const seatsEl = $('pk-seats');
     seatsEl.innerHTML = '';
     const winners = new Set(t.result ? t.result.winners.map((w) => w.seat) : []);
@@ -94,7 +88,7 @@
       // Kort (ikke mine, de vises stort under bordet)
       if (s.cards && i !== t.mySeat) {
         const cards = el('div', 'pk-seat-cards');
-        s.cards.forEach((c) => cards.appendChild(card(c, 'tiny')));
+        s.cards.forEach((c, j) => cards.appendChild(card(c, 'tiny', `seat${i}:${j}`)));
         wrap.appendChild(cards);
       }
       seatsEl.appendChild(wrap);
@@ -110,8 +104,8 @@
     // Midten: kortene på bordet, potten og status
     const board = $('pk-board');
     board.innerHTML = '';
-    for (let i = 0; i < 5; i++) board.appendChild(t.board[i] ? card(t.board[i]) : el('div', 'pk-card slot'));
-    $('pk-pot').textContent = t.pot ? `Pott: ${t.pot}` : '';
+    for (let i = 0; i < 5; i++) board.appendChild(t.board[i] ? card(t.board[i], '', `board${i}`) : el('div', 'pk-card slot'));
+    $('pk-pot').textContent = t.pot ? `🪙 ${t.pot}` : '';
     let status = '';
     if (t.phase === 'result' && t.result) {
       status = t.result.winners
@@ -139,20 +133,33 @@
     if (mine) {
       const mc = $('pk-my-cards');
       mc.innerHTML = '';
-      (mine.cards || []).forEach((c) => mc.appendChild(card(c, 'big')));
-      $('pk-my-info').textContent = mine.folded ? 'Du har kastet denne hånden' : mine.inHand ? `Du har ${mine.chips} i sjetonger` : `Du har ${mine.chips} i sjetonger · venter på neste hånd`;
+      (mine.cards || []).forEach((c, j) => mc.appendChild(card(c, 'big', `mine${j}`)));
+      $('pk-my-hand').textContent = mine.folded ? 'Kastet' : t.myHand || (mine.inHand ? '' : 'Neste hånd');
+      $('pk-my-hand').classList.toggle('dim', !!mine.folded || !t.myHand);
+      $('pk-my-info').textContent = `🪙 ${mine.chips} sjetonger`;
     }
+    fx.end();
+
+    // Handlinger: bare når det er min tur
     const l = t.legal;
     $('pk-actions').classList.toggle('hidden', !l);
+    if (!l) raiseOpen = false;
     if (l) {
       $('pk-call').textContent = l.canCheck ? 'Sjekk' : `Syn ${l.toCall}`;
-      $('pk-raise-box').classList.toggle('hidden', !l.canRaise);
+      $('pk-raise-open').disabled = !l.canRaise;
+      $('pk-raise-open').classList.toggle('open', raiseOpen);
+      $('pk-raise-box').classList.toggle('hidden', !(raiseOpen && l.canRaise));
       const r = $('pk-raise-range');
       r.min = l.minRaiseTo;
       r.max = l.maxRaiseTo;
       if (!(Number(r.value) >= l.minRaiseTo && Number(r.value) <= l.maxRaiseTo)) r.value = l.minRaiseTo;
-      $('pk-raise-to').textContent = r.value;
+      renderPresets(l);
+      showRaise();
     }
+    // Sitter jeg, men det er ikke min tur: vis hvem vi venter på
+    const waiting = mine && !l && t.toAct >= 0 && t.seats[t.toAct] && mine.inHand && !mine.folded;
+    $('pk-wait').classList.toggle('hidden', !waiting);
+    if (waiting) $('pk-wait').textContent = `Venter på ${t.seats[t.toAct].name.split(' ')[0]} …`;
 
     // Info for tilskuere
     const free = t.seats.filter((s) => !s).length;
@@ -167,16 +174,54 @@
 
     // Lyd: kort som deles ut og sjetonger på bordet
     if (window.sfx && document.body.dataset.tab === 'poker') {
-      sfx.watch('pk-cards', document.querySelectorAll('#tab-poker .pk-card:not(.slot)').length, 'card');
       sfx.watch('pk-chips', t.pot + t.seats.reduce((n, s) => n + (s ? s.bet || 0 : 0), 0), 'chip');
     }
   }
 
   function updateTimer() {
+    if (!t || !t.deadline) return;
+    const pct = `${(Math.max(0, t.deadline - Date.now()) / 30000) * 100}%`;
     const bar = document.querySelector('.pk-timer span');
-    if (!bar || !t || !t.deadline) return;
-    const left = Math.max(0, t.deadline - Date.now());
-    bar.style.width = `${(left / 30000) * 100}%`;
+    if (bar) bar.style.width = pct;
+    $('pk-turn-bar').style.width = pct;
+  }
+
+  // ---------- Høyne: snarveier og finjustering ----------
+  function renderPresets(l) {
+    // Potten (alt som er satset) og hva bordet står i nå
+    const myBet = t.seats[t.mySeat] ? t.seats[t.mySeat].bet || 0 : 0;
+    const current = myBet + l.toCall;
+    const after = t.pot + l.toCall; // potten etter at jeg har synt
+    const clamp = (v) => Math.min(l.maxRaiseTo, Math.max(l.minRaiseTo, Math.round(v / 5) * 5));
+    const opts = [
+      ['Min', l.minRaiseTo],
+      ['½ pott', clamp(current + after / 2)],
+      ['Pott', clamp(current + after)],
+      ['All in', l.maxRaiseTo],
+    ];
+    const wrap = $('pk-presets');
+    wrap.innerHTML = '';
+    const cur = Number($('pk-raise-range').value);
+    opts.forEach(([label, v], i) => {
+      if (i > 0 && i < 3 && (v <= l.minRaiseTo || v >= l.maxRaiseTo)) return; // like Min eller All in: hopp over
+      const b = el('button', `tc-preset${v === cur ? ' active' : ''}`, label);
+      b.type = 'button';
+      b.addEventListener('click', () => {
+        $('pk-raise-range').value = v;
+        renderPresets(l);
+        showRaise();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  function showRaise() {
+    const l = t && t.legal;
+    if (!l) return;
+    const v = Number($('pk-raise-range').value);
+    const all = v >= l.maxRaiseTo;
+    $('pk-raise').innerHTML = all ? `ALL IN · ${v}` : `Høyne til <span id="pk-raise-to">${v}</span>`;
+    $('pk-raise').classList.toggle('allin', all);
   }
 
   // ---------- Innkjøp ----------
@@ -188,12 +233,31 @@
     r.min = t.minBuyIn;
     r.max = max;
     r.value = Math.min(Math.max(200, t.minBuyIn), max);
-    $('pk-buyin-amount').textContent = r.value;
     $('pk-buyin-seat').textContent = seat + 1;
+    renderBuyIn();
     $('pk-buyin').classList.remove('hidden');
+    $('pk-buyin').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
-  $('pk-buyin-range').addEventListener('input', () => ($('pk-buyin-amount').textContent = $('pk-buyin-range').value));
+  function renderBuyIn() {
+    const r = $('pk-buyin-range');
+    const min = Number(r.min);
+    const max = Number(r.max);
+    $('pk-buyin-amount').textContent = r.value;
+    const wrap = $('pk-buyin-presets');
+    wrap.innerHTML = '';
+    [...new Set([min, 200, 500, max])].filter((v) => v >= min && v <= max).sort((a, b) => a - b).forEach((v) => {
+      const b = el('button', `tc-preset${v === Number(r.value) ? ' active' : ''}`, v === max ? `Maks ${v}` : v === min ? `Min ${v}` : String(v));
+      b.type = 'button';
+      b.addEventListener('click', () => {
+        r.value = v;
+        renderBuyIn();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  $('pk-buyin-range').addEventListener('input', renderBuyIn);
   $('pk-buyin-cancel').addEventListener('click', () => $('pk-buyin').classList.add('hidden'));
   $('pk-buyin-ok').addEventListener('click', () => send('/api/poker/sit', { seat: buyInSeat, buyIn: Number($('pk-buyin-range').value) }, () => $('pk-buyin').classList.add('hidden')));
   $('pk-leave').addEventListener('click', () => {
@@ -203,10 +267,29 @@
   // ---------- Handlinger ----------
   $('pk-fold').addEventListener('click', () => send('/api/poker/action', { action: 'fold' }));
   $('pk-call').addEventListener('click', () => send('/api/poker/action', { action: t.legal && t.legal.canCheck ? 'check' : 'call' }));
-  $('pk-raise-range').addEventListener('input', () => ($('pk-raise-to').textContent = $('pk-raise-range').value));
-  $('pk-raise').addEventListener('click', () => send('/api/poker/action', { action: 'raise', amount: Number($('pk-raise-range').value) }));
-  $('pk-allin').addEventListener('click', () => {
-    if (confirm('All in?')) send('/api/poker/action', { action: 'allin' });
+  $('pk-raise-open').addEventListener('click', () => {
+    raiseOpen = !raiseOpen;
+    render();
+  });
+  $('pk-raise-range').addEventListener('input', () => {
+    if (t && t.legal) renderPresets(t.legal);
+    showRaise();
+  });
+  const nudge = (dir) => {
+    const r = $('pk-raise-range');
+    const step = Math.max(5, (t && t.blinds ? t.blinds.big : 10));
+    r.value = Math.min(Number(r.max), Math.max(Number(r.min), Number(r.value) + dir * step));
+    if (t && t.legal) renderPresets(t.legal);
+    showRaise();
+  };
+  $('pk-minus').addEventListener('click', () => nudge(-1));
+  $('pk-plus').addEventListener('click', () => nudge(1));
+  $('pk-raise').addEventListener('click', () => {
+    const l = t && t.legal;
+    const v = Number($('pk-raise-range').value);
+    raiseOpen = false;
+    if (l && v >= l.maxRaiseTo) send('/api/poker/action', { action: 'allin' });
+    else send('/api/poker/action', { action: 'raise', amount: v });
   });
 
   async function send(path, body, onOk) {

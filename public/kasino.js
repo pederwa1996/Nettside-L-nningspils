@@ -162,7 +162,14 @@
   // Lyspærer rundt toppen av automaten og rundt lykkehjulet
   (function bulbs() {
     const top = $('sm-bulbs');
-    for (let i = 0; i < 13; i++) top.appendChild(Object.assign(document.createElement('i'), { style: `--i:${i}` }));
+    // Lyspærene følger buen øverst på automaten (halv ellipse, samme mål som i CSS)
+    const B = 15;
+    for (let i = 0; i < B; i++) {
+      const a = Math.PI - (i / (B - 1)) * Math.PI;
+      const b = document.createElement('i');
+      b.style.cssText = `--i:${i};left:calc(50% + ${Math.cos(a).toFixed(4)} * (50% - 12px));top:calc(var(--arch) - ${Math.sin(a).toFixed(4)} * (var(--arch) - 12px))`;
+      top.appendChild(b);
+    }
     const ring = $('wheel-lights');
     const N = 24;
     for (let i = 0; i < N; i++) {
@@ -375,8 +382,8 @@
       if (result.cash || result.bonus) fortune.classList.add('won');
       if (result.win) beerWin('Lykkehjulet ga deg en ekte pils!');
       else if (result.cash >= 500) celebrate({ tier: 'big', amount: result.cash, icon: '🎰', title: 'JACKPOT!', voice: 'v_jackpot', sub: 'Du traff det smale gullfeltet på lykkehjulet!' });
-      else if (result.cash >= 100) celebrate({ tier: 'win', amount: result.cash, icon: '💰', title: 'CASH!', sub: 'Lykkehjulet ga deg cash' });
-      else if (result.cash && window.sfx) sfx.play('coin'); // små gevinster: bare en mynt-lyd
+      // Alle cash-gevinster får samme popup, også de små
+      else if (result.cash) celebrate({ tier: 'win', amount: result.cash, icon: '💰', title: 'CASH!', sub: 'Lykkehjulet ga deg cash' });
       else if (result.bonus) celebrate({ tier: 'win', icon: '🎡', title: '+1 SPINN!', sub: 'Spinn igjen, helt gratis!' });
       else loseNudge($('spin-result'));
       wheelSpinning = false;
