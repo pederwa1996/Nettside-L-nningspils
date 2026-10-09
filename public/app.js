@@ -502,7 +502,7 @@ const NOW_STATUS = {
   mogg: ['🗿', 'Moggeren', 'Øver på chad-ansiktet'],
   oppgaver: ['🎯', 'Oppdragstakeren', 'Leter etter oppgaver'],
   flappy: ['🕊️', 'Flapperen', 'Spiller Flappy Sjef'],
-  hiace: ['🚐', 'Servicemontøren', 'Kjører Mujaffas Hiace'],
+  servicebil: ['🚐', 'Servicemontøren', 'Er ute hos kunder i Branæs Servicebil'],
   chat: ['💬', 'Sladrebasen', 'Sitter i chatten'],
 };
 

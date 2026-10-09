@@ -19,7 +19,7 @@
     mogg: 'mogg-off',
     oppgaver: 'oppgavene',
     flappy: 'Flappy Sjef',
-    hiace: 'Mujaffas Hiace',
+    servicebil: 'Branæs Servicebil',
     profil: 'profilene',
   };
 
@@ -28,7 +28,7 @@
     if (path === '/' || path === '/index.html') return 'hjem';
     if (path === '/kasino.html') return `kasino-${document.body.dataset.tab || 'wheel'}`;
     if (path === '/spill.html') return 'flappy';
-    if (path === '/hiace.html') return 'hiace';
+    if (path === '/servicebil.html') return 'servicebil';
     if (path === '/pvp.html') return document.body.dataset.room || 'pvp'; // fanen man er på (arena, duell, mogg …)
     if (path === '/baren.html') return 'baren';
     const page = path.replace(/^\//, '').replace(/\.html$/, '');

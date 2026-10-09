@@ -3616,9 +3616,9 @@ body.kasino .casino-games .tab.cg { isolation: isolate; -webkit-backface-visibil
 body.kasino .casino-games .cg-badge { border-radius: 10px 10px 0 0; }
 
 /* =========================================================
-   🚐 Mujaffas Hiace: Røa Elektriske-blått og gult blinklys
+   🚐 Branæs Servicebil: Røa Elektriske-blått og gult blinklys
    ========================================================= */
-body.pvp-arena[data-tab="hiace"] { --pv-accent: #ffb000; }
+body.pvp-arena[data-tab="hiace"], body.pvp-arena[data-tab="servicebil"] { --pv-accent: #ffb000; }
 .pvp-games { grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .pg-hiace { --pg-a: #3d5bb5; --pg-b: #14204a; --pg-edge: #ffc94d; }
 .pg-hiace .pg-icon { animation: pg-drive 1.4s ease-in-out infinite; }

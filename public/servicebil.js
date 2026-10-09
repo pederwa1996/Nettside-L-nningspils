@@ -1,8 +1,10 @@
 'use strict';
 
-// 🚐 Mujaffas Hiace: kjør Røa Elektriske-bilen til kundene.
-// Sett ovenfra: veien går nedover, du styrer bilen med fingeren (dra) eller piltastene.
-// Unngå biler, hull, veiarbeid, trikken, P-vakter og bommen. Plukk opp verktøy og kundejobber.
+// 🚐 Branæs Servicebil: kjør Røa Elektriske-bilen ut til kundene og gjør jobben.
+// Fase 1 (veien): styr bilen med fingeren (dra) eller piltastene, unngå trafikken og spis pølser
+//   og vafler så energien holder. Fase 2 (hos kunden): hver 1000 m stopper du og får en jobb,
+//   et lite elektriker-minispill (servicebil-jobb.js) som blir vanskeligere utover dagen.
+//   Feiler du, klager kunden. Tre klager, og sjefen ringer og avslutter dagen.
 (function () {
   const $ = (id) => document.getElementById(id);
 
@@ -28,22 +30,23 @@
   const SPEED_START = 300; // px per sekund
   const SPEED_MAX = 720;
   const SPEED_GAIN = 7; // per sekund
+  const PX_PER_M = 10; // 10 px = 1 meter
   const PX_PER_POINT = 40;
-  const TOOL_POINTS = 15;
-  const JOB_POINTS = 60;
-  const FAGBREV_MS = 8000;
+  const STOP_EVERY_M = 1000;
+  const ENERGY_DRAIN = 3.2; // per sekund på veien
+  const FOOD_POINTS = 10;
+  const MAX_COMPLAINTS = 3;
   const BLUE = '#26397a';
 
-  const TOOLS = [
-    { k: 'kabel', icon: '🔌', name: 'Kabel' },
-    { k: 'sikring', icon: '⚡', name: 'Sikring' },
-    { k: 'verktoy', icon: '🔧', name: 'Verktøy' },
-    { k: 'pære', icon: '💡', name: 'Lyspære' },
+  const FOODS = [
+    { k: 'pølse', icon: '🌭', name: 'Pølse', energy: 22, ring: '#e8590c', weight: 0.65 },
+    { k: 'vaffel', icon: '🧇', name: 'Vaffel', energy: 32, ring: '#f2b705', weight: 0.35 },
   ];
-  const JOBS = [
-    'Byttet sikring hos fru Hansen', 'Fant jordfeilen på Røa', 'Montert ladeboks på Smestad', 'Ny kurs til badet på Vinderen',
-    'Varmekabler i gangen', 'Smarthus i Bærum', 'Lysstyring i kantina', 'Nytt sikringsskap på Majorstua', 'Stikkontakt hos bestemor',
-    'Utelys på hytta', 'Komfyrvakt på Ullern', 'Downlights i stua', 'Panelovn på soverommet', 'Fiber til hjemmekontoret',
+  const CUSTOMERS = [
+    { name: 'Fru Hansen', place: 'Røa' }, { name: 'Familien Berg', place: 'Smestad' }, { name: 'Kebabsjappa', place: 'Majorstua' },
+    { name: 'Barnehagen Solstråla', place: 'Vinderen' }, { name: 'Tannlegen', place: 'Ullern' }, { name: 'Hytta til sjefen', place: 'Bærum' },
+    { name: 'Bestemor Olsen', place: 'Hovseter' }, { name: 'Pizzeriaen', place: 'Bogstadveien' }, { name: 'Frisøren', place: 'Røa senter' },
+    { name: 'Advokatkontoret', place: 'Frogner' }, { name: 'Bakeriet', place: 'Grefsen' }, { name: 'Los Tacos', place: 'Majorstua' },
   ];
 
   // Røa Elektriske-logoen (samme som på forsiden)
@@ -53,7 +56,7 @@
   logo.src = '/roa-logo.svg';
 
   // ---------- Lerret (skarpt på mobil) ----------
-  const canvas = $('hiace');
+  const canvas = $('servicebil');
   const ctx = canvas.getContext('2d');
   const dpr = Math.min(3, window.devicePixelRatio || 1);
   canvas.width = W * dpr;
@@ -64,45 +67,56 @@
   let me = null;
   let info = null;
   let gameId = null;
-  let mode = 'ready'; // ready | playing | dead
+  let mode = 'ready'; // ready | playing | arrive | job | jobdone | dead
   let car;
   let speed;
   let distance;
   let bonus;
-  let jobs;
-  let things; // hindringer og ting å plukke opp
+  let jobsDone;
+  let level;
+  let complaints;
+  let energy;
+  let hungryWarned;
+  let things; // hindringer, mat og kundens parkeringsplass
   let scenery; // hus og trær langs veien
-  let floaters; // flytende tekster (+15 osv.)
+  let floaters;
   let sparks;
-  let tools;
-  let fagbrevUntil;
   let nextRowAt;
-  let nextJobAt;
   let nextTollAt;
+  let nextStopAt;
+  let job;
+  let jobResult;
+  let customer;
+  let resumeSpeed;
+  let brake;
   let dash;
   let shake;
   let deadAt;
+  let doneAt;
   let result;
-  let elapsed;
 
   function reset() {
     car = { x: laneX(1), target: laneX(1), tilt: 0 };
     speed = SPEED_START;
     distance = 0;
     bonus = 0;
-    jobs = 0;
+    jobsDone = 0;
+    level = 0;
+    complaints = 0;
+    energy = 100;
+    hungryWarned = false;
     things = [];
     floaters = [];
     sparks = [];
-    tools = new Set();
-    fagbrevUntil = 0;
     nextRowAt = 500;
-    nextJobAt = 1800;
     nextTollAt = 5200;
+    nextStopAt = STOP_EVERY_M * PX_PER_M;
+    job = null;
+    jobResult = null;
+    customer = null;
     dash = 0;
     shake = 0;
     result = null;
-    elapsed = 0;
     if (!scenery) {
       scenery = [];
       for (let y = -100; y < H + 100; y += 90) addScenery(y);
@@ -113,7 +127,7 @@
   }
 
   const score = () => Math.floor(distance / PX_PER_POINT) + bonus;
-  const fagbrev = () => performance.now() < fagbrevUntil;
+  const meters = () => Math.floor(distance / PX_PER_M);
 
   // ---------- Kulisser: villahus, trær og lyktestolper (Røa-stemning) ----------
   const HOUSE_COLORS = ['#f2e6c9', '#d9534f', '#f5f5f0', '#5b7fa6', '#e8c547', '#8fb07a', '#c98f5b'];
@@ -166,7 +180,7 @@
     // Trikken i midtfila
     if (r < 0.2 && free.includes(1) && busy.size === 0 && distance > 1200) {
       things.push(makeObstacle('tram', 1, y));
-      if (Math.random() < 0.5) addPickup(Math.random() < 0.5 ? 0 : 2, y - 60);
+      if (Math.random() < 0.6) addFood(Math.random() < 0.5 ? 0 : 2, y - 60);
       return;
     }
     const kinds = ['car', 'car', 'hole', 'works'];
@@ -174,25 +188,13 @@
     const blocks = hard && shuffled.length === 3 && Math.random() < 0.45 ? 2 : 1;
     for (let i = 0; i < blocks; i++) things.push(makeObstacle(kinds[Math.floor(Math.random() * kinds.length)], shuffled[i], y + (Math.random() - 0.5) * 30));
     const left = shuffled.slice(blocks);
-    if (left.length && Math.random() < 0.45) addPickup(left[Math.floor(Math.random() * left.length)], y - 10);
+    // Mer mat når montøren er sulten
+    if (left.length && Math.random() < (energy < 40 ? 0.7 : 0.45)) addFood(left[Math.floor(Math.random() * left.length)], y - 10);
   }
 
-  function addPickup(lane, y) {
-    // Det verktøyet man mangler kommer litt oftere, så man kan klare et helt sett
-    const missing = TOOLS.filter((t) => !tools.has(t.k));
-    const pool = missing.length && Math.random() < 0.6 ? missing : TOOLS;
-    const tool = pool[Math.floor(Math.random() * pool.length)];
-    things.push({ kind: 'tool', tool, x: laneX(lane), y, w: 34, h: 34, hit: false, lane });
-  }
-
-  function spawnJob() {
-    const y = -80;
-    const busy = busyLanes(y - 200, y + 160);
-    const edge = [0, 2].filter((l) => !busy.has(l));
-    if (!edge.length) return false;
-    const lane = edge[Math.floor(Math.random() * edge.length)];
-    things.push({ kind: 'job', x: laneX(lane), y, w: 50, h: 50, hit: false, lane, text: JOBS[Math.floor(Math.random() * JOBS.length)], side: lane === 0 ? 0 : 1 });
-    return true;
+  function addFood(lane, y) {
+    const food = Math.random() < FOODS[0].weight ? FOODS[0] : FOODS[1];
+    things.push({ kind: 'food', food, x: laneX(lane), y, w: 34, h: 34, hit: false, lane });
   }
 
   function spawnToll() {
@@ -209,24 +211,38 @@
   const keys = { left: false, right: false };
   function toLogical(e) {
     const r = canvas.getBoundingClientRect();
-    return ((e.clientX - r.left) / r.width) * W;
+    return { x: ((e.clientX - r.left) / r.width) * W, y: ((e.clientY - r.top) / r.height) * H };
   }
   canvas.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     startAudio();
+    const p = toLogical(e);
     if (mode === 'ready') start();
     else if (mode === 'dead') {
       if (performance.now() - deadAt > 900) reset();
       return;
+    } else if (mode === 'job') {
+      canvas.setPointerCapture(e.pointerId);
+      ServiceJobs.down(job, p.x, p.y);
+      return;
+    } else if (mode === 'jobdone') {
+      if (performance.now() - doneAt > 700) leaveCustomer();
+      return;
     }
-    drag = { id: e.pointerId, x0: toLogical(e), car0: car.target };
+    drag = { id: e.pointerId, x0: p.x, car0: car.target };
     canvas.setPointerCapture(e.pointerId);
   });
   canvas.addEventListener('pointermove', (e) => {
+    const p = toLogical(e);
+    if (mode === 'job') return ServiceJobs.move(job, p.x, p.y);
     if (!drag || e.pointerId !== drag.id || mode !== 'playing') return;
-    car.target = clampX(drag.car0 + (toLogical(e) - drag.x0) * 1.25);
+    car.target = clampX(drag.car0 + (p.x - drag.x0) * 1.25);
   });
   const endDrag = (e) => {
+    if (mode === 'job') {
+      const p = toLogical(e);
+      ServiceJobs.up(job, p.x, p.y);
+    }
     if (drag && e.pointerId === drag.id) drag = null;
   };
   canvas.addEventListener('pointerup', endDrag);
@@ -237,6 +253,8 @@
     else if (e.key === ' ' || e.key === 'Enter') {
       if (mode === 'ready') start();
       else if (mode === 'dead' && performance.now() - deadAt > 900) reset();
+      else if (mode === 'jobdone' && performance.now() - doneAt > 700) leaveCustomer();
+      else return;
     } else return;
     e.preventDefault();
     startAudio();
@@ -250,8 +268,8 @@
   function start() {
     if (!me) return;
     mode = 'playing';
-    $('hi-msg').textContent = '';
-    $('hi-msg').className = 'result';
+    $('sb-msg').textContent = '';
+    $('sb-msg').className = 'result';
     if (window.sfx) sfx.play('go');
   }
 
@@ -278,18 +296,65 @@
   }
   function engine() {
     if (!audio) return;
-    const on = mode === 'playing' && !(window.sfx && sfx.muted) && document.visibilityState === 'visible';
+    const on = (mode === 'playing' || mode === 'arrive') && !(window.sfx && sfx.muted) && document.visibilityState === 'visible';
     const t = audio.a.currentTime;
-    const base = 48 + (speed - SPEED_START) * 0.09;
+    const base = 40 + Math.max(0, speed - 100) * 0.09;
     audio.o1.frequency.setTargetAtTime(base, t, 0.15);
     audio.o2.frequency.setTargetAtTime(base * 2.01, t, 0.15);
     audio.g.gain.setTargetAtTime(on ? 0.035 : 0, t, on ? 0.2 : 0.08);
   }
 
+  // ---------- Fase 2: fram til kunden og gjør jobben ----------
+  function arrive() {
+    mode = 'arrive';
+    customer = CUSTOMERS[Math.floor(Math.random() * CUSTOMERS.length)];
+    const stop = { kind: 'stop', x: laneX(2), y: -60, w: 0, h: 0, hit: false, lane: 2, customer, color: HOUSE_COLORS[Math.floor(Math.random() * HOUSE_COLORS.length)] };
+    // Rydd veien foran bilen, så man ikke krasjer på vei inn til kunden
+    things = things.filter((t) => t.y > CAR_Y + 40);
+    things.push(stop);
+    resumeSpeed = speed;
+    // Jevn oppbremsing slik at bilen står stille akkurat på parkeringsplassen
+    brake = { stop, a: (speed * speed) / (2 * (CAR_Y - stop.y)) };
+    car.target = laneX(2);
+    floaters.push({ x: W / 2, y: 200, text: `🏠 Framme hos ${customer.name}!`, color: '#7dffb0', life: 1.6, big: true });
+    if (window.sfx) sfx.play('notify');
+  }
+
+  function startJob() {
+    level++;
+    job = ServiceJobs.create(level);
+    mode = 'job';
+    if (window.sfx) sfx.play('door');
+  }
+
+  function finishJob() {
+    jobResult = ServiceJobs.rating(job);
+    if (job.state === 'won') {
+      jobsDone++;
+      bonus += jobResult.points;
+    } else complaints++;
+    mode = 'jobdone';
+    doneAt = performance.now();
+    if (job.state !== 'won' && window.sfx) sfx.play('sad');
+  }
+
+  function leaveCustomer() {
+    if (complaints >= MAX_COMPLAINTS) return endDay('complaints');
+    things = things.filter((t) => t.kind !== 'stop');
+    job = null;
+    mode = 'playing';
+    speed = Math.max(SPEED_START, resumeSpeed * 0.85);
+    nextStopAt = distance + STOP_EVERY_M * PX_PER_M;
+    nextRowAt = distance + speed * 0.9;
+    nextTollAt = Math.max(nextTollAt, distance + 2500);
+    car.target = laneX(1);
+    if (window.sfx) sfx.play('go');
+  }
+
   // ---------- Spill-løkka ----------
   function update(dt) {
-    // Kulissene ruller alltid (også på startskjermen)
-    const v = mode === 'playing' ? speed : mode === 'ready' ? 120 : 0;
+    // Kulissene ruller når bilen kjører
+    const v = mode === 'playing' || mode === 'arrive' ? speed : mode === 'ready' ? 120 : 0;
     dash = (dash + v * dt) % 60;
     scenery.forEach((s) => (s.y += v * dt));
     scenery = scenery.filter((s) => s.y < H + 120);
@@ -300,14 +365,37 @@
     sparks.forEach((p) => { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 300 * dt; p.life -= dt; });
     sparks = sparks.filter((p) => p.life > 0);
     shake = Math.max(0, shake - dt * 30);
+
+    if (mode === 'job') {
+      ServiceJobs.update(job, dt);
+      if (job.state !== 'play') finishJob();
+      return;
+    }
+    if (mode === 'arrive') {
+      speed = Math.max(0, speed - brake.a * dt);
+      distance += speed * dt;
+      things.forEach((t) => (t.y += speed * dt));
+      car.x += (car.target - car.x) * Math.min(1, dt * 5);
+      if (speed < 8 || brake.stop.y >= CAR_Y) {
+        speed = 0;
+        brake.stop.y = CAR_Y;
+        car.x = car.target;
+        startJob();
+      }
+      return;
+    }
     if (mode !== 'playing') return;
 
-    elapsed += dt;
     speed = Math.min(SPEED_MAX, speed + SPEED_GAIN * dt);
-    const before = Math.floor(distance / PX_PER_POINT);
     distance += speed * dt;
-    // Fagbrev-bonus: dobbelt opp på avstanden også
-    if (fagbrev()) bonus += Math.floor(distance / PX_PER_POINT) - before;
+    energy = Math.max(0, energy - ENERGY_DRAIN * dt);
+    if (energy < 25 && !hungryWarned) {
+      hungryWarned = true;
+      floaters.push({ x: W / 2, y: CAR_Y - 140, text: '😵 Sulten! Finn en 🌭', color: '#ff9b6b', life: 1.6, big: true });
+      if (window.sfx) sfx.play('buzzer');
+    }
+    if (energy >= 35) hungryWarned = false;
+    if (energy <= 0) return endDay('energy');
 
     // Styring: piltaster flytter målet, bilen glir mykt etter
     if (keys.left) car.target = clampX(car.target - 340 * dt);
@@ -316,14 +404,16 @@
     car.x += (car.target - car.x) * Math.min(1, dt * 12);
     car.tilt = Math.max(-0.18, Math.min(0.18, ((car.x - prev) / Math.max(dt, 0.001)) * 0.0009));
 
+    // Kunden hver 1000 m
+    if (distance >= nextStopAt) return arrive();
+
     // Nye rader: tettere jo fortere det går (men aldri raskere enn man rekker å reagere)
-    if (distance >= nextRowAt) {
+    if (distance >= nextRowAt && distance < nextStopAt - 900) {
       spawnRow();
       const t = Math.max(0.62, 1.15 - (speed - SPEED_START) / 900);
       nextRowAt = distance + speed * t;
     }
-    if (distance >= nextJobAt && spawnJob()) nextJobAt = distance + 2400 + Math.random() * 1600;
-    if (distance >= nextTollAt && spawnToll()) {
+    if (distance >= nextTollAt && distance < nextStopAt - 1500 && spawnToll()) {
       nextTollAt = distance + 6500 + Math.random() * 3000;
       nextRowAt = Math.max(nextRowAt, distance + 260);
     }
@@ -335,73 +425,58 @@
     things = things.filter((t) => t.y - (t.h || 0) / 2 < H + 60 && !t.gone);
 
     // Kollisjon (litt snill: boksen er mindre enn bilen)
-    const cx = car.x;
-    const cy = CAR_Y;
     const hw = CAR_W / 2 - 4;
     const hh = CAR_H / 2 - 6;
     for (const t of things) {
-      const over = Math.abs(t.x - cx) < hw + t.w / 2 - 2 && Math.abs(t.y - cy) < hh + t.h / 2 - 2;
+      const over = Math.abs(t.x - car.x) < hw + t.w / 2 - 2 && Math.abs(t.y - CAR_Y) < hh + t.h / 2 - 2;
       if (!over || t.gone) continue;
       if (t.hit) return crash(t);
-      if (t.kind === 'tool') pickTool(t);
-      else if (t.kind === 'job') deliver(t);
+      if (t.kind === 'food') eat(t);
     }
   }
 
-  function pickTool(t) {
+  function eat(t) {
     t.gone = true;
-    const pts = TOOL_POINTS * (fagbrev() ? 2 : 1);
-    bonus += pts;
-    tools.add(t.tool.k);
-    floaters.push({ x: t.x, y: t.y, text: `+${pts} ${t.tool.icon}`, color: '#ffe27a', life: 0.9 });
+    energy = Math.min(100, energy + t.food.energy);
+    bonus += FOOD_POINTS;
+    floaters.push({ x: t.x, y: t.y, text: `+${t.food.energy} ⚡ ${t.food.icon}`, color: '#ffe27a', life: 0.9 });
     if (window.sfx) sfx.play('coin');
-    // Helt sett: Fagbrev-bonus, dobbelt opp en stund
-    if (tools.size === TOOLS.length) {
-      tools = new Set();
-      fagbrevUntil = performance.now() + FAGBREV_MS;
-      floaters.push({ x: W / 2, y: CAR_Y - 140, text: '🎓 FAGBREV-BONUS ×2', color: '#7dffb0', life: 1.8, big: true });
-      if (window.sfx) sfx.play('win');
-    }
   }
 
-  function deliver(t) {
-    t.gone = true;
-    jobs++;
-    const pts = JOB_POINTS * (fagbrev() ? 2 : 1);
-    bonus += pts;
-    floaters.push({ x: W / 2, y: CAR_Y - 110, text: `✔ ${t.text}  +${pts}`, color: '#7dffb0', life: 1.8, job: true });
-    if (window.sfx) sfx.play('like');
-    if (navigator.vibrate) navigator.vibrate(30);
-  }
-
-  const CRASH_TEXT = {
+  const END_TEXT = {
     car: 'Du kjørte inn i en bil! 💥', hole: 'Rett i et hull i veien! 🕳️', works: 'Rett i veiarbeidet! 🚧',
     tram: 'Trikken vinner alltid … 🚋', bar: 'Bommen var nede! 🚧', guard: 'Du kjørte nesten ned P-vakta! 👮',
+    energy: 'Tom for energi! Montøren må hjem og spise 🌭', complaints: '📞 Sjefen ringer: tre klager, du er ferdig for i dag!',
   };
 
-  async function crash(t) {
-    mode = 'dead';
-    deadAt = performance.now();
+  function crash(t) {
     shake = 14;
     for (let i = 0; i < 22; i++) sparks.push({ x: car.x, y: CAR_Y - CAR_H / 2, vx: (Math.random() - 0.5) * 340, vy: -Math.random() * 300, life: 0.6 + Math.random() * 0.5, c: Math.random() < 0.5 ? '#ffd34d' : '#ff7a3d' });
     if (window.sfx) sfx.play('clash');
     if (navigator.vibrate) navigator.vibrate([80, 40, 140]);
+    endDay(t.kind);
+  }
+
+  async function endDay(reason) {
+    mode = 'dead';
+    deadAt = performance.now();
+    if ((reason === 'energy' || reason === 'complaints') && window.sfx) sfx.play('sad'); // krasj har egen lyd
     const finalScore = score();
-    result = { reason: CRASH_TEXT[t.kind] || 'Krasj!', score: finalScore, jobs };
+    result = { reason: END_TEXT[reason] || 'Ferdig for i dag!', score: finalScore, jobs: jobsDone, meters: meters() };
     if (!gameId) {
       result.error = 'Fikk ikke kontakt med serveren, poengene ble ikke lagret.';
       return;
     }
     try {
-      const r = await api('/api/hiace/end', { gameId, score: finalScore, jobs });
+      const r = await api('/api/hiace/end', { gameId, score: finalScore, jobs: jobsDone });
       Object.assign(result, r);
       me = r.me;
       info = { ...info, best: r.best, next: r.next, leaderboard: r.leaderboard };
       renderInfo();
       if (r.earnedSpins) {
-        $('hi-msg').textContent = `🎉 Du tjente ${r.earnedSpins} nye spinn! Bruk dem på lykkehjulet.`;
-        $('hi-msg').className = 'result win';
-        if (window.celebrate) celebrate({ tier: 'win', icon: '🚐', title: `+${r.earnedSpins} SPINN!`, sub: `${finalScore} poeng i Mujaffas Hiace` });
+        $('sb-msg').textContent = `🎉 Du tjente ${r.earnedSpins} nye spinn! Bruk dem på lykkehjulet.`;
+        $('sb-msg').className = 'result win';
+        if (window.celebrate) celebrate({ tier: 'win', icon: '🚐', title: `+${r.earnedSpins} SPINN!`, sub: `${finalScore} poeng i Branæs Servicebil` });
       } else if (r.isRecord && window.sfx) sfx.play('win');
     } catch (err) {
       result.error = err.message;
@@ -418,6 +493,8 @@
     ctx.arcTo(x, y, x + w, y, r);
     ctx.closePath();
   }
+
+  const rr0 = (x, y, w, h, r) => roundRect(x, y, w, h, r);
 
   function drawRoad() {
     // Gress og fortau
@@ -617,40 +694,51 @@
       ctx.fillStyle = '#ffd34d';
       ctx.font = 'bold 9px system-ui';
       ctx.fillText('P-VAKT', 0, -20);
-    } else if (t.kind === 'tool') {
+    } else if (t.kind === 'food') {
+      // Pølse eller vaffel som svever litt
       const p = 1 + Math.sin(performance.now() / 180 + t.x) * 0.08;
       ctx.scale(p, p);
-      ctx.fillStyle = 'rgba(255, 226, 122, 0.25)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
       ctx.beginPath();
       ctx.arc(0, 0, 19, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#ffe27a';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = t.food.ring;
+      ctx.lineWidth = 3;
       ctx.stroke();
-      ctx.font = '20px system-ui';
+      ctx.font = '22px system-ui';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(t.tool.icon, 0, 1);
-    } else if (t.kind === 'job') {
-      // Kunden: hus-nål med jobben
-      const pulse = (Math.sin(performance.now() / 200) + 1) / 2;
-      ctx.fillStyle = `rgba(46, 204, 113, ${0.25 + pulse * 0.2})`;
-      ctx.beginPath();
-      ctx.arc(0, 0, 24 + pulse * 4, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillText(t.food.icon, 0, 1);
+    } else if (t.kind === 'stop') {
+      // Kundens hus: parkeringsplass i høyre fil og et skilt med navnet
       ctx.strokeStyle = '#2ecc71';
       ctx.lineWidth = 3;
-      ctx.setLineDash([6, 5]);
+      ctx.setLineDash([8, 6]);
+      rr0(-34, -56, 68, 112, 8);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.font = '24px system-ui';
+      ctx.fillStyle = 'rgba(46, 204, 113, 0.18)';
+      ctx.fill();
+      ctx.fillStyle = '#2ecc71';
+      ctx.font = '900 13px system-ui';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('🏠', 0, 0);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 9px system-ui';
-      ctx.fillText('KUNDE', 0, 30);
-    }
+      ctx.fillText('P', 0, -40);
+      // Huset ved siden av veien
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.fillRect(56, -36, 60, 76);
+      ctx.fillStyle = t.color;
+      ctx.fillRect(52, -40, 60, 76);
+      ctx.fillStyle = '#7a2e1f';
+      ctx.fillRect(48, -44, 34, 84);
+      ctx.fillStyle = '#9a3e2a';
+      ctx.fillRect(82, -44, 34, 84);
+      ctx.fillStyle = '#14204a';
+      rr0(-60, -96, 150, 30, 8);
+      ctx.fill();
+      ctx.fillStyle = '#ffd56b';
+      ctx.font = '800 12px system-ui';
+      ctx.fillText(`🏠 ${t.customer.name}`, 15, -81);    }
     ctx.restore();
   }
 
@@ -826,42 +914,48 @@
   }
 
   function drawHud() {
-    ctx.fillStyle = 'rgba(10, 12, 20, 0.72)';
-    roundRect(8, 8, W - 16, 44, 12);
+    ctx.fillStyle = 'rgba(10, 12, 20, 0.74)';
+    roundRect(8, 8, W - 16, 56, 12);
     ctx.fill();
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#fff';
     ctx.font = '900 20px system-ui';
-    ctx.fillText(`${score()}`, 20, 30);
+    ctx.fillText(`${score()}`, 20, 28);
     ctx.font = '700 10px system-ui';
     ctx.fillStyle = '#a9b3c9';
     ctx.fillText('POENG', 20, 46);
+    // Neste kunde
     ctx.textAlign = 'center';
+    const toGo = Math.max(0, Math.ceil((nextStopAt - distance) / PX_PER_M));
     ctx.fillStyle = '#7dffb0';
-    ctx.font = '900 16px system-ui';
-    ctx.fillText(`🏠 ${jobs}`, 128, 30);
-    ctx.fillStyle = '#ffe27a';
-    ctx.fillText(`${Math.round(speed / 7)} km/t`, 196, 30);
-    // Verktøysettet: lyser opp når du har plukket det
-    TOOLS.forEach((t, i) => {
-      const x = 268 + i * 30;
-      ctx.globalAlpha = tools.has(t.k) ? 1 : 0.28;
-      ctx.font = '18px system-ui';
-      ctx.fillText(t.icon, x, 30);
-    });
-    ctx.globalAlpha = 1;
-    if (fagbrev()) {
-      const left = (fagbrevUntil - performance.now()) / FAGBREV_MS;
-      ctx.fillStyle = 'rgba(46, 204, 113, 0.9)';
-      roundRect(W / 2 - 90, 58, 180, 22, 11);
-      ctx.fill();
-      ctx.fillStyle = '#062b16';
-      ctx.font = '900 11px system-ui';
-      ctx.fillText('🎓 FAGBREV-BONUS ×2', W / 2, 69);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-      ctx.fillRect(W / 2 - 80, 77, 160 * left, 2);
+    ctx.font = '900 15px system-ui';
+    ctx.fillText(mode === 'playing' ? `🏠 ${toGo} m` : '🏠 Framme', 140, 28);
+    ctx.fillStyle = '#a9b3c9';
+    ctx.font = '700 10px system-ui';
+    ctx.fillText(`${meters()} m kjørt · ${jobsDone} jobb${jobsDone === 1 ? '' : 'er'}`, 140, 46);
+    // Klager
+    ctx.font = '14px system-ui';
+    for (let i = 0; i < MAX_COMPLAINTS; i++) {
+      ctx.globalAlpha = i < complaints ? 1 : 0.25;
+      ctx.fillText(i < complaints ? '😡' : '🙂', 226 + i * 20, 28);
     }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#a9b3c9';
+    ctx.font = '700 10px system-ui';
+    ctx.fillText('KLAGER', 246, 46);
+    // Energi
+    const low = energy < 25;
+    const blink = low && Math.floor(performance.now() / 250) % 2 === 0;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+    roundRect(292, 20, 92, 14, 7);
+    ctx.fill();
+    ctx.fillStyle = blink ? '#ff3b3b' : energy > 50 ? '#3ccf7a' : energy > 25 ? '#ffd34d' : '#ff5a5a';
+    roundRect(292, 20, Math.max(8, 92 * (energy / 100)), 14, 7);
+    ctx.fill();
+    ctx.fillStyle = '#a9b3c9';
+    ctx.font = '700 10px system-ui';
+    ctx.fillText('🌭 ENERGI', 338, 46);
   }
 
   function drawFloaters() {
@@ -869,28 +963,18 @@
       ctx.globalAlpha = Math.min(1, f.life * 2);
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      if (f.job) {
-        ctx.font = '800 13px system-ui';
-        const w = ctx.measureText(f.text).width + 24;
-        ctx.fillStyle = 'rgba(6, 43, 22, 0.88)';
-        roundRect(W / 2 - w / 2, f.y - 15, w, 30, 15);
-        ctx.fill();
-        ctx.fillStyle = f.color;
-        ctx.fillText(f.text, W / 2, f.y);
-      } else {
-        ctx.font = f.big ? '900 22px system-ui' : '900 16px system-ui';
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.strokeText(f.text, f.x, f.y);
-        ctx.fillStyle = f.color;
-        ctx.fillText(f.text, f.x, f.y);
-      }
+      ctx.font = f.big ? '900 22px system-ui' : '900 16px system-ui';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.strokeText(f.text, f.x, f.y);
+      ctx.fillStyle = f.color;
+      ctx.fillText(f.text, f.x, f.y);
     });
     ctx.globalAlpha = 1;
   }
 
   function panel(y, h) {
-    ctx.fillStyle = 'rgba(8, 10, 18, 0.86)';
+    ctx.fillStyle = 'rgba(8, 10, 18, 0.88)';
     roundRect(24, y, W - 48, h, 18);
     ctx.fill();
     ctx.strokeStyle = 'rgba(255, 176, 0, 0.6)';
@@ -899,44 +983,68 @@
   }
 
   function drawStart() {
-    panel(120, 380);
-    drawSideVan(W / 2 - 112 * 1.15, 168, 1.15);
+    panel(110, 420);
+    drawSideVan(W / 2 - 112 * 1.15, 158, 1.15);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffb000';
-    ctx.font = '900 30px system-ui';
-    ctx.fillText('MUJAFFAS HIACE', W / 2, 322);
+    ctx.font = '900 28px system-ui';
+    ctx.fillText('BRANÆS SERVICEBIL', W / 2, 312);
     ctx.fillStyle = '#e6e9f2';
     ctx.font = '700 14px system-ui';
-    ctx.fillText('Kjør til kundene. Unngå trafikken.', W / 2, 352);
+    ctx.fillText('Kjør ut til kundene og gjør jobben.', W / 2, 340);
     ctx.font = '600 13px system-ui';
     ctx.fillStyle = '#a9b3c9';
-    ctx.fillText('👆 Dra fingeren for å styre (eller ← →)', W / 2, 384);
-    ctx.fillText('🔌 ⚡ 🔧 💡  Helt sett = Fagbrev-bonus ×2', W / 2, 408);
-    ctx.fillText('🏠 Kunde = +60 poeng', W / 2, 432);
+    ctx.fillText('👆 Dra fingeren for å styre (eller ← →)', W / 2, 372);
+    ctx.fillText('🌭 🧇 Spis underveis, ellers går energien tom', W / 2, 396);
+    ctx.fillText('🏠 Hver 1000 m: en jobb hos kunden', W / 2, 420);
+    ctx.fillText('😡 Tre klager, og sjefen ringer', W / 2, 444);
     const p = (Math.sin(performance.now() / 300) + 1) / 2;
     ctx.fillStyle = `rgba(255, 176, 0, ${0.7 + p * 0.3})`;
     ctx.font = '900 18px system-ui';
-    ctx.fillText(me ? 'TRYKK FOR Å STARTE' : 'Logg inn for å spille', W / 2, 474);
+    ctx.fillText(me ? 'TRYKK FOR Å STARTE' : 'Logg inn for å spille', W / 2, 496);
+  }
+
+  function drawJobDone() {
+    const won = job.state === 'won';
+    panel(210, 290);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '900 26px system-ui';
+    ctx.fillStyle = won ? '#7dffb0' : '#ff8a8a';
+    ctx.fillText(won ? '✔ JOBB UTFØRT!' : '😡 KUNDEN KLAGER', W / 2, 250);
+    ctx.font = '30px system-ui';
+    ctx.fillText(won ? '⭐'.repeat(jobResult.stars) + '☆'.repeat(3 - jobResult.stars) : '☆☆☆', W / 2, 296);
+    ctx.fillStyle = '#e6e9f2';
+    ctx.font = '700 14px system-ui';
+    ctx.fillText(won ? `${customer.name} er fornøyd${job.mistakes ? ` (${job.mistakes} feil underveis)` : ''}` : 'Tiden gikk ut før jobben var ferdig.', W / 2, 338);
+    ctx.fillStyle = won ? '#ffe27a' : '#ff9b9b';
+    ctx.font = '900 30px system-ui';
+    ctx.fillText(won ? `+${jobResult.points}` : `${complaints} av ${MAX_COMPLAINTS} klager`, W / 2, 384);
+    if (performance.now() - doneAt > 700) {
+      ctx.fillStyle = '#ffb000';
+      ctx.font = '900 16px system-ui';
+      ctx.fillText(complaints >= MAX_COMPLAINTS ? 'TRYKK FOR Å SE RESULTATET' : 'TRYKK FOR Å KJØRE VIDERE 🚐', W / 2, 460);
+    }
   }
 
   function drawDead() {
     if (performance.now() - deadAt < 500) return;
-    panel(170, 330);
+    panel(160, 360);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ff7a7a';
     ctx.font = '900 24px system-ui';
-    ctx.fillText('KRASJ!', W / 2, 206);
+    ctx.fillText('FERDIG FOR I DAG', W / 2, 196);
     ctx.fillStyle = '#e6e9f2';
-    ctx.font = '700 14px system-ui';
-    ctx.fillText(result.reason, W / 2, 236);
+    ctx.font = '700 13px system-ui';
+    ctx.fillText(result.reason, W / 2, 226);
     ctx.fillStyle = '#fff';
     ctx.font = '900 48px system-ui';
-    ctx.fillText(result.score, W / 2, 296);
+    ctx.fillText(result.score, W / 2, 284);
     ctx.font = '700 12px system-ui';
     ctx.fillStyle = '#a9b3c9';
-    ctx.fillText(`POENG · 🏠 ${result.jobs} jobb${result.jobs === 1 ? '' : 'er'} utført`, W / 2, 332);
+    ctx.fillText(`POENG · ${result.meters} m · 🏠 ${result.jobs} jobb${result.jobs === 1 ? '' : 'er'} utført`, W / 2, 322);
     let line = '';
     let color = '#ffe27a';
     if (result.error) {
@@ -947,20 +1055,25 @@
     else if (result.best !== undefined) line = `Rekorden din: ${result.best}`;
     ctx.fillStyle = color;
     ctx.font = '800 15px system-ui';
-    ctx.fillText(line, W / 2, 372);
+    ctx.fillText(line, W / 2, 364);
     if (result.next && !result.error) {
       ctx.fillStyle = '#a9b3c9';
       ctx.font = '600 12px system-ui';
-      ctx.fillText(`Neste belønning: ${result.next.score} poeng = ${result.next.spins} spinn`, W / 2, 398);
+      ctx.fillText(`Neste belønning: ${result.next.score} poeng = ${result.next.spins} spinn`, W / 2, 390);
     }
     if (performance.now() - deadAt > 900) {
       ctx.fillStyle = '#ffb000';
       ctx.font = '900 17px system-ui';
-      ctx.fillText('TRYKK FOR Å KJØRE IGJEN', W / 2, 460);
+      ctx.fillText('TRYKK FOR EN NY ARBEIDSDAG', W / 2, 470);
     }
   }
 
   function draw() {
+    if (mode === 'job' || mode === 'jobdone') {
+      ServiceJobs.draw(ctx, job, customer);
+      if (mode === 'jobdone') drawJobDone();
+      return;
+    }
     ctx.save();
     if (shake) ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
     drawRoad();
@@ -974,7 +1087,7 @@
     });
     ctx.globalAlpha = 1;
     ctx.restore();
-    if (mode === 'playing' || mode === 'dead') drawHud();
+    if (mode !== 'ready') drawHud();
     drawFloaters();
     if (mode === 'ready') drawStart();
     if (mode === 'dead') drawDead();
@@ -993,9 +1106,9 @@
   // ---------- Info under spillet ----------
   function renderInfo() {
     if (!info) return;
-    $('hi-best').textContent = info.best;
-    $('hi-next').textContent = `${info.next.score} poeng = ${info.next.spins} spinn`;
-    const ol = $('hi-board');
+    $('sb-best').textContent = info.best;
+    $('sb-next').textContent = `${info.next.score} poeng = ${info.next.spins} spinn`;
+    const ol = $('sb-board');
     ol.innerHTML = '';
     if (!info.leaderboard.length) ol.innerHTML = '<li class="muted">Ingen har kjørt ennå. Bli den første!</li>';
     info.leaderboard.forEach((e, i) => {
@@ -1007,7 +1120,7 @@
       ol.appendChild(li);
     });
     const f = info.first;
-    $('hi-rewards').innerHTML = [1, 2, 3, 4, 5].map((k) => `<li><b>${f * 2 ** (k - 1)} poeng</b> → ${k} spinn</li>`).join('');
+    $('sb-rewards').innerHTML = [1, 2, 3, 4, 5].map((k) => `<li><b>${f * 2 ** (k - 1)} poeng</b> → ${k} spinn</li>`).join('');
   }
 
   async function load() {
@@ -1022,5 +1135,6 @@
   reset();
   load();
   requestAnimationFrame(frame);
-  window.__hiace = { get mode() { return mode; }, get score() { return score(); }, get things() { return things; }, car: () => car };
+  // Til testene
+  window.__servicebil = { get mode() { return mode; }, get score() { return score(); }, get things() { return things; }, get job() { return job; }, car: () => car, set energy(v) { energy = v; }, jump: (m) => { distance = Math.max(distance, nextStopAt - m * PX_PER_M); } };
 })();

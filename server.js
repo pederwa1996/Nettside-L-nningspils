@@ -33,8 +33,9 @@ const WHEEL_CASH = [
 // Flappy-spillet: første milepæl og hvor ofte et rør dukker opp (brukes til juksesjekk)
 const GAME_FIRST_MILESTONE = Number(process.env.GAME_FIRST_MILESTONE) || 50;
 const GAME_PIPE_INTERVAL_MS = 1500;
-// 🚐 Mujaffas Hiace: første milepæl (500, 1000, 2000 ... poeng gir 1, 2, 3 ... spinn) og maks poeng per sekund (juksesjekk)
-const HIACE_FIRST_MILESTONE = Number(process.env.HIACE_FIRST_MILESTONE) || 500;
+// 🚐 Branæs Servicebil (API-et heter fortsatt /api/hiace): første milepæl (1000, 2000, 4000 ... poeng gir 1, 2, 3 ... spinn)
+// og maks poeng per sekund (juksesjekk)
+const HIACE_FIRST_MILESTONE = Number(process.env.HIACE_FIRST_MILESTONE) || 1000;
 const HIACE_MAX_PER_SEC = 90;
 // Sett TRUST_PROXY=true når appen kjører bak en proxy (Render, Railway, Fly, nginx osv.)
 const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
@@ -1629,7 +1630,7 @@ const routes = {
     sendJson(res, 200, { score, isRecord, earnedSpins: earned, me: meView(p), leaderboard: leaderboard() });
   },
 
-  // ---------- 🚐 Mujaffas Hiace: kjør servicebilen til kundene ----------
+  // ---------- 🚐 Branæs Servicebil: kjør ut til kundene og gjør jobben ----------
   'GET /api/hiace': (req, res) => {
     const p = currentParticipant(req);
     const avatars = {};
@@ -1675,7 +1676,7 @@ const routes = {
     p.hiaceMilestones = Math.max(p.hiaceMilestones || 0, reached);
     if (earned) addSpins(p, earned);
     if (isRecord && score >= 100) {
-      addActivity(p.name, '🚐', `satte ny rekord i Mujaffas Hiace: ${score} poeng og ${jobs} jobb${jobs === 1 ? '' : 'er'}${earned ? ` (+${earned} spinn)` : ''}`);
+      addActivity(p.name, '🚐', `satte ny rekord i Branæs Servicebil: ${score} poeng og ${jobs} jobb${jobs === 1 ? '' : 'er'} utført${earned ? ` (+${earned} spinn)` : ''}`);
     }
     if (isRecord || earned) saveState();
     const k = p.hiaceMilestones || 0;

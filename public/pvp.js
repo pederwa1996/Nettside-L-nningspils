@@ -1,7 +1,7 @@
 'use strict';
 
 // PvP-arenaen: alle spillene på én side, med en rad knapper øverst (som i kasinoet).
-// 🎲 Terning · ⚡ Reaksjon · 🧠 Hoderegning (arena.js) · ✊ Duell (duell.js) · 🗿 Mogg-off (mogg.js) · 🕊️ Flappy · 🚐 Hiace (hiace.html)
+// 🎲 Terning · ⚡ Reaksjon · 🧠 Hoderegning (arena.js) · ✊ Duell (duell.js) · 🗿 Mogg-off (mogg.js) · 🕊️ Flappy · 🚐 Branæs Servicebil (servicebil.html)
 (function () {
   const $ = (id) => document.getElementById(id);
   const TABS = {
@@ -11,9 +11,10 @@
     duel: { hash: 'duell', panel: 'pv-duel', room: 'duell' },
     mogg: { hash: 'mogg', panel: 'pv-mogg', room: 'mogg' },
     flappy: { hash: 'flappy', panel: 'pv-flappy', room: 'pvp' },
-    hiace: { hash: 'hiace', panel: 'pv-hiace', room: 'pvp' },
+    servicebil: { hash: 'servicebil', panel: 'pv-hiace', room: 'pvp' },
   };
   let me = null;
+  if (location.hash === '#hiace') history.replaceState(null, '', '#servicebil'); // gammelt navn
   let tab = Object.keys(TABS).find((k) => `#${TABS[k].hash}` === location.hash) || 'dice';
 
   function showTab(name, { sound = false } = {}) {
@@ -85,9 +86,9 @@
     const first = d.settings.gameFirstMilestone;
     $('game-rule').textContent = `Fly mellom rørene. ${first} poeng = 1 spinn, ${first * 2} = 2, ${first * 4} = 3 …`;
     renderLeaderboard(d.leaderboard, d.avatars);
-    // 🚐 Mujaffas Hiace har sin egen toppliste
+    // 🚐 Branæs Servicebil har sin egen toppliste
     fetch('/api/hiace').then((r) => r.json()).then((h) => {
-      $('hiace-rule').textContent = `Kjør Røa Elektriske-bilen til kundene og unngå trafikken. ${h.first} poeng = 1 spinn, ${h.first * 2} = 2, ${h.first * 4} = 3 …`;
+      $('hiace-rule').textContent = `Kjør ut til kundene, gjør jobben og spis pølser underveis. ${h.first} poeng = 1 spinn, ${h.first * 2} = 2, ${h.first * 4} = 3 …`;
       renderLeaderboard(h.leaderboard, h.avatars, 'hiace-board');
     }).catch(() => {});
   }
