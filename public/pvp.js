@@ -1,7 +1,7 @@
 'use strict';
 
 // PvP-arenaen: alle spillene på én side, med en rad knapper øverst (som i kasinoet).
-// 🎲 Terning · ⚡ Reaksjon · 🧠 Hoderegning (arena.js) · ✊ Duell (duell.js) · 🗿 Mogg-off (mogg.js) · 🕊️ Flappy
+// 🎲 Terning · ⚡ Reaksjon · 🧠 Hoderegning (arena.js) · ✊ Duell (duell.js) · 🗿 Mogg-off (mogg.js) · 🕊️ Flappy · 🚐 Hiace (hiace.html)
 (function () {
   const $ = (id) => document.getElementById(id);
   const TABS = {
@@ -11,6 +11,7 @@
     duel: { hash: 'duell', panel: 'pv-duel', room: 'duell' },
     mogg: { hash: 'mogg', panel: 'pv-mogg', room: 'mogg' },
     flappy: { hash: 'flappy', panel: 'pv-flappy', room: 'pvp' },
+    hiace: { hash: 'hiace', panel: 'pv-hiace', room: 'pvp' },
   };
   let me = null;
   let tab = Object.keys(TABS).find((k) => `#${TABS[k].hash}` === location.hash) || 'dice';
@@ -21,7 +22,7 @@
     document.body.dataset.tab = name;
     document.body.dataset.room = t.room;
     document.querySelectorAll('.pvp-games .pg').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
-    ['pv-arena', 'pv-duel', 'pv-mogg', 'pv-flappy'].forEach((p) => $(p).classList.toggle('hidden', p !== t.panel));
+    ['pv-arena', 'pv-duel', 'pv-mogg', 'pv-flappy', 'pv-hiace'].forEach((p) => $(p).classList.toggle('hidden', p !== t.panel));
     if (t.panel === 'pv-arena' && window.arenaSetGame) window.arenaSetGame(name);
     history.replaceState(null, '', `${location.pathname}${location.search}#${t.hash}`);
     if (window.updatePresenceRoom) window.updatePresenceRoom();
@@ -44,8 +45,8 @@
     ['dice', 'reaction', 'math'].forEach((g) => setBadge(g, d.incoming.filter((a) => a.game === g).length));
   };
 
-  function renderLeaderboard(list, avatars) {
-    const ol = $('leaderboard');
+  function renderLeaderboard(list, avatars, id = 'leaderboard') {
+    const ol = $(id);
     ol.innerHTML = '';
     if (!list.length) {
       ol.innerHTML = '<li class="muted">Ingen har spilt ennå.</li>';
@@ -84,6 +85,11 @@
     const first = d.settings.gameFirstMilestone;
     $('game-rule').textContent = `Fly mellom rørene. ${first} poeng = 1 spinn, ${first * 2} = 2, ${first * 4} = 3 …`;
     renderLeaderboard(d.leaderboard, d.avatars);
+    // 🚐 Mujaffas Hiace har sin egen toppliste
+    fetch('/api/hiace').then((r) => r.json()).then((h) => {
+      $('hiace-rule').textContent = `Kjør Røa Elektriske-bilen til kundene og unngå trafikken. ${h.first} poeng = 1 spinn, ${h.first * 2} = 2, ${h.first * 4} = 3 …`;
+      renderLeaderboard(h.leaderboard, h.avatars, 'hiace-board');
+    }).catch(() => {});
   }
 
   // Hvor mange som er i hvert spill nå (arenaen telles samlet på de tre arena-knappene)

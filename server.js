@@ -33,6 +33,9 @@ const WHEEL_CASH = [
 // Flappy-spillet: første milepæl og hvor ofte et rør dukker opp (brukes til juksesjekk)
 const GAME_FIRST_MILESTONE = Number(process.env.GAME_FIRST_MILESTONE) || 50;
 const GAME_PIPE_INTERVAL_MS = 1500;
+// 🚐 Mujaffas Hiace: første milepæl (500, 1000, 2000 ... poeng gir 1, 2, 3 ... spinn) og maks poeng per sekund (juksesjekk)
+const HIACE_FIRST_MILESTONE = Number(process.env.HIACE_FIRST_MILESTONE) || 500;
+const HIACE_MAX_PER_SEC = 90;
 // Sett TRUST_PROXY=true når appen kjører bak en proxy (Render, Railway, Fly, nginx osv.)
 const TRUST_PROXY = process.env.TRUST_PROXY === 'true';
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
@@ -345,9 +348,9 @@ function milestoneScore(k) {
   return GAME_FIRST_MILESTONE * 2 ** (k - 1);
 }
 
-function milestonesFor(score) {
+function milestonesFor(score, first = GAME_FIRST_MILESTONE) {
   let k = 0;
-  while (score >= milestoneScore(k + 1)) k++;
+  while (score >= first * 2 ** k) k++;
   return k;
 }
 
@@ -1091,6 +1094,13 @@ function standings() {
     .sort((a, b) => b.beers - a.beers || b.spinsLeft - a.spinsLeft || a.name.localeCompare(b.name, 'no'));
 }
 
+function hiaceBoard() {
+  return state.participants
+    .filter((p) => p.bestHiace > 0)
+    .map((p) => ({ name: p.name, score: p.bestHiace }))
+    .sort((a, b) => b.score - a.score);
+}
+
 function leaderboard() {
   return state.participants
     .filter((p) => p.bestScore > 0)
@@ -1617,6 +1627,59 @@ const routes = {
     if (isRecord || earned) saveState();
 
     sendJson(res, 200, { score, isRecord, earnedSpins: earned, me: meView(p), leaderboard: leaderboard() });
+  },
+
+  // ---------- 🚐 Mujaffas Hiace: kjør servicebilen til kundene ----------
+  'GET /api/hiace': (req, res) => {
+    const p = currentParticipant(req);
+    const avatars = {};
+    state.participants.forEach((x) => (avatars[x.name] = x.avatar || null));
+    const k = p ? p.hiaceMilestones || 0 : 0;
+    sendJson(res, 200, {
+      best: p ? p.bestHiace || 0 : 0,
+      next: { score: HIACE_FIRST_MILESTONE * 2 ** k, spins: k + 1 },
+      first: HIACE_FIRST_MILESTONE,
+      leaderboard: hiaceBoard().slice(0, 10),
+      avatars,
+      me: meView(p),
+    });
+  },
+
+  'POST /api/hiace/start': (req, res) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const gameId = crypto.randomBytes(16).toString('hex');
+    for (const [id, g] of games) if (g.token === p.token && g.kind === 'hiace') games.delete(id);
+    games.set(gameId, { token: p.token, start: Date.now(), kind: 'hiace' });
+    sendJson(res, 200, { gameId });
+  },
+
+  'POST /api/hiace/end': (req, res, body) => {
+    const p = currentParticipant(req);
+    if (!p) return sendJson(res, 401, { error: 'Du må registrere deg først.' });
+    const game = games.get(String(body.gameId || ''));
+    if (!game || game.token !== p.token || game.kind !== 'hiace') return sendJson(res, 400, { error: 'Ukjent tur. Prøv igjen.' });
+    games.delete(String(body.gameId));
+    const score = Math.floor(Number(body.score));
+    if (!Number.isFinite(score) || score < 0) return sendJson(res, 400, { error: 'Ugyldig poengsum.' });
+    // Veien går ikke fortere enn en viss fart, så poengsummen kan ikke være høyere enn tiden tillater
+    const maxPossible = Math.floor(((Date.now() - game.start) / 1000) * HIACE_MAX_PER_SEC) + 50;
+    if (score > maxPossible) return sendJson(res, 400, { error: 'Den poengsummen ser litt mistenkelig ut 🤨' });
+    const jobs = Math.max(0, Math.min(500, Math.floor(Number(body.jobs) || 0)));
+
+    const isRecord = score > (p.bestHiace || 0);
+    if (isRecord) p.bestHiace = score;
+    const reached = milestonesFor(p.bestHiace || 0, HIACE_FIRST_MILESTONE);
+    let earned = 0;
+    for (let k = (p.hiaceMilestones || 0) + 1; k <= reached; k++) earned += k;
+    p.hiaceMilestones = Math.max(p.hiaceMilestones || 0, reached);
+    if (earned) addSpins(p, earned);
+    if (isRecord && score >= 100) {
+      addActivity(p.name, '🚐', `satte ny rekord i Mujaffas Hiace: ${score} poeng og ${jobs} jobb${jobs === 1 ? '' : 'er'}${earned ? ` (+${earned} spinn)` : ''}`);
+    }
+    if (isRecord || earned) saveState();
+    const k = p.hiaceMilestones || 0;
+    sendJson(res, 200, { score, isRecord, best: p.bestHiace || 0, earnedSpins: earned, next: { score: HIACE_FIRST_MILESTONE * 2 ** k, spins: k + 1 }, leaderboard: hiaceBoard().slice(0, 10), me: meView(p) });
   },
 
   'GET /api/duels': (req, res) => {

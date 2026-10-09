@@ -3614,3 +3614,25 @@ body.kasino .casino-games .tab.cg { isolation: isolate; -webkit-backface-visibil
 .casino-games .cg-slot::before { background-image: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, 0.85) 45%, transparent 52%) !important; }
 @keyframes cg-shine2 { 0%, 60% { background-position: 150% 0; } 85%, 100% { background-position: -50% 0; } }
 body.kasino .casino-games .cg-badge { border-radius: 10px 10px 0 0; }
+
+/* =========================================================
+   🚐 Mujaffas Hiace: Røa Elektriske-blått og gult blinklys
+   ========================================================= */
+body.pvp-arena[data-tab="hiace"] { --pv-accent: #ffb000; }
+.pvp-games { grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.pg-hiace { --pg-a: #3d5bb5; --pg-b: #14204a; --pg-edge: #ffc94d; }
+.pg-hiace .pg-icon { animation: pg-drive 1.4s ease-in-out infinite; }
+@keyframes pg-drive { 0%, 100% { transform: translateX(-2px); } 50% { transform: translateX(2px) translateY(-1px); } }
+a.pv-play-btn.hiace-btn { background: linear-gradient(180deg, #ffd56b, #ffb000); color: #1a1200; box-shadow: 0 0 18px rgba(255, 176, 0, 0.5); }
+.hiace-hero h1 { font-size: clamp(1.25rem, 6.6vw, 2.1rem); letter-spacing: 1px; white-space: nowrap; }
+.hiace-hero .pvp-tagline a { color: #ffd56b; }
+body.hiace-page .hiace-card { padding: 10px; }
+.hiace-info { margin: 0 0 8px; text-align: center; font-size: 0.85rem; color: #cfd6e8; }
+.hiace-info strong { color: #ffd56b; }
+.hiace-wrap { display: flex; justify-content: center; }
+.hiace-wrap canvas {
+  width: 100%; max-width: min(420px, calc(74vh * 400 / 700)); aspect-ratio: 400 / 700; height: auto;
+  border-radius: 14px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  box-shadow: 0 0 0 2px #ffb000, 0 0 24px rgba(255, 176, 0, 0.35), 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+body.hiace-page .rewards li b { color: #ffd56b; }
