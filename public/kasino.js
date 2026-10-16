@@ -216,11 +216,11 @@
 
   // ---------- Lykkehjulet ----------
   // 40 felt à 2,5 %: ingen «bom», alt annet enn 💀 gir noe.
-  // Tegningen er omtrentlig (serveren avgjør: 🍺 6 %, 💀 14 %): 🍺 3 felt · 🎡 +1 spinn 4 (10 %) · 💀 5 · 💰 25: 10 · 50: 8 · 100: 6 · 200: 3 · 500: 1 (jackpot)
+  // 🍺 4 felt (10 %) · 🎡 +1 spinn 4 (10 %) · 💀 4 (10 %) · 💰 25: 10 · 50: 8 · 100: 6 · 200: 3 · 500: 1 (jackpot)
   const LAYOUT = [
     '500', '25', '50', 'beer', '25', '100', 'bonus', '25', '50', 'lose',
     '25', '100', 'lose', '50', '25', '200', 'bonus', '50', '25', '100',
-    'beer', '25', '50', 'bonus', '100', '25', 'lose', '50', '200', '25',
+    'beer', '25', '50', 'bonus', '100', '25', 'beer', '50', '200', '25',
     'lose', '100', 'beer', '50', '25', 'bonus', '100', 'lose', '50', '200',
   ];
   const SEGMENTS = LAYOUT.length;
