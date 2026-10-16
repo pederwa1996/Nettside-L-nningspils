@@ -210,7 +210,7 @@ function closeModal() {
   flow = null;
 }
 
-const STEPS = ['Måler kjevelinjen ...', 'Sjekker jegerøynene ...', 'Beregner chad-faktor ...', 'Sammenligner med Sigma-databasen ...'];
+const STEPS = ['Måler smirket ...', 'Sjekker chad-blikket ...', 'Måler vinkelen på kjaken ...', 'Sammenligner med Giga Chad ...'];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 $('camera').addEventListener('change', async () => {
