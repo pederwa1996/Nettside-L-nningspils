@@ -3636,3 +3636,12 @@ body.hiace-page .hiace-card { padding: 10px; }
   box-shadow: 0 0 0 2px #ffb000, 0 0 24px rgba(255, 176, 0, 0.35), 0 12px 30px rgba(0, 0, 0, 0.6);
 }
 body.hiace-page .rewards li b { color: #ffd56b; }
+
+/* 🔒 Baren stengt (admin) */
+.bar-closed { text-align: center; padding: 10px 6px; }
+.bc-sign { display: inline-block; margin-bottom: 6px; padding: 6px 18px; border-radius: 10px; background: #8e1b28; color: #fff; font-weight: 900; letter-spacing: 3px; box-shadow: 0 0 0 3px #f2cf6b, 0 6px 16px rgba(0, 0, 0, 0.3); transform: rotate(-3deg); }
+.bar-closed.hidden { display: none; }
+.bar-switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0 4px; padding: 10px 12px; border-radius: 12px; background: rgba(46, 204, 113, 0.12); border: 1px solid rgba(46, 204, 113, 0.5); font-weight: 800; }
+.bar-switch.closed { background: rgba(224, 49, 49, 0.12); border-color: rgba(224, 49, 49, 0.55); }
+.bar-switch.suggest { animation: bar-suggest 1.2s ease-in-out infinite alternate; }
+@keyframes bar-suggest { to { box-shadow: 0 0 0 3px rgba(224, 49, 49, 0.55); } }

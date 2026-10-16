@@ -1141,6 +1141,7 @@ function meView(p) {
 
 function settings() {
   return {
+    barClosed: !!state.barClosed,
     totalTickets: TOTAL_TICKETS,
     ticketsPerPerson: TICKETS_PER_PERSON,
     winningTickets: WINNING_TICKETS,
@@ -2453,6 +2454,7 @@ const routes = {
       maxPerOrder: MAX_PILS_PER_ORDER,
       won: p ? beersWon(p) : null,
       orders: p ? state.orders.filter((o) => o.name === p.name).slice(-10).reverse().map(orderView) : [],
+      barClosed: !!state.barClosed,
     });
   },
 
@@ -2463,6 +2465,8 @@ const routes = {
     if (!Number.isFinite(qty) || qty < 1 || qty > MAX_PILS_PER_ORDER) {
       return sendJson(res, 400, { error: `Du kan bestille 1–${MAX_PILS_PER_ORDER} pils om gangen.` });
     }
+    // Admin kan stenge baren når budsjettet er brukt opp
+    if (state.barClosed) return sendJson(res, 400, { error: 'Baren er stengt 🔒 Budsjettet er brukt opp. Takk for i kveld! 🍻' });
     const pending = state.orders.filter((o) => o.name === p.name && o.status === 'pending').length;
     if (pending >= MAX_PENDING_ORDERS) return sendJson(res, 400, { error: 'Du har allerede bestillinger som venter. Vent til spillmesteren har levert!' });
     // Pils kan bare tas ut som gevinst (til gode), ikke kjøpes for flus
@@ -2522,7 +2526,20 @@ const routes = {
       saveState();
       broadcast('orders', {});
     }
-    sendJson(res, 200, { budget: budgetView() });
+    sendJson(res, 200, { budget: budgetView(), barClosed: !!state.barClosed });
+  },
+
+  // Steng eller åpne baren (f.eks. når budsjettet er brukt opp). Bestillinger som venter kan fortsatt leveres.
+  'POST /api/admin/bar': (req, res, body) => {
+    if (!checkAdmin(body, req)) return sendJson(res, 403, { error: 'Feil passord.' });
+    const closed = !!body.closed;
+    if (closed !== !!state.barClosed) {
+      state.barClosed = closed;
+      addActivity('Spillmesteren', closed ? '🔒' : '🔓', closed ? 'stengte baren – budsjettet er brukt opp. Takk for i kveld! 🍻' : 'åpnet baren igjen! 🍻');
+      saveState();
+      broadcast('orders', {});
+    }
+    sendJson(res, 200, { barClosed: !!state.barClosed, budget: budgetView() });
   },
 
   'POST /api/admin/order-status': (req, res, body) => {

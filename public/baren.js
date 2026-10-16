@@ -31,9 +31,12 @@
     const me = data.me;
     const n = Math.min(me.beersOwed, data.maxPerOrder);
     const empty = me.beersOwed <= 0;
-    $('bar-order').classList.toggle('hidden', empty);
-    $('bar-empty').classList.toggle('hidden', !empty);
-    if (empty) return;
+    const closed = !!data.barClosed;
+    $('bar-closed').classList.toggle('hidden', !closed);
+    $('bar-closed-owed').textContent = me.beersOwed ? `Du har ${me.beersOwed} pils til gode som ikke kan løses inn.` : '';
+    $('bar-order').classList.toggle('hidden', empty || closed);
+    $('bar-empty').classList.toggle('hidden', !empty || closed);
+    if (empty || closed) return;
     qty = Math.max(1, Math.min(qty, n));
     const wrap = $('tap-glasses');
     wrap.innerHTML = '';

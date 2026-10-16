@@ -49,7 +49,32 @@ function renderBudget(b) {
     <p class="note">Pris per pils: ${kr(b.price)}. «I omløp» er mulige utgifter, ikke penger som er brukt.</p>`;
   $('budget-total').value = b.total;
   $('budget-price').value = b.price;
+  // Foreslå å stenge baren når pengene er brukt opp
+  $('bar-switch').classList.toggle('suggest', b.remaining < b.price && !barClosed);
 }
+
+// ---- Steng eller åpne baren ----
+let barClosed = false;
+function renderBarSwitch(closed) {
+  barClosed = !!closed;
+  $('bar-state').textContent = barClosed ? '🔒 Baren er stengt' : '🍻 Baren er åpen';
+  $('bar-toggle').textContent = barClosed ? '🔓 Åpne baren igjen' : '🔒 Steng baren';
+  $('bar-toggle').classList.toggle('secondary', barClosed);
+  $('bar-switch').classList.toggle('closed', barClosed);
+  if (barClosed) $('bar-switch').classList.remove('suggest');
+}
+$('bar-toggle').addEventListener('click', async () => {
+  const closing = !barClosed;
+  if (closing && !confirm('Stenge baren? Ingen kan bestille mer pils. Bestillinger som allerede venter kan du fortsatt levere.')) return;
+  try {
+    const r = await post('/api/admin/bar', { closed: closing });
+    renderBarSwitch(r.barClosed);
+    renderBudget(r.budget);
+    showMsg(r.barClosed ? 'Baren er stengt 🔒' : 'Baren er åpen igjen 🍻', true);
+  } catch (err) {
+    showMsg(err.message);
+  }
+});
 
 $('budget-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -118,7 +143,7 @@ document.querySelectorAll('.sugg-f').forEach((b) => b.addEventListener('click', 
 if (location.hash === '#forslag') document.getElementById('forslag').open = true;
 
 async function load() {
-  post('/api/admin/budget').then((r) => renderBudget(r.budget)).catch(() => {});
+  post('/api/admin/budget').then((r) => { renderBarSwitch(r.barClosed); renderBudget(r.budget); }).catch(() => {});
   const data = await post('/api/admin/login');
   $('panel').classList.remove('hidden');
   renderSuggestions(data.suggestions || []);
